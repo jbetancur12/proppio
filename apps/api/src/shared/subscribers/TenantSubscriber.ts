@@ -15,7 +15,10 @@ export class TenantSubscriber implements EventSubscriber<BaseTenantEntity> {
             if (!entity.tenantId) {
                 try {
                     const ctx = getContext();
-                    entity.tenantId = ctx.tenantId;
+                    // Only set tenantId if user has one (not Super Admin)
+                    if (ctx.tenantId) {
+                        entity.tenantId = ctx.tenantId;
+                    }
                 } catch (e) {
                     // If running a seed or super-admin task without context, you must explicitly set tenantId
                     // OR we throw error to prevent accidental global data creation.
