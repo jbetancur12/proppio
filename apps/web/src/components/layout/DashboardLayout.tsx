@@ -8,7 +8,8 @@ import {
     Users,
     Settings,
     LogOut,
-    Menu
+    Menu,
+    FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         { label: "Panel", href: "/dashboard", icon: Home },
         { label: "Propiedades", href: "/properties", icon: Building }, // Placeholder route
         { label: "Inquilinos", href: "/renters", icon: Users },
+        { label: "Contratos", href: "/leases", icon: FileText },
         { label: "Configuración", href: "/settings", icon: Settings }, // Placeholder
     ];
 

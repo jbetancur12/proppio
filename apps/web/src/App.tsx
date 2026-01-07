@@ -10,6 +10,7 @@ import { DashboardLayout } from './components/layout/DashboardLayout';
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { PropertyDetailPage } from './features/properties/PropertyDetailPage';
 import { RentersPage } from './features/renters/RentersPage';
+import { LeasesPage } from './features/leases/LeasesPage';
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,11 @@ function App() {
             <Route path="/renters" element={
               <ProtectedRoute>
                 <RentersPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/leases" element={
+              <ProtectedRoute>
+                <LeasesPage />
               </ProtectedRoute>
             } />
             <Route path="*" element={<Navigate to="/dashboard" />} />
