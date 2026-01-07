@@ -26,5 +26,10 @@ export const rentersApi = {
     }>) => {
         const res = await api.put(`/api/renters/${id}`, data);
         return res.data.data;
+    },
+
+    getHistory: async (id: string) => {
+        const res = await api.get(`/api/renters/${id}/history`);
+        return res.data.data;
     }
 };

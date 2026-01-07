@@ -2,6 +2,9 @@ import { EntityManager } from "@mikro-orm/core";
 import { Renter } from "../entities/Renter";
 import { CreateRenterDto, UpdateRenterDto } from "../dtos/renter.dto";
 import { AppError, NotFoundError, ValidationError } from "../../../shared/errors/AppError";
+import { Lease } from "../../leases/entities/Lease";
+import { Payment } from "../../payments/entities/Payment";
+import { MaintenanceTicket } from "../../maintenance/entities/MaintenanceTicket";
 
 export class RentersService {
     constructor(private readonly em: EntityManager) { }
@@ -45,5 +48,28 @@ export class RentersService {
     async delete(id: string): Promise<void> {
         const renter = await this.findOne(id);
         await this.em.removeAndFlush(renter);
+    }
+
+    async getHistory(id: string) {
+        const renter = await this.findOne(id);
+
+        // Find Leases
+        const leases = await this.em.find(Lease, { renter }, { populate: ['unit', 'unit.property'], orderBy: { startDate: 'DESC' } });
+        const leaseIds = leases.map(l => l.id);
+
+        // Find Payments (linked to Renter's leases)
+        const payments = leaseIds.length > 0
+            ? await this.em.find(Payment, { lease: { $in: leaseIds } }, { populate: ['lease', 'lease.unit'], orderBy: { paymentDate: 'DESC' } })
+            : [];
+
+        // Find Tickets
+        const tickets = await this.em.find(MaintenanceTicket, { reportedBy: renter }, { populate: ['unit', 'unit.property'], orderBy: { createdAt: 'DESC' } });
+
+        return {
+            renter,
+            leases,
+            payments,
+            tickets
+        };
     }
 }

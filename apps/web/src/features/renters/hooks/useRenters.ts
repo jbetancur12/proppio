@@ -23,3 +23,11 @@ export function useCreateRenter() {
         }
     });
 }
+
+export function useRenterHistory(id: string) {
+    return useQuery({
+        queryKey: ['renter', id, 'history'],
+        queryFn: () => rentersApi.getHistory(id),
+        enabled: !!id
+    });
+}

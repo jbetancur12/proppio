@@ -5,12 +5,14 @@ import { useState } from "react";
 import { Plus, Search, User } from "lucide-react";
 import { useRenters, useCreateRenter } from "./hooks/useRenters";
 import { RenterCard } from "./components/RenterCard";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Container component - manages state and orchestrates data flow
  * Following design_guidelines.md section 3.1
  */
 export function RentersPage() {
+    const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
 
     // Form state
@@ -112,7 +114,7 @@ export function RentersPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {renters?.map((renter: any) => (
-                            <RenterCard key={renter.id} renter={renter} />
+                            <RenterCard key={renter.id} renter={renter} onClick={() => navigate(`/renters/${renter.id}`)} />
                         ))}
                         {renters?.length === 0 && (
                             <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">

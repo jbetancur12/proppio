@@ -51,4 +51,15 @@ export class RentersController {
             next(error);
         }
     }
+
+    async getHistory(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const service = this.getService();
+            const history = await service.getHistory(id);
+            ApiResponse.success(res, history);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

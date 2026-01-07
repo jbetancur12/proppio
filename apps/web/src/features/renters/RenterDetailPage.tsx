@@ -1,0 +1,129 @@
+import { useNavigate, useParams } from "react-router-dom";
+import { useRenterHistory } from "./hooks/useRenters";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Mail, Phone, User, FileText } from "lucide-react";
+import { PaymentCard } from "../payments/components/PaymentCard";
+import { TicketCard } from "../maintenance/components/TicketCard";
+
+export function RenterDetailPage() {
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const { data: history, isLoading } = useRenterHistory(id!);
+
+    if (isLoading) return <div className="p-8 text-center text-gray-500">Cargando perfil...</div>;
+    if (!history) return <div className="p-8 text-center text-red-500">Inquilino no encontrado</div>;
+
+    const { renter, leases, payments, tickets } = history;
+
+    return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Header / Profile */}
+            <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+                <Button variant="ghost" className="absolute top-4 left-4 md:static md:p-0" size="icon" onClick={() => navigate('/renters')}>
+                    <ArrowLeft size={20} />
+                </Button>
+
+                <Avatar className="w-24 h-24 border-4 border-indigo-50">
+                    <AvatarFallback className="text-2xl bg-indigo-100 text-indigo-700">
+                        {renter.firstName[0]}{renter.lastName[0]}
+                    </AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 text-center md:text-left space-y-2">
+                    <h1 className="text-2xl font-bold text-gray-900">{renter.firstName} {renter.lastName}</h1>
+                    <div className="flex flex-col md:flex-row items-center gap-3 text-gray-500 text-sm">
+                        <span className="flex items-center gap-1"><User size={14} /> ID: {renter.identification}</span>
+                        {renter.email && <span className="flex items-center gap-1"><Mail size={14} /> {renter.email}</span>}
+                        <span className="flex items-center gap-1"><Phone size={14} /> {renter.phone}</span>
+                    </div>
+                </div>
+
+                <div className="flex gap-4 text-center">
+                    <div>
+                        <p className="text-2xl font-bold text-indigo-600">{leases.length}</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium">Contratos</p>
+                    </div>
+                    <div>
+                        <p className="text-2xl font-bold text-green-600">{payments.length}</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium">Pagos</p>
+                    </div>
+                    <div>
+                        <p className="text-2xl font-bold text-orange-600">{tickets.length}</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium">Tickets</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Tabs Content */}
+            <Tabs defaultValue="leases" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsTrigger value="leases">Contratos</TabsTrigger>
+                    <TabsTrigger value="payments">Historial Pagos</TabsTrigger>
+                    <TabsTrigger value="tickets">Mantenimiento</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="leases" className="space-y-4">
+                    {leases.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400">Sin contratos registrados</div>
+                    ) : (
+                        leases.map((lease: any) => (
+                            <Card key={lease.id} className="hover:border-indigo-200 transition-colors cursor-pointer" onClick={() => navigate(`/leases/${lease.id}`)}>
+                                <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+                                            <FileText size={20} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900">{lease.unit?.property?.name} - {lease.unit?.name}</h3>
+                                            <p className="text-sm text-gray-500">
+                                                {new Date(lease.startDate).toLocaleDateString()} - {new Date(lease.endDate).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <Badge variant="outline" className={
+                                            lease.status === 'ACTIVE' ? 'bg-green-50 text-green-700' :
+                                                lease.status === 'EXPIRED' ? 'bg-red-50 text-red-700' :
+                                                    'bg-gray-100'
+                                        }>
+                                            {lease.status}
+                                        </Badge>
+                                        <Button size="sm" variant="ghost">Ver Detalles</Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
+                </TabsContent>
+
+                <TabsContent value="payments">
+                    {payments.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400">Sin pagos registrados</div>
+                    ) : (
+                        <div className="space-y-3">
+                            {payments.map((payment: any) => (
+                                <PaymentCard key={payment.id} payment={payment} />
+                            ))}
+                        </div>
+                    )}
+                </TabsContent>
+
+                <TabsContent value="tickets">
+                    {tickets.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400">Sin tickets reportados</div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {tickets.map((ticket: any) => (
+                                <TicketCard key={ticket.id} ticket={ticket} />
+                            ))}
+                        </div>
+                    )}
+                </TabsContent>
+            </Tabs>
+        </div>
+    );
+}
