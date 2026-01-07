@@ -1,54 +1,33 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { toast } from "sonner";
 import { ArrowLeft, Home, User, Settings, BedDouble, Bath, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useProperty, useUnits, useCreateUnit } from "./hooks/useProperties";
 
+/**
+ * Container component for Property Details
+ * Following design_guidelines.md section 3.1
+ */
 export function PropertyDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const [unitName, setUnitName] = useState("");
     const [unitType, setUnitType] = useState("");
     const [activeTab, setActiveTab] = useState("units");
 
-    const { data: property, isLoading: loadingProp } = useQuery({
-        queryKey: ['property', id],
-        queryFn: async () => {
-            const res = await api.get(`/api/properties/${id}`);
-            return res.data;
-        }
-    });
+    const { data: property, isLoading: loadingProp } = useProperty(id || "");
+    const { data: units, isLoading: loadingUnits } = useUnits(id || "");
+    const createUnitMutation = useCreateUnit(id || "");
 
-    const { data: units, isLoading: loadingUnits } = useQuery({
-        queryKey: ['units', id],
-        queryFn: async () => {
-            const res = await api.get(`/api/properties/${id}/units`);
-            return res.data;
-        },
-        enabled: !!id
-    });
-
-    const createUnitMutation = useMutation({
-        mutationFn: async () => {
-            await api.post('/api/properties/units', { // Note: Route defined as /api/properties/units in api routes
-                propertyId: id,
-                name: unitName,
-                type: unitType || "Apartamento"
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['units', id] });
-            setUnitName("");
-            toast.success("Unidad creada");
-        },
-        onError: () => toast.error("Error al crear la unidad")
-    });
+    const handleCreateUnit = () => {
+        createUnitMutation.mutate(
+            { propertyId: id!, name: unitName, type: unitType || "Apartamento" },
+            { onSuccess: () => setUnitName("") }
+        );
+    };
 
     if (loadingProp) return <div className="p-8">Cargando...</div>;
     if (!property) return <div className="p-8">Propiedad no encontrada <Button onClick={() => navigate('/dashboard')}>Volver</Button></div>;
@@ -125,7 +104,6 @@ export function PropertyDetailPage() {
                                                 <div>
                                                     <h4 className="font-bold text-lg text-gray-800 group-hover:text-indigo-600">{u.name}</h4>
                                                     <p className="text-sm text-gray-500 capitalize">{u.type || "Apartamento"}</p>
-                                                    {/* Details placeholder */}
                                                     <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
                                                         <span className="flex items-center gap-1"><BedDouble size={12} /> 2</span>
                                                         <span className="flex items-center gap-1"><Bath size={12} /> 1</span>
@@ -155,7 +133,7 @@ export function PropertyDetailPage() {
                                         <label className="text-xs font-semibold uppercase text-gray-500">Tipo</label>
                                         <Input placeholder="Ej. Apartamento" value={unitType} onChange={e => setUnitType(e.target.value)} />
                                     </div>
-                                    <Button className="w-full bg-gray-900 text-white hover:bg-black" onClick={() => createUnitMutation.mutate()} disabled={!unitName}>
+                                    <Button className="w-full bg-gray-900 text-white hover:bg-black" onClick={handleCreateUnit} disabled={!unitName}>
                                         Crear Unidad
                                     </Button>
                                 </CardContent>

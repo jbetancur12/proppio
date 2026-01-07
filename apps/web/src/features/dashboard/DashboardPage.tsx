@@ -1,50 +1,37 @@
 import { useNavigate } from "react-router-dom"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { api } from "../api/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
-import { toast } from "sonner"
-import {
-    Plus,
-    Search,
-    Building,
-    MapPin,
-    TrendingUp,
-    Users,
-} from "lucide-react"
+import { Plus, Search, Building, TrendingUp, Users } from "lucide-react"
+import { useProperties, useCreateProperty } from "../properties/hooks/useProperties"
+import { PropertyCard } from "../properties/components/PropertyCard"
 
+/**
+ * Dashboard - Container component
+ * Uses hooks for data fetching following design_guidelines.md 3.2
+ */
 export function DashboardPage() {
     const navigate = useNavigate()
-    const queryClient = useQueryClient()
-    const [isCreating, setIsCreating] = useState(false) // Toggle for create modal/form
-
-    // Create form state
+    const [isCreating, setIsCreating] = useState(false)
     const [newName, setNewName] = useState("")
     const [newAddress, setNewAddress] = useState("")
 
-    const { data: properties, isLoading } = useQuery({
-        queryKey: ['properties'],
-        queryFn: async () => {
-            const res = await api.get('/api/properties');
-            return res.data;
-        }
-    })
+    const { data: properties, isLoading } = useProperties()
+    const createMutation = useCreateProperty()
 
-    const createMutation = useMutation({
-        mutationFn: async () => {
-            await api.post('/api/properties', { name: newName, address: newAddress });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['properties'] });
-            setNewName("");
-            setNewAddress("");
-            setIsCreating(false);
-            toast.success("Propiedad creada!");
-        },
-        onError: () => toast.error("Error al crear propiedad")
-    })
+    const handleCreate = () => {
+        createMutation.mutate(
+            { name: newName, address: newAddress },
+            {
+                onSuccess: () => {
+                    setNewName("")
+                    setNewAddress("")
+                    setIsCreating(false)
+                }
+            }
+        )
+    }
 
     return (
         <div className="space-y-8">
@@ -98,7 +85,7 @@ export function DashboardPage() {
                 </Card>
             </div>
 
-            {/* Create Form (Inline for now, could be dialog) */}
+            {/* Create Form */}
             {isCreating && (
                 <Card className="animate-in fade-in slide-in-from-top-4 border-indigo-100 bg-indigo-50/50">
                     <CardHeader>
@@ -117,7 +104,7 @@ export function DashboardPage() {
                     </CardContent>
                     <CardFooter className="flex justify-end gap-2">
                         <Button variant="ghost" onClick={() => setIsCreating(false)}>Cancelar</Button>
-                        <Button onClick={() => createMutation.mutate()} disabled={!newName || createMutation.isPending}>
+                        <Button onClick={handleCreate} disabled={!newName || createMutation.isPending}>
                             {createMutation.isPending ? 'Guardando...' : 'Crear Propiedad'}
                         </Button>
                     </CardFooter>
@@ -141,32 +128,11 @@ export function DashboardPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {properties?.map((p: any) => (
-                            <Card
+                            <PropertyCard
                                 key={p.id}
-                                className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border-gray-200"
+                                property={p}
                                 onClick={() => navigate(`/properties/${p.id}`)}
-                            >
-                                <div className="h-40 bg-gray-100 relative group-hover:scale-105 transition-transform duration-500">
-                                    {/* Placeholder generic image or gradient pattern */}
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-gray-200 to-gray-100 flex items-center justify-center text-gray-300">
-                                        <Building size={48} />
-                                    </div>
-                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded-md text-xs font-bold shadow-sm">
-                                        {p.units?.length || 0} Unidades
-                                    </div>
-                                </div>
-                                <CardContent className="p-5">
-                                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">{p.name}</h3>
-                                    <div className="flex items-start gap-2 mt-2 text-gray-500 text-sm">
-                                        <MapPin size={16} className="mt-0.5 shrink-0" />
-                                        {p.address}
-                                    </div>
-                                </CardContent>
-                                <CardFooter className="p-5 pt-0 flex justify-between items-center text-sm text-gray-500 border-t border-gray-50 mt-4 pt-4">
-                                    <span>Ocupación</span>
-                                    <span className="font-medium text-gray-900">--%</span>
-                                </CardFooter>
-                            </Card>
+                            />
                         ))}
                         {properties?.length === 0 && (
                             <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">

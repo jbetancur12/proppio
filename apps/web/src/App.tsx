@@ -4,16 +4,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-
-import { PropertyDetailPage } from './pages/PropertyDetailPage';
-import { RentersPage } from './pages/RentersPage';
-
-const queryClient = new QueryClient();
-
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
-// ...
+// Feature-based imports (following design_guidelines.md 3.3 Co-location)
+import { DashboardPage } from './features/dashboard/DashboardPage';
+import { PropertyDetailPage } from './features/properties/PropertyDetailPage';
+import { RentersPage } from './features/renters/RentersPage';
+
+const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -27,7 +25,6 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
-            {/* Added a root path redirect to dashboard */}
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
@@ -39,7 +36,6 @@ function App() {
                 <PropertyDetailPage />
               </ProtectedRoute>
             } />
-            {/* Added the new renters route */}
             <Route path="/renters" element={
               <ProtectedRoute>
                 <RentersPage />
