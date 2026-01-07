@@ -17,6 +17,7 @@ import { PaymentsPage } from './features/payments/PaymentsPage';
 import { ExpensesPage } from './features/expenses/ExpensesPage';
 import { MaintenancePage } from './features/maintenance/MaintenancePage';
 import { SubscriptionSuspendedPage } from './pages/SubscriptionSuspendedPage';
+import { RentIncreasePage } from './features/leases/RentIncreasePage';
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,11 @@ function App() {
             <Route path="/maintenance" element={
               <ProtectedRoute>
                 <MaintenancePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/rent-increases" element={
+              <ProtectedRoute>
+                <RentIncreasePage />
               </ProtectedRoute>
             } />
             <Route path="/subscription-suspended" element={<SubscriptionSuspendedPage />} />
