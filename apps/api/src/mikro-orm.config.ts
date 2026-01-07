@@ -8,6 +8,7 @@ import path from 'path';
 import { TenantSubscriber } from './shared/subscribers/TenantSubscriber';
 
 import { PropertyEntity } from './features/properties/entities/Property';
+import { UnitEntity } from './features/properties/entities/Unit';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
@@ -18,7 +19,7 @@ const config: Options = {
     password: process.env.DB_PASSWORD,
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
-    entities: [BaseEntity, Tenant, PropertyEntity],
+    entities: [BaseEntity, Tenant, PropertyEntity, UnitEntity],
     subscribers: [new TenantSubscriber()],
     debug: process.env.NODE_ENV !== 'production',
     allowGlobalContext: true, // Allow global context for now, will implement AsyncLocalStorage later

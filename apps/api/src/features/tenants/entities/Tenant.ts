@@ -13,14 +13,17 @@ export enum TenantPlan {
 
 @Entity({ tableName: 'tenants' })
 export class Tenant extends BaseEntity {
-    @Property()
+    @Property({ type: 'string' })
     name!: string;
+
+    @Property({ type: 'string', unique: true })
+    slug!: string;
 
     @Enum(() => TenantStatus)
     status: TenantStatus = TenantStatus.ACTIVE;
 
-    @Enum(() => TenantPlan)
-    plan: TenantPlan = TenantPlan.FREE;
+    @Property({ type: 'string', nullable: true })
+    plan?: string;
 
     @Property({ type: 'json', nullable: true })
     config?: Record<string, any>;

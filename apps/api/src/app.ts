@@ -3,14 +3,15 @@ import cors from 'cors';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import config from './mikro-orm.config';
 import { authMiddleware } from './shared/middlewares/authMiddleware';
-import propertiesRoutes from './features/properties/routes';
+import propertyRoutes from './features/properties/routes';
 import authRoutes from './features/auth/routes';
+import { errorMiddleware } from './shared/middlewares/errorMiddleware';
 
 export const createApp = async () => {
-    const app = express();
-
     // 1. Initialize ORM
     const orm = await MikroORM.init(config);
+
+    const app = express();
 
     // 2. Global Middlewares
     app.use(cors());
@@ -30,7 +31,7 @@ export const createApp = async () => {
     apiRouter.use(authMiddleware);
 
     // Feature Routes
-    apiRouter.use('/properties', propertiesRoutes);
+    app.use('/api/properties', propertyRoutes);
 
     // Example protected route to verify context
     apiRouter.get('/me', (req, res) => {

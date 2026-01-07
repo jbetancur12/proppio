@@ -36,6 +36,33 @@ Abstrae el acceso a datos. Si mañana cambiamos Postgres por Mongo (hipotéticam
 *   No usar `try/catch` en cada función. Usar un middleware global de manejo de erorres (`ErrorHandler`).
 *   Lanzar errores tipados: `throw new BusinessLogicError("El contrato ya está activo")`.
 
+### 2.4 Estándar de API (Responses & Errors)
+Todas las respuestas de la API deben seguir estrictamente este formato JSON:
+
+**Éxito (200/201):**
+```json
+{
+  "success": true,
+  "data": { ... },     // Objeto o Array
+  "message": "Operación exitosa", // Opcional
+  "timestamp": "2023-10-27T10:00:00Z"
+}
+```
+
+**Error (4xx/5xx):**
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR", // Código legible por máquina
+    "message": "El email es inválido", // Mensaje legible por humano
+    "details": [...] // Opcional (ej: errores de Zod)
+  },
+  "timestamp": "2023-10-27T10:00:00Z"
+}
+```
+*   Usar `ApiResponse.success/created` y `AppError` para garantizar esto.
+
 ## 3. Patrones de Diseño Frontend (React)
 
 ### 3.1 Container vs. Presentational Components

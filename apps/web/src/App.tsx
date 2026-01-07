@@ -6,11 +6,17 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 
+import { PropertyDetailPage } from './pages/PropertyDetailPage';
+
 const queryClient = new QueryClient();
+
+import { DashboardLayout } from './components/layout/DashboardLayout';
+
+// ...
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  return isAuthenticated ? <DashboardLayout>{children}</DashboardLayout> : <Navigate to="/login" />;
 }
 
 function App() {
@@ -23,6 +29,11 @@ function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/properties/:id" element={
+              <ProtectedRoute>
+                <PropertyDetailPage />
               </ProtectedRoute>
             } />
             <Route path="*" element={<Navigate to="/dashboard" />} />
