@@ -15,6 +15,9 @@ import { Payment } from './features/payments/entities/Payment';
 import { Expense } from './features/expenses/entities/Expense';
 import { MaintenanceTicket } from './features/maintenance/entities/MaintenanceTicket';
 import { BaseTenantEntity } from './shared/entities/BaseTenantEntity';
+import { RentIncrease } from './features/leases/entities/RentIncrease';
+import { User } from './features/auth/entities/User';
+import { TenantUser } from './features/auth/entities/TenantUser';
 
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -26,7 +29,19 @@ export default defineConfig({
     password: process.env.DB_PASSWORD,
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
-    entities: [Tenant, PropertyEntity, UnitEntity, Renter, Lease, Payment, Expense, MaintenanceTicket],
+    entities: [
+        Tenant,
+        PropertyEntity,
+        UnitEntity,
+        Renter,
+        Lease,
+        Payment,
+        Expense,
+        MaintenanceTicket,
+        RentIncrease,
+        User,
+        TenantUser
+    ],
     subscribers: [new TenantSubscriber()],
     debug: process.env.NODE_ENV !== 'production',
     allowGlobalContext: true, // Allow global context for now, will implement AsyncLocalStorage later
