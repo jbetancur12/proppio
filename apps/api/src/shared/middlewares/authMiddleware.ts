@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { requestContext, UserContext } from '../utils/RequestContext';
+import { RequestContext as MikroContext } from '@mikro-orm/core';
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -23,6 +24,15 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         if (!decoded.tenantId || !decoded.userId) {
             res.status(401).json({ message: 'Invalid token payload' });
             return;
+        }
+
+        // CRITICAL: Set PostgreSQL RLS variable for Row Level Security
+        // This enables the third layer of multi-tenancy defense
+        const em = MikroContext.getEntityManager();
+        if (em) {
+            await em.getConnection().execute(
+                `SET LOCAL app.current_tenant = '${decoded.tenantId}'`
+            );
         }
 
         // Wrap the next() call in the AsyncLocalStorage context
