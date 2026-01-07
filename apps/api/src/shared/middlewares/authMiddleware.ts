@@ -21,6 +21,44 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as UserContext;
 
         // Validate required fields in the token
+        if (decoded.globalRole === 'SUPER_ADMIN') {
+            // Super Admin: No tenantId required, skip tenant validation
+            // Check for impersonation header
+            const impersonateTenant = req.headers['x-impersonate-tenant'] as string;
+
+            if (impersonateTenant) {
+                // Validate tenant exists
+                const { Tenant } = await import('../../features/tenants/entities/Tenant');
+                const tenant = await em.findOne(Tenant, { id: impersonateTenant });
+
+                if (!tenant) {
+                    res.status(401).json({
+                        success: false,
+                        error: {
+                            code: 'INVALID_TENANT',
+                            message: 'Tenant de impersonación no válido'
+                        }
+                    });
+                    return;
+                }
+
+                // Set tenantId for impersonation
+                decoded.tenantId = impersonateTenant;
+
+                // Set RLS variable
+                await em.getConnection().execute(
+                    `SET LOCAL app.current_tenant = '${impersonateTenant}'`
+                );
+            }
+
+            // Continue without tenant context if not impersonating
+            requestContext.run(decoded, () => {
+                next();
+            });
+            return;
+        }
+
+        // Regular user: tenantId is required
         if (!decoded.tenantId || !decoded.userId) {
             res.status(401).json({ message: 'Invalid token payload' });
             return;

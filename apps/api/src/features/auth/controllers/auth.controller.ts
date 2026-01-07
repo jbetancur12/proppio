@@ -1,11 +1,16 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { RequestContext } from '@mikro-orm/core';
 import { AuthService } from '../services/auth.service';
 import { loginSchema } from '../dtos/auth.dto';
 
 export class AuthController {
-    private service = new AuthService();
+    private getService(): AuthService {
+        const em = RequestContext.getEntityManager();
+        if (!em) throw new Error('EntityManager not found in context');
+        return new AuthService(em);
+    }
 
-    async login(req: Request, res: Response) {
+    async login(req: Request, res: Response, next: NextFunction) {
         try {
             const validation = loginSchema.safeParse(req.body);
             if (!validation.success) {
@@ -13,10 +18,10 @@ export class AuthController {
                 return;
             }
 
-            const result = await this.service.login(validation.data);
+            const result = await this.getService().login(validation.data);
             res.json(result);
         } catch (error) {
-            res.status(401).json({ message: 'Invalid credentials' });
+            next(error);
         }
     }
 }
