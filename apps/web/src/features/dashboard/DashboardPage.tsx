@@ -226,11 +226,11 @@ export function DashboardPage() {
 
             {/* Property Grid */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h2 className="text-xl font-bold text-gray-800">Tus Propiedades</h2>
-                    <div className="relative w-64">
+                    <div className="relative w-full md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <Input placeholder="Buscar propiedades..." className="pl-9 bg-white" />
+                        <Input placeholder="Buscar propiedades..." className="pl-9 bg-white w-full" />
                     </div>
                 </div>
 

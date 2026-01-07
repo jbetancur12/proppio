@@ -58,8 +58,8 @@ export function PropertyDetailPage() {
             </div>
 
             {/* Tabs */}
-            <div className="border-b border-gray-200">
-                <nav className="flex space-x-8" aria-label="Tabs">
+            <div className="border-b border-gray-200 overflow-x-auto">
+                <nav className="flex space-x-8 min-w-max px-2" aria-label="Tabs">
                     {[
                         { id: 'overview', label: 'Resumen', icon: Home },
                         { id: 'units', label: 'Unidades', icon: BedDouble },
