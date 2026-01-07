@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useTenant } from '../hooks/useAdmin';
-import { ImpersonateButton } from '../components/ImpersonateButton';
+import { useTenant } from './hooks/useAdmin';
+import { ImpersonateButton } from './components/ImpersonateButton';
 import { ArrowLeft, Building2, FileText, Users } from 'lucide-react';
 
 export function TenantDetailPage() {
@@ -43,8 +43,8 @@ export function TenantDetailPage() {
                             <p className="text-sm text-gray-600">Estado</p>
                             <span
                                 className={`inline-block px-3 py-1 text-sm rounded-full mt-1 ${tenant.status === 'ACTIVE'
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-amber-100 text-amber-700'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-amber-100 text-amber-700'
                                     }`}
                             >
                                 {tenant.status}

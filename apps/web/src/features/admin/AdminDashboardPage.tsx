@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, TrendingUp, AlertTriangle } from 'lucide-react';
-import { useGlobalMetrics, useAllTenants } from '../hooks/useAdmin';
-import { Tenant } from '../services/adminApi';
+import { useGlobalMetrics, useAllTenants } from './hooks/useAdmin';
+import { Tenant } from './services/adminApi';
 
 export function AdminDashboardPage() {
     const { data: metrics, isLoading: metricsLoading } = useGlobalMetrics();
