@@ -12,6 +12,7 @@ import leaseRoutes from './features/leases/routes';
 import paymentRoutes from './features/payments/routes';
 import statsRoutes from './features/stats/routes';
 import expenseRoutes from './features/expenses/routes';
+import maintenanceRoutes from './features/maintenance/routes';
 
 export const createApp = async () => {
     // 1. Initialize ORM
@@ -43,6 +44,7 @@ export const createApp = async () => {
     apiRouter.use('/payments', paymentRoutes);
     apiRouter.use('/stats', statsRoutes);
     apiRouter.use('/expenses', expenseRoutes);
+    apiRouter.use('/maintenance', maintenanceRoutes);
 
     // Example protected route to verify context
     apiRouter.get('/me', (req, res) => {

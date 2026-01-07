@@ -11,7 +11,8 @@ import {
     Menu,
     FileText,
     DollarSign,
-    TrendingDown
+    TrendingDown,
+    Hammer
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         { label: "Contratos", href: "/leases", icon: FileText },
         { label: "Pagos", href: "/payments", icon: DollarSign },
         { label: "Gastos", href: "/expenses", icon: TrendingDown },
+        { label: "Mantenimiento", href: "/maintenance", icon: Hammer },
         { label: "Configuración", href: "/settings", icon: Settings },
     ];
 

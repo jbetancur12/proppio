@@ -14,6 +14,7 @@ import { LeasesPage } from './features/leases/LeasesPage';
 import { LeaseDetailPage } from './features/leases/LeaseDetailPage';
 import { PaymentsPage } from './features/payments/PaymentsPage';
 import { ExpensesPage } from './features/expenses/ExpensesPage';
+import { MaintenancePage } from './features/maintenance/MaintenancePage';
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,11 @@ function App() {
             <Route path="/expenses" element={
               <ProtectedRoute>
                 <ExpensesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/maintenance" element={
+              <ProtectedRoute>
+                <MaintenancePage />
               </ProtectedRoute>
             } />
             <Route path="*" element={<Navigate to="/dashboard" />} />
