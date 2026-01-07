@@ -2,7 +2,7 @@ import { EntityManager } from "@mikro-orm/core";
 import { Lease, LeaseStatus } from "../entities/Lease";
 import { CreateLeaseDto, UpdateLeaseDto } from "../dtos/lease.dto";
 import { NotFoundError, ValidationError } from "../../../shared/errors/AppError";
-import { UnitEntity } from "../../properties/entities/Unit";
+import { UnitEntity, UnitStatus } from "../../properties/entities/Unit";
 import { Renter } from "../../renters/entities/Renter";
 
 /**
@@ -77,7 +77,15 @@ export class LeasesService {
         if (lease.status !== LeaseStatus.DRAFT) {
             throw new ValidationError('Solo contratos en borrador pueden activarse');
         }
+
         lease.status = LeaseStatus.ACTIVE;
+
+        // Auto-update unit status to OCCUPIED
+        const unit = await this.em.findOne(UnitEntity, { id: lease.unit.id });
+        if (unit) {
+            unit.status = UnitStatus.OCCUPIED;
+        }
+
         await this.em.flush();
         return lease;
     }
@@ -87,7 +95,15 @@ export class LeasesService {
         if (lease.status !== LeaseStatus.ACTIVE) {
             throw new ValidationError('Solo contratos activos pueden terminarse');
         }
+
         lease.status = LeaseStatus.TERMINATED;
+
+        // Auto-update unit status to VACANT
+        const unit = await this.em.findOne(UnitEntity, { id: lease.unit.id });
+        if (unit) {
+            unit.status = UnitStatus.VACANT;
+        }
+
         await this.em.flush();
         return lease;
     }

@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
-import { Plus, Search, Building, TrendingUp, Users } from "lucide-react"
+import { Plus, Search, Building, TrendingUp, Users, DollarSign, Home, FileText } from "lucide-react"
 import { useProperties, useCreateProperty } from "../properties/hooks/useProperties"
 import { PropertyCard } from "../properties/components/PropertyCard"
+import { useDashboardStats } from "./hooks/useDashboardStats"
 
 /**
  * Dashboard - Container component
@@ -18,6 +19,7 @@ export function DashboardPage() {
     const [newAddress, setNewAddress] = useState("")
 
     const { data: properties, isLoading } = useProperties()
+    const { data: stats } = useDashboardStats()
     const createMutation = useCreateProperty()
 
     const handleCreate = () => {
@@ -32,6 +34,9 @@ export function DashboardPage() {
             }
         )
     }
+
+    const formatCurrency = (value: number) =>
+        new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 
     return (
         <div className="space-y-8">
@@ -48,38 +53,91 @@ export function DashboardPage() {
                 </div>
             </div>
 
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Stats Overview - Row 1 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
-                    <CardContent className="p-6">
+                    <CardContent className="p-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-indigo-100 font-medium">Total Propiedades</p>
-                                <h3 className="text-3xl font-bold mt-1">{properties?.length || 0}</h3>
+                                <p className="text-indigo-100 font-medium text-sm">Propiedades</p>
+                                <h3 className="text-2xl font-bold mt-1">{stats?.totalProperties || 0}</h3>
                             </div>
-                            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><Building className="text-white" /></div>
+                            <div className="p-2.5 bg-white/20 rounded-lg backdrop-blur-sm"><Building className="text-white" size={20} /></div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-emerald-100 font-medium text-sm">Ocupación</p>
+                                <h3 className="text-2xl font-bold mt-1">{stats?.occupancyRate || 0}%</h3>
+                                <p className="text-xs text-emerald-200 mt-1">{stats?.occupiedUnits || 0}/{stats?.totalUnits || 0} unidades</p>
+                            </div>
+                            <div className="p-2.5 bg-white/20 rounded-lg backdrop-blur-sm"><TrendingUp className="text-white" size={20} /></div>
                         </div>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm">
-                    <CardContent className="p-6">
+                    <CardContent className="p-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 font-medium">Total Inquilinos</p>
-                                <h3 className="text-3xl font-bold mt-1 text-gray-900">0</h3>
+                                <p className="text-gray-500 font-medium text-sm">Inquilinos</p>
+                                <h3 className="text-2xl font-bold mt-1 text-gray-900">{stats?.totalRenters || 0}</h3>
                             </div>
-                            <div className="p-3 bg-green-50 rounded-xl text-green-600"><Users /></div>
+                            <div className="p-2.5 bg-blue-50 rounded-lg text-blue-600"><Users size={20} /></div>
                         </div>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm">
-                    <CardContent className="p-6">
+                    <CardContent className="p-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 font-medium">Tasa de Ocupación</p>
-                                <h3 className="text-3xl font-bold mt-1 text-gray-900">0%</h3>
+                                <p className="text-gray-500 font-medium text-sm">Contratos Activos</p>
+                                <h3 className="text-2xl font-bold mt-1 text-gray-900">{stats?.activeLeases || 0}</h3>
                             </div>
-                            <div className="p-3 bg-amber-50 rounded-xl text-amber-600"><TrendingUp /></div>
+                            <div className="p-2.5 bg-purple-50 rounded-lg text-purple-600"><FileText size={20} /></div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Stats Overview - Row 2 (Financial) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="border-none shadow-sm">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-gray-500 font-medium text-sm">Canon Esperado (Mes)</p>
+                                <h3 className="text-xl font-bold mt-1 text-gray-900">{formatCurrency(stats?.monthlyExpectedIncome || 0)}</h3>
+                            </div>
+                            <div className="p-2.5 bg-amber-50 rounded-lg text-amber-600"><Home size={20} /></div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="border-none shadow-sm">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-gray-500 font-medium text-sm">Recaudado (Mes)</p>
+                                <h3 className="text-xl font-bold mt-1 text-green-600">{formatCurrency(stats?.monthlyReceivedIncome || 0)}</h3>
+                            </div>
+                            <div className="p-2.5 bg-green-50 rounded-lg text-green-600"><DollarSign size={20} /></div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="border-none shadow-sm">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-gray-500 font-medium text-sm">Tasa de Recaudo</p>
+                                <h3 className={`text-xl font-bold mt-1 ${(stats?.collectionRate || 0) >= 80 ? 'text-green-600' : 'text-amber-600'}`}>
+                                    {stats?.collectionRate || 0}%
+                                </h3>
+                            </div>
+                            <div className={`p-2.5 rounded-lg ${(stats?.collectionRate || 0) >= 80 ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>
+                                <TrendingUp size={20} />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
