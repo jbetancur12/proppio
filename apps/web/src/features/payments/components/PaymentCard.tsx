@@ -1,7 +1,11 @@
-import { DollarSign, Calendar, CreditCard, CheckCircle, XCircle, Clock } from "lucide-react";
+import { DollarSign, Calendar, CreditCard, CheckCircle, XCircle, Clock, Download, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PaymentData } from "../services/paymentsApi";
+import { useState } from "react";
+import { paymentsApi } from "../services/paymentsApi";
+import { toast } from "sonner";
 
 interface PaymentCardProps {
     payment: PaymentData;
@@ -27,6 +31,7 @@ const methodLabels: Record<string, string> = {
  * Following design_guidelines.md section 3.1
  */
 export function PaymentCard({ payment }: PaymentCardProps) {
+    const [isDownloading, setIsDownloading] = useState(false);
     const status = statusConfig[payment.status];
     const StatusIcon = status.icon;
 
@@ -36,6 +41,17 @@ export function PaymentCard({ payment }: PaymentCardProps) {
     const formatMonth = (dateStr: string) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+    };
+
+    const handleDownload = async () => {
+        try {
+            setIsDownloading(true);
+            await paymentsApi.downloadReceipt(payment.id, payment.reference);
+        } catch (error) {
+            toast.error("Error al descargar el recibo");
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     return (
@@ -70,6 +86,25 @@ export function PaymentCard({ payment }: PaymentCardProps) {
 
                 {payment.reference && (
                     <p className="text-xs text-gray-400 mt-2 truncate">Ref: {payment.reference}</p>
+                )}
+
+                {payment.status === 'COMPLETED' && (
+                    <div className="mt-4 pt-2 border-t border-gray-100">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 h-8"
+                            onClick={handleDownload}
+                            disabled={isDownloading}
+                        >
+                            {isDownloading ? (
+                                <Loader2 size={14} className="mr-2 animate-spin" />
+                            ) : (
+                                <Download size={14} className="mr-2" />
+                            )}
+                            Descargar Recibo
+                        </Button>
+                    </div>
                 )}
             </CardContent>
         </Card>

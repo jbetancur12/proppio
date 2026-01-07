@@ -4,6 +4,7 @@ import { PaymentsService } from '../services/payments.service';
 import { createPaymentSchema, updatePaymentSchema } from '../dtos/payment.dto';
 import { ApiResponse } from '../../../shared/utils/ApiResponse';
 import { ValidationError } from '../../../shared/errors/AppError';
+import { generatePaymentReceipt } from '../utils/pdfGenerator';
 
 /**
  * PaymentsController - HTTP layer only
@@ -80,6 +81,31 @@ export class PaymentsController {
             const service = this.getService();
             const summary = await service.getPaymentSummary(leaseId);
             ApiResponse.success(res, summary);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async downloadReceipt(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const service = this.getService();
+            const payment = await service.findOne(id);
+
+            const renter = (payment.lease as any)?.renter;
+            const tenantName = renter
+                ? `${renter.firstName} ${renter.lastName}`
+                : 'Arrendatario';
+
+            const pdfBuffer = await generatePaymentReceipt({
+                payment,
+                tenantName,
+                companyName: 'Rent Manager'
+            });
+
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=recibo-${id.slice(0, 8)}.pdf`);
+            res.send(pdfBuffer);
         } catch (error) {
             next(error);
         }

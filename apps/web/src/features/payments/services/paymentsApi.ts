@@ -46,5 +46,21 @@ export const paymentsApi = {
     getSummary: async (leaseId: string): Promise<{ total: number; count: number }> => {
         const res = await api.get(`/api/payments/summary/${leaseId}`);
         return res.data.data;
+    },
+
+    downloadReceipt: async (id: string, reference?: string) => {
+        const res = await api.get(`/api/payments/${id}/receipt`, {
+            responseType: 'blob'
+        });
+
+        // Create download link
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        const filename = reference ? `recibo-${reference}.pdf` : `recibo-${id.slice(0, 8)}.pdf`;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
     }
 };
