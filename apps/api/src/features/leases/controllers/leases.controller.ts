@@ -90,4 +90,15 @@ export class LeasesController {
             next(error);
         }
     }
+
+    async getExpiring(req: Request, res: Response, next: NextFunction) {
+        try {
+            const days = req.query.days ? parseInt(req.query.days as string) : 60;
+            const service = this.getService();
+            const leases = await service.findExpiring(days);
+            ApiResponse.success(res, leases);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

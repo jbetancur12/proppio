@@ -9,6 +9,13 @@ export function useLeases() {
     });
 }
 
+export function useExpiringLeases(days: number = 60) {
+    return useQuery({
+        queryKey: ['leases', 'expiring', days],
+        queryFn: () => leasesApi.getExpiring(days)
+    });
+}
+
 export function useLease(id: string) {
     return useQuery({
         queryKey: ['lease', id],

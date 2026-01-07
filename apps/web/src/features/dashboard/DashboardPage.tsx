@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
-import { Plus, Search, Building, TrendingUp, Users, DollarSign, FileText } from "lucide-react"
+import { Plus, Search, Building, TrendingUp, Users, DollarSign, FileText, AlertTriangle, ArrowRight } from "lucide-react"
 import { useProperties, useCreateProperty } from "../properties/hooks/useProperties"
 import { PropertyCard } from "../properties/components/PropertyCard"
 import { useDashboardStats } from "./hooks/useDashboardStats"
+import { useExpiringLeases } from "../leases/hooks/useLeases"
 
 /**
  * Dashboard - Container component
@@ -20,6 +21,7 @@ export function DashboardPage() {
 
     const { data: properties, isLoading } = useProperties()
     const { data: stats } = useDashboardStats()
+    const { data: expiringLeases } = useExpiringLeases(60)
     const createMutation = useCreateProperty()
 
     const handleCreate = () => {
@@ -52,6 +54,38 @@ export function DashboardPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Expiring Leases Alert (Only if any) */}
+            {expiringLeases && expiringLeases.length > 0 && (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 text-amber-800 font-bold">
+                            <AlertTriangle size={20} className="text-amber-600" />
+                            <h3>Próximos Vencimientos de Contratos (60 días)</h3>
+                        </div>
+                        <Button variant="ghost" size="sm" className="text-amber-700 hover:text-amber-900" onClick={() => navigate('/leases')}>
+                            Ver Todos <ArrowRight size={16} className="ml-1" />
+                        </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {expiringLeases.slice(0, 3).map((lease: any) => {
+                            const daysLeft = Math.ceil((new Date(lease.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+                            const isUrgent = daysLeft <= 30;
+                            return (
+                                <div key={lease.id} className="bg-white p-3 rounded-lg border border-amber-100 shadow-sm flex justify-between items-center group cursor-pointer hover:border-amber-300 transition-all" onClick={() => navigate('/leases')}>
+                                    <div>
+                                        <p className="font-bold text-gray-900 text-sm">{lease.unit?.name}</p>
+                                        <p className="text-xs text-gray-500">{lease.renter?.firstName} {lease.renter?.lastName}</p>
+                                    </div>
+                                    <div className={`text-xs font-bold px-2 py-1 rounded ${isUrgent ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                                        {daysLeft} días
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Stats Overview - Row 1 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

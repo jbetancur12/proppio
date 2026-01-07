@@ -107,4 +107,18 @@ export class LeasesService {
         await this.em.flush();
         return lease;
     }
+
+    async findExpiring(days: number = 60): Promise<Lease[]> {
+        const today = new Date();
+        const futureDate = new Date();
+        futureDate.setDate(today.getDate() + days);
+
+        return this.em.find(Lease, {
+            status: LeaseStatus.ACTIVE,
+            endDate: { $gte: today, $lte: futureDate }
+        }, {
+            populate: ['unit', 'renter', 'unit.property'],
+            orderBy: { endDate: 'ASC' }
+        });
+    }
 }

@@ -18,6 +18,11 @@ export const leasesApi = {
         return res.data.data;
     },
 
+    getExpiring: async (days: number = 60): Promise<LeaseData[]> => {
+        const res = await api.get(`/api/leases/expiring?days=${days}`);
+        return res.data.data;
+    },
+
     getById: async (id: string): Promise<LeaseData> => {
         const res = await api.get(`/api/leases/${id}`);
         return res.data.data;
