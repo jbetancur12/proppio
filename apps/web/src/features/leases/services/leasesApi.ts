@@ -23,6 +23,7 @@ export interface LeaseData {
     securityDeposit?: number;
     status: 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'TERMINATED';
     notes?: string;
+    contractPdfPath?: string;
 }
 
 export const leasesApi = {

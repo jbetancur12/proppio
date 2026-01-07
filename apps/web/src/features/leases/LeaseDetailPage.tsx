@@ -3,7 +3,7 @@ import { ArrowLeft, Calendar, User, Home, DollarSign, FileText, CheckCircle, Ale
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useLease, useTerminateLease, useActivateLease } from "./hooks/useLeases";
+import { useLease, useTerminateLease, useActivateLease, useUploadContract } from "./hooks/useLeases";
 import { usePayments } from "../payments/hooks/usePayments";
 import { PaymentCard } from "../payments/components/PaymentCard";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ export function LeaseDetailPage() {
     const { data: payments } = usePayments(id);
     const terminateMutation = useTerminateLease();
     const activateMutation = useActivateLease();
+    const uploadContractMutation = useUploadContract();
 
     if (isLoading) return <div className="p-8 text-center text-gray-500">Cargando detalles del contrato...</div>;
     if (!lease) return <div className="p-8 text-center text-red-500">Contrato no encontrado</div>;
@@ -176,10 +177,35 @@ export function LeaseDetailPage() {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {/* Placeholder for Upload Button - To be implemented next step */}
-                                        <Button variant="outline" size="sm">
-                                            Subir PDF
-                                        </Button>
+                                        <input
+                                            type="file"
+                                            id="upload-contract"
+                                            className="hidden"
+                                            accept="application/pdf"
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    uploadContractMutation.mutate({ id: id!, file });
+                                                }
+                                            }}
+                                        />
+                                        {lease.contractPdfPath ? (
+                                            <div className="flex gap-2">
+                                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                    Subido
+                                                </Badge>
+                                                {/* Future: Add Download Button */}
+                                            </div>
+                                        ) : (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => document.getElementById('upload-contract')?.click()}
+                                                disabled={uploadContractMutation.isPending}
+                                            >
+                                                {uploadContractMutation.isPending ? 'Subiendo...' : 'Subir PDF'}
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             </div>

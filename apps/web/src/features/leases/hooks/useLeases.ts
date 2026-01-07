@@ -68,3 +68,18 @@ export function useTerminateLease() {
         }
     });
 }
+
+export function useUploadContract() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, file }: { id: string; file: File }) => leasesApi.uploadContract(id, file),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['lease', variables.id] });
+            toast.success("Contrato subido exitosamente");
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error?.message || "Error al subir contrato");
+        }
+    });
+}
