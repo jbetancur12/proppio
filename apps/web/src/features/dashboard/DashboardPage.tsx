@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
-import { Plus, Search, Building, TrendingUp, Users, DollarSign, Home, FileText } from "lucide-react"
+import { Plus, Search, Building, TrendingUp, Users, DollarSign, FileText } from "lucide-react"
 import { useProperties, useCreateProperty } from "../properties/hooks/useProperties"
 import { PropertyCard } from "../properties/components/PropertyCard"
 import { useDashboardStats } from "./hooks/useDashboardStats"
@@ -103,15 +103,16 @@ export function DashboardPage() {
             </div>
 
             {/* Stats Overview - Row 2 (Financial) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="border-none shadow-sm">
                     <CardContent className="p-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 font-medium text-sm">Canon Esperado (Mes)</p>
-                                <h3 className="text-xl font-bold mt-1 text-gray-900">{formatCurrency(stats?.monthlyExpectedIncome || 0)}</h3>
+                                <p className="text-gray-500 font-medium text-sm">Ingresos (Mes)</p>
+                                <h3 className="text-xl font-bold mt-1 text-green-600">{formatCurrency(stats?.monthlyReceivedIncome || 0)}</h3>
+                                <p className="text-xs text-gray-400 mt-1">Esperado: {formatCurrency(stats?.monthlyExpectedIncome || 0)}</p>
                             </div>
-                            <div className="p-2.5 bg-amber-50 rounded-lg text-amber-600"><Home size={20} /></div>
+                            <div className="p-2.5 bg-green-50 rounded-lg text-green-600"><DollarSign size={20} /></div>
                         </div>
                     </CardContent>
                 </Card>
@@ -119,10 +120,21 @@ export function DashboardPage() {
                     <CardContent className="p-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500 font-medium text-sm">Recaudado (Mes)</p>
-                                <h3 className="text-xl font-bold mt-1 text-green-600">{formatCurrency(stats?.monthlyReceivedIncome || 0)}</h3>
+                                <p className="text-gray-500 font-medium text-sm">Gastos (Mes)</p>
+                                <h3 className="text-xl font-bold mt-1 text-red-600">-{formatCurrency(stats?.monthlyExpenses || 0)}</h3>
                             </div>
-                            <div className="p-2.5 bg-green-50 rounded-lg text-green-600"><DollarSign size={20} /></div>
+                            <div className="p-2.5 bg-red-50 rounded-lg text-red-600"><TrendingUp className="rotate-180" size={20} /></div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-50 to-white border-indigo-100 border">
+                    <CardContent className="p-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-indigo-600 font-medium text-sm">Utilidad Neta</p>
+                                <h3 className="text-xl font-bold mt-1 text-indigo-700">{formatCurrency(stats?.netIncome || 0)}</h3>
+                            </div>
+                            <div className="p-2.5 bg-indigo-100 rounded-lg text-indigo-600"><DollarSign size={20} /></div>
                         </div>
                     </CardContent>
                 </Card>

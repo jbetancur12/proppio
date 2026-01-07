@@ -10,7 +10,8 @@ import {
     LogOut,
     Menu,
     FileText,
-    DollarSign
+    DollarSign,
+    TrendingDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         { label: "Inquilinos", href: "/renters", icon: Users },
         { label: "Contratos", href: "/leases", icon: FileText },
         { label: "Pagos", href: "/payments", icon: DollarSign },
+        { label: "Gastos", href: "/expenses", icon: TrendingDown },
         { label: "Configuración", href: "/settings", icon: Settings },
     ];
 

@@ -10,6 +10,8 @@ export interface DashboardStats {
     activeLeases: number;
     monthlyExpectedIncome: number;
     monthlyReceivedIncome: number;
+    monthlyExpenses: number;
+    netIncome: number;
     collectionRate: number;
 }
 

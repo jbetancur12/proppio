@@ -12,6 +12,7 @@ import { PropertyDetailPage } from './features/properties/PropertyDetailPage';
 import { RentersPage } from './features/renters/RentersPage';
 import { LeasesPage } from './features/leases/LeasesPage';
 import { PaymentsPage } from './features/payments/PaymentsPage';
+import { ExpensesPage } from './features/expenses/ExpensesPage';
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,11 @@ function App() {
             <Route path="/payments" element={
               <ProtectedRoute>
                 <PaymentsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/expenses" element={
+              <ProtectedRoute>
+                <ExpensesPage />
               </ProtectedRoute>
             } />
             <Route path="*" element={<Navigate to="/dashboard" />} />

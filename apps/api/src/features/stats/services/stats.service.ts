@@ -4,6 +4,7 @@ import { UnitEntity, UnitStatus } from "../../properties/entities/Unit";
 import { Renter } from "../../renters/entities/Renter";
 import { Lease, LeaseStatus } from "../../leases/entities/Lease";
 import { Payment, PaymentStatus } from "../../payments/entities/Payment";
+import { Expense } from "../../expenses/entities/Expense";
 
 export interface DashboardStats {
     totalProperties: number;
@@ -15,6 +16,8 @@ export interface DashboardStats {
     activeLeases: number;
     monthlyExpectedIncome: number;
     monthlyReceivedIncome: number;
+    monthlyExpenses: number;
+    netIncome: number;
     collectionRate: number;
 }
 
@@ -52,6 +55,15 @@ export class StatsService {
         });
         const monthlyReceivedIncome = payments.reduce((sum, p) => sum + p.amount, 0);
 
+        // Monthly expenses
+        const expenses = await this.em.find(Expense, {
+            date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+        });
+        const monthlyExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+        // Net Income
+        const netIncome = monthlyReceivedIncome - monthlyExpenses;
+
         // Collection rate
         const collectionRate = monthlyExpectedIncome > 0
             ? Math.round((monthlyReceivedIncome / monthlyExpectedIncome) * 100)
@@ -67,6 +79,8 @@ export class StatsService {
             activeLeases,
             monthlyExpectedIncome,
             monthlyReceivedIncome,
+            monthlyExpenses,
+            netIncome,
             collectionRate
         };
     }
