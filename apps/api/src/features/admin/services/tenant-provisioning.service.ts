@@ -34,12 +34,11 @@ export class TenantProvisioningService {
         }
 
         // Create tenant
-        const tenant = new Tenant({
-            name: data.name,
-            slug: data.slug,
-            status: TenantStatus.ACTIVE,
-            plan: data.plan || 'FREE'
-        });
+        const tenant = new Tenant();
+        tenant.name = data.name;
+        tenant.slug = data.slug;
+        tenant.status = TenantStatus.ACTIVE;
+        tenant.plan = data.plan || 'FREE';
 
         // Create admin user
         const passwordHash = await bcrypt.hash(data.adminUser.password, 10);

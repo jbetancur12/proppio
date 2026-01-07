@@ -23,7 +23,7 @@ export class AdminService {
     }
 
     async getTenantStats(tenantId: string): Promise<TenantStats> {
-        const propertiesCount = await this.em.count(PropertyEntity, { tenant: { id: tenantId } });
+        const propertiesCount = await this.em.count(PropertyEntity, { tenantId });
         const leasesCount = await this.em.count(Lease, { tenantId });
         const usersCount = await this.em.count(TenantUser, { tenant: { id: tenantId } });
 
