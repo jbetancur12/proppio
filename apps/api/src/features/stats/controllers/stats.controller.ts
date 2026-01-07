@@ -23,4 +23,14 @@ export class StatsController {
             next(error);
         }
     }
+
+    async getHistory(req: Request, res: Response, next: NextFunction) {
+        try {
+            const service = this.getService();
+            const history = await service.getFinancialHistory(12); // Default to last 12 months
+            ApiResponse.success(res, history);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

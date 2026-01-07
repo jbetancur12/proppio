@@ -84,4 +84,61 @@ export class StatsService {
             collectionRate
         };
     }
+
+    async getFinancialHistory(months: number = 6) {
+        // Calculate date range
+        const end = new Date();
+        const start = new Date();
+        start.setMonth(start.getMonth() - months + 1);
+        start.setDate(1); // First day of start month
+        start.setHours(0, 0, 0, 0);
+
+        // Fetch Payments
+        const payments = await this.em.find(Payment, {
+            status: PaymentStatus.COMPLETED,
+            paymentDate: { $gte: start }
+        });
+
+        // Fetch Expenses
+        const expenses = await this.em.find(Expense, {
+            date: { $gte: start }
+        });
+
+        // Group by Month
+        const historyMap = new Map<string, { income: number; expense: number }>();
+
+        // Initialize all months to ensure no gaps
+        for (let i = 0; i < months; i++) {
+            const d = new Date(start);
+            d.setMonth(d.getMonth() + i);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            historyMap.set(key, { income: 0, expense: 0 });
+        }
+
+        // Aggregate Income
+        payments.forEach(p => {
+            const d = new Date(p.paymentDate);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            if (historyMap.has(key)) {
+                const entry = historyMap.get(key)!;
+                entry.income += p.amount;
+            }
+        });
+
+        // Aggregate Expenses
+        expenses.forEach(e => {
+            const d = new Date(e.date);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            if (historyMap.has(key)) {
+                const entry = historyMap.get(key)!;
+                entry.expense += e.amount;
+            }
+        });
+
+        // Convert to Array
+        return Array.from(historyMap.entries()).map(([month, data]) => ({
+            month, // Format: YYYY-MM
+            ...data
+        })).sort((a, b) => a.month.localeCompare(b.month));
+    }
 }

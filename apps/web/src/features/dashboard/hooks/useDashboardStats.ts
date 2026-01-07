@@ -8,3 +8,11 @@ export function useDashboardStats() {
         refetchInterval: 30000 // Refresh every 30 seconds
     });
 }
+
+export function useFinancialHistory() {
+    return useQuery({
+        queryKey: ['financial-history'],
+        queryFn: statsApi.getHistory,
+        refetchInterval: 300000 // 5 minutes
+    });
+}

@@ -6,8 +6,9 @@ import { useState } from "react"
 import { Plus, Search, Building, TrendingUp, Users, DollarSign, FileText, AlertTriangle, ArrowRight } from "lucide-react"
 import { useProperties, useCreateProperty } from "../properties/hooks/useProperties"
 import { PropertyCard } from "../properties/components/PropertyCard"
-import { useDashboardStats } from "./hooks/useDashboardStats"
+import { useDashboardStats, useFinancialHistory } from "./hooks/useDashboardStats"
 import { useExpiringLeases } from "../leases/hooks/useLeases"
+import { FinancialChart } from "./components/FinancialChart"
 
 /**
  * Dashboard - Container component
@@ -21,6 +22,7 @@ export function DashboardPage() {
 
     const { data: properties, isLoading } = useProperties()
     const { data: stats } = useDashboardStats()
+    const { data: financialHistory } = useFinancialHistory()
     const { data: expiringLeases } = useExpiringLeases(60)
     const createMutation = useCreateProperty()
 
@@ -187,6 +189,13 @@ export function DashboardPage() {
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+
+            {/* Financial History Chart */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <FinancialChart data={financialHistory} />
+
+                {/* Add Quick Actions or Recent Activity here later if needed */}
             </div>
 
             {/* Create Form */}

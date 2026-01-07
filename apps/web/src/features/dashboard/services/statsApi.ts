@@ -19,5 +19,10 @@ export const statsApi = {
     getDashboard: async (): Promise<DashboardStats> => {
         const res = await api.get('/api/stats/dashboard');
         return res.data.data;
+    },
+
+    getHistory: async (): Promise<{ month: string; income: number; expense: number }[]> => {
+        const res = await api.get('/api/stats/history');
+        return res.data.data;
     }
 };
