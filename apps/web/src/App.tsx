@@ -16,6 +16,7 @@ import { LeaseDetailPage } from './features/leases/LeaseDetailPage';
 import { PaymentsPage } from './features/payments/PaymentsPage';
 import { ExpensesPage } from './features/expenses/ExpensesPage';
 import { MaintenancePage } from './features/maintenance/MaintenancePage';
+import { SubscriptionSuspendedPage } from './pages/SubscriptionSuspendedPage';
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ function App() {
                 <MaintenancePage />
               </ProtectedRoute>
             } />
+            <Route path="/subscription-suspended" element={<SubscriptionSuspendedPage />} />
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
           <Toaster />

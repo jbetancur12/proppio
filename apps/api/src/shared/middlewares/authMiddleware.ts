@@ -26,14 +26,46 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
+        // Get EntityManager for DB operations
+        const em = MikroContext.getEntityManager();
+        if (!em) {
+            res.status(500).json({ message: 'Internal server error' });
+            return;
+        }
+
+        // KILL SWITCH: Check tenant status
+        const { Tenant, TenantStatus } = await import('../../features/tenants/entities/Tenant');
+        const tenant = await em.findOne(Tenant, { id: decoded.tenantId });
+
+        if (!tenant) {
+            res.status(401).json({
+                success: false,
+                error: {
+                    code: 'TENANT_NOT_FOUND',
+                    message: 'Tenant not found'
+                },
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+
+        if (tenant.status === TenantStatus.SUSPENDED) {
+            res.status(402).json({
+                success: false,
+                error: {
+                    code: 'SUBSCRIPTION_REQUIRED',
+                    message: 'Tu suscripción ha sido suspendida. Por favor contacta a soporte.'
+                },
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+
         // CRITICAL: Set PostgreSQL RLS variable for Row Level Security
         // This enables the third layer of multi-tenancy defense
-        const em = MikroContext.getEntityManager();
-        if (em) {
-            await em.getConnection().execute(
-                `SET LOCAL app.current_tenant = '${decoded.tenantId}'`
-            );
-        }
+        await em.getConnection().execute(
+            `SET LOCAL app.current_tenant = '${decoded.tenantId}'`
+        );
 
         // Wrap the next() call in the AsyncLocalStorage context
         requestContext.run(decoded, () => {
