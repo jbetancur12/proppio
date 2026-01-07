@@ -23,7 +23,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     const navItems = [
         { label: "Panel", href: "/dashboard", icon: Home },
         { label: "Propiedades", href: "/properties", icon: Building }, // Placeholder route
-        { label: "Inquilinos", href: "/tenants", icon: Users }, // Placeholder
+        { label: "Inquilinos", href: "/renters", icon: Users },
         { label: "Configuración", href: "/settings", icon: Settings }, // Placeholder
     ];
 

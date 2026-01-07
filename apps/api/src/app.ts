@@ -7,6 +7,8 @@ import propertyRoutes from './features/properties/routes';
 import authRoutes from './features/auth/routes';
 import { errorMiddleware } from './shared/middlewares/errorMiddleware';
 
+import renterRoutes from './features/renters/routes';
+
 export const createApp = async () => {
     // 1. Initialize ORM
     const orm = await MikroORM.init(config);
@@ -31,7 +33,8 @@ export const createApp = async () => {
     apiRouter.use(authMiddleware);
 
     // Feature Routes
-    app.use('/api/properties', propertyRoutes);
+    apiRouter.use('/properties', propertyRoutes);
+    apiRouter.use('/renters', renterRoutes);
 
     // Example protected route to verify context
     apiRouter.get('/me', (req, res) => {
