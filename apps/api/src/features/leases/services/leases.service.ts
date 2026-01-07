@@ -121,4 +121,11 @@ export class LeasesService {
             orderBy: { endDate: 'ASC' }
         });
     }
+
+    async updateContractPdf(id: string, filePath: string): Promise<Lease> {
+        const lease = await this.findOne(id);
+        lease.contractPdfPath = filePath;
+        await this.em.flush();
+        return lease;
+    }
 }

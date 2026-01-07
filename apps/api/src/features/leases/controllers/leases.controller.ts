@@ -5,6 +5,8 @@ import { createLeaseSchema, updateLeaseSchema } from '../dtos/lease.dto';
 import { ApiResponse } from '../../../shared/utils/ApiResponse';
 import { ValidationError } from '../../../shared/errors/AppError';
 
+import { storageService } from '../../../shared/services/storage.service';
+
 /**
  * LeasesController - HTTP layer only, delegates to service
  * Following design_guidelines.md section 2.1 (SRP)
@@ -97,6 +99,29 @@ export class LeasesController {
             const service = this.getService();
             const leases = await service.findExpiring(days);
             ApiResponse.success(res, leases);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async uploadContract(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const file = req.file;
+            if (!file) throw new ValidationError('No se proporcionó ningún archivo');
+
+            // Upload to S3/MinIO
+            const bucketName = process.env.STORAGE_BUCKET || 'rent-manager-documents';
+            await storageService.ensureBucket(bucketName);
+
+            const key = `leases/${id}/contract.pdf`; // Standard path
+            await storageService.uploadBuffer(bucketName, key, file.buffer, file.mimetype);
+
+            // Update lease record
+            const service = this.getService();
+            const lease = await service.updateContractPdf(id, key);
+
+            ApiResponse.success(res, lease, 'Contrato subido exitosamente');
         } catch (error) {
             next(error);
         }

@@ -10,6 +10,11 @@ router.get('/:id', (req, res, next) => controller.getOne(req, res, next));
 router.post('/', (req, res, next) => controller.create(req, res, next));
 router.put('/:id', (req, res, next) => controller.update(req, res, next));
 router.post('/:id/activate', (req, res, next) => controller.activate(req, res, next));
+import multer from 'multer';
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+router.post('/:id/documents', upload.single('file'), (req, res, next) => controller.uploadContract(req, res, next));
 router.post('/:id/terminate', (req, res, next) => controller.terminate(req, res, next));
 
 export default router;

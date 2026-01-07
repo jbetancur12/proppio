@@ -62,5 +62,14 @@ export const leasesApi = {
     terminate: async (id: string) => {
         const res = await api.post(`/api/leases/${id}/terminate`);
         return res.data.data;
+    },
+
+    uploadContract: async (id: string, file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await api.post(`/api/leases/${id}/documents`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return res.data.data;
     }
 };

@@ -155,6 +155,37 @@ export function LeaseDetailPage() {
                         </CardContent>
                     </Card>
 
+                    {/* Documents Section */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <FileText size={18} className="text-gray-600" /> Documentos
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {/* Contract File */}
+                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-white rounded border border-gray-200">
+                                            <FileText size={24} className="text-red-500" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-gray-900">Contrato de Arrendamiento</p>
+                                            <p className="text-xs text-gray-500">PDF Firmado</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {/* Placeholder for Upload Button - To be implemented next step */}
+                                        <Button variant="outline" size="sm">
+                                            Subir PDF
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* Entities Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Card>
