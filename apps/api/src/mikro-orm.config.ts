@@ -11,6 +11,7 @@ import { PropertyEntity } from './features/properties/entities/Property';
 import { UnitEntity } from './features/properties/entities/Unit';
 import { Renter } from './features/renters/entities/Renter';
 import { Lease } from './features/leases/entities/Lease';
+import { Payment } from './features/payments/entities/Payment';
 import { BaseTenantEntity } from './shared/entities/BaseTenantEntity';
 
 
@@ -23,7 +24,7 @@ export default defineConfig({
     password: process.env.DB_PASSWORD,
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
-    entities: [Tenant, PropertyEntity, UnitEntity, Renter, Lease],
+    entities: [Tenant, PropertyEntity, UnitEntity, Renter, Lease, Payment],
     subscribers: [new TenantSubscriber()],
     debug: process.env.NODE_ENV !== 'production',
     allowGlobalContext: true, // Allow global context for now, will implement AsyncLocalStorage later

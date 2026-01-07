@@ -9,6 +9,7 @@ import { errorMiddleware } from './shared/middlewares/errorMiddleware';
 
 import renterRoutes from './features/renters/routes';
 import leaseRoutes from './features/leases/routes';
+import paymentRoutes from './features/payments/routes';
 
 export const createApp = async () => {
     // 1. Initialize ORM
@@ -37,6 +38,7 @@ export const createApp = async () => {
     apiRouter.use('/properties', propertyRoutes);
     apiRouter.use('/renters', renterRoutes);
     apiRouter.use('/leases', leaseRoutes);
+    apiRouter.use('/payments', paymentRoutes);
 
     // Example protected route to verify context
     apiRouter.get('/me', (req, res) => {

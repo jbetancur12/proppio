@@ -9,7 +9,8 @@ import {
     Settings,
     LogOut,
     Menu,
-    FileText
+    FileText,
+    DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,10 +24,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
     const navItems = [
         { label: "Panel", href: "/dashboard", icon: Home },
-        { label: "Propiedades", href: "/properties", icon: Building }, // Placeholder route
+        { label: "Propiedades", href: "/properties", icon: Building },
         { label: "Inquilinos", href: "/renters", icon: Users },
         { label: "Contratos", href: "/leases", icon: FileText },
-        { label: "Configuración", href: "/settings", icon: Settings }, // Placeholder
+        { label: "Pagos", href: "/payments", icon: DollarSign },
+        { label: "Configuración", href: "/settings", icon: Settings },
     ];
 
     return (
