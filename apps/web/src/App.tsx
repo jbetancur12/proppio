@@ -18,6 +18,12 @@ import { ExpensesPage } from './features/expenses/ExpensesPage';
 import { MaintenancePage } from './features/maintenance/MaintenancePage';
 import { SubscriptionSuspendedPage } from './pages/SubscriptionSuspendedPage';
 import { RentIncreasePage } from './features/leases/RentIncreasePage';
+import { AdminLayout } from './features/admin/components/AdminLayout';
+import { AdminDashboardPage } from './features/admin/AdminDashboardPage';
+import { TenantsPage } from './features/admin/TenantsPage';
+import { CreateTenantPage } from './features/admin/CreateTenantPage';
+import { TenantDetailPage } from './features/admin/TenantDetailPage';
+import { UsersPage } from './features/admin/UsersPage';
 
 const queryClient = new QueryClient();
 
@@ -85,6 +91,14 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/subscription-suspended" element={<SubscriptionSuspendedPage />} />
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
+            <Route path="/admin/tenants" element={<AdminLayout><TenantsPage /></AdminLayout>} />
+            <Route path="/admin/tenants/create" element={<AdminLayout><CreateTenantPage /></AdminLayout>} />
+            <Route path="/admin/tenants/:id" element={<AdminLayout><TenantDetailPage /></AdminLayout>} />
+            <Route path="/admin/users" element={<AdminLayout><UsersPage /></AdminLayout>} />
+
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
           <Toaster />
