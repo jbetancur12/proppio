@@ -3,6 +3,8 @@ import cors from 'cors';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import config from './mikro-orm.config';
 import { authMiddleware } from './shared/middlewares/authMiddleware';
+import propertiesRoutes from './features/properties/routes';
+import authRoutes from './features/auth/routes';
 
 export const createApp = async () => {
     const app = express();
@@ -20,11 +22,15 @@ export const createApp = async () => {
 
     // 4. Public Routes (e.g. Health Check, Login)
     app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
+    app.use('/auth', authRoutes);
 
     // 5. Protected Routes Middleware
     // For now, we apply it to everything under /api
     const apiRouter = express.Router();
     apiRouter.use(authMiddleware);
+
+    // Feature Routes
+    apiRouter.use('/properties', propertiesRoutes);
 
     // Example protected route to verify context
     apiRouter.get('/me', (req, res) => {
