@@ -20,6 +20,13 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as UserContext;
 
+        // Get EntityManager for DB operations
+        const em = MikroContext.getEntityManager();
+        if (!em) {
+            res.status(500).json({ message: 'Internal server error' });
+            return;
+        }
+
         // Validate required fields in the token
         if (decoded.globalRole === 'SUPER_ADMIN') {
             // Super Admin: No tenantId required, skip tenant validation
@@ -61,13 +68,6 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         // Regular user: tenantId is required
         if (!decoded.tenantId || !decoded.userId) {
             res.status(401).json({ message: 'Invalid token payload' });
-            return;
-        }
-
-        // Get EntityManager for DB operations
-        const em = MikroContext.getEntityManager();
-        if (!em) {
-            res.status(500).json({ message: 'Internal server error' });
             return;
         }
 

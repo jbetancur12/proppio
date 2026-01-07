@@ -1,9 +1,10 @@
 import { AsyncLocalStorage } from 'async_hooks';
 
 export interface UserContext {
-    tenantId: string;
+    tenantId?: string; // Optional for Super Admin
     userId: string;
-    role: string;
+    role?: string;
+    globalRole?: string; // For Super Admin
 }
 
 export const requestContext = new AsyncLocalStorage<UserContext>();
