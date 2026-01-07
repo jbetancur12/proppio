@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
     Building,
     Home,
@@ -108,9 +108,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         <div className="w-6 h-6 bg-indigo-600 text-white rounded flex items-center justify-center text-xs">R</div>
                         Rent Manager
                     </span>
-                    <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => setOpen(true)}><Menu /></Button>
-                    </SheetTrigger>
+                    <Button variant="ghost" size="icon" onClick={() => setOpen(true)}><Menu /></Button>
                 </header>
                 <div className="flex-1 p-4 md:p-8 overflow-y-auto">
                     <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
