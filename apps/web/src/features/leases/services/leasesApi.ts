@@ -2,8 +2,21 @@ import { api } from "../../../api/client";
 
 export interface LeaseData {
     id: string;
-    unit: { id: string; name: string };
-    renter: { id: string; firstName: string; lastName: string };
+    unit: {
+        id: string;
+        name: string;
+        property?: {
+            id: string;
+            name: string;
+        }
+    };
+    renter: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        email?: string;
+        phone?: string;
+    };
     startDate: string;
     endDate: string;
     monthlyRent: number;

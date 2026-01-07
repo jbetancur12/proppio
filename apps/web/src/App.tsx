@@ -11,6 +11,7 @@ import { DashboardPage } from './features/dashboard/DashboardPage';
 import { PropertyDetailPage } from './features/properties/PropertyDetailPage';
 import { RentersPage } from './features/renters/RentersPage';
 import { LeasesPage } from './features/leases/LeasesPage';
+import { LeaseDetailPage } from './features/leases/LeaseDetailPage';
 import { PaymentsPage } from './features/payments/PaymentsPage';
 import { ExpensesPage } from './features/expenses/ExpensesPage';
 
@@ -47,6 +48,11 @@ function App() {
             <Route path="/leases" element={
               <ProtectedRoute>
                 <LeasesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/leases/:id" element={
+              <ProtectedRoute>
+                <LeaseDetailPage />
               </ProtectedRoute>
             } />
             <Route path="/payments" element={
