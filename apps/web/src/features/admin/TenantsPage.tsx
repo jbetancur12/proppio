@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAllTenants, useUpdateTenantStatus } from '../hooks/useAdmin';
+import { Tenant } from '../services/adminApi';
 import { Eye, Power, PowerOff, Plus } from 'lucide-react';
 
 export function TenantsPage() {
@@ -12,7 +13,7 @@ export function TenantsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'SUSPENDED'>('ALL');
 
-    const filteredTenants = tenants.filter((tenant) => {
+    const filteredTenants = tenants.filter((tenant: Tenant) => {
         const matchesSearch =
             tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             tenant.slug.toLowerCase().includes(searchTerm.toLowerCase());
@@ -101,7 +102,7 @@ export function TenantsPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {filteredTenants.map((tenant) => (
+                                    {filteredTenants.map((tenant: Tenant) => (
                                         <tr key={tenant.id} className="hover:bg-gray-50">
                                             <td className="px-4 py-3 text-sm font-medium">{tenant.name}</td>
                                             <td className="px-4 py-3 text-sm text-gray-600">/{tenant.slug}</td>
@@ -109,8 +110,8 @@ export function TenantsPage() {
                                             <td className="px-4 py-3">
                                                 <span
                                                     className={`inline-block px-2 py-1 text-xs rounded-full ${tenant.status === 'ACTIVE'
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-amber-100 text-amber-700'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-amber-100 text-amber-700'
                                                         }`}
                                                 >
                                                     {tenant.status}

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useGlobalMetrics, useAllTenants } from '../hooks/useAdmin';
+import { Tenant } from '../services/adminApi';
 
 export function AdminDashboardPage() {
     const { data: metrics, isLoading: metricsLoading } = useGlobalMetrics();
@@ -86,7 +87,7 @@ export function AdminDashboardPage() {
                         <p className="text-gray-500">Cargando...</p>
                     ) : (
                         <div className="space-y-3">
-                            {recentTenants.map((tenant) => (
+                            {recentTenants.map((tenant: Tenant) => (
                                 <div
                                     key={tenant.id}
                                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -98,8 +99,8 @@ export function AdminDashboardPage() {
                                     <div className="text-right">
                                         <span
                                             className={`inline-block px-2 py-1 text-xs rounded-full ${tenant.status === 'ACTIVE'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-amber-100 text-amber-700'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-amber-100 text-amber-700'
                                                 }`}
                                         >
                                             {tenant.status}
