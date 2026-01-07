@@ -26,5 +26,5 @@ export class Tenant extends BaseEntity {
     plan?: string;
 
     @Property({ type: 'json', nullable: true })
-    config?: Record<string, any>;
+    config?: Record<string, unknown>;
 }

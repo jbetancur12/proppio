@@ -1,4 +1,4 @@
-import { EntityManager } from "@mikro-orm/core";
+import { EntityManager, FilterQuery } from "@mikro-orm/core";
 import { MaintenanceTicket, TicketStatus } from "../entities/MaintenanceTicket";
 import { CreateTicketDto, UpdateTicketDto } from "../dtos/maintenance.dto";
 import { NotFoundError, ValidationError } from "../../../shared/errors/AppError";
@@ -9,9 +9,9 @@ export class MaintenanceService {
     constructor(private readonly em: EntityManager) { }
 
     async findAll(filters: { status?: string, unitId?: string } = {}): Promise<MaintenanceTicket[]> {
-        const where: any = {};
-        if (filters.status && filters.status !== 'ALL') where.status = filters.status;
-        if (filters.unitId) where.unit = { id: filters.unitId };
+        const where: FilterQuery<MaintenanceTicket> = {};
+        if (filters.status && filters.status !== 'ALL') where.status = filters.status as TicketStatus;
+        if (filters.unitId) where.unit = { id: filters.unitId } as any;
 
         return this.em.find(MaintenanceTicket, where, { populate: ['unit', 'unit.property', 'reportedBy'], orderBy: { createdAt: 'DESC' } });
     }

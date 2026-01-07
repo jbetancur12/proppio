@@ -1,8 +1,10 @@
 import PDFDocument from 'pdfkit';
 import { Payment } from '../entities/Payment';
+import { Lease } from '../../leases/entities/Lease';
+import { UnitEntity } from '../../properties/entities/Unit';
 
 interface ReceiptData {
-    payment: Payment;
+    payment: Payment & { lease: Lease & { unit?: UnitEntity } };
     tenantName: string;
     companyName?: string;
 }
@@ -62,7 +64,7 @@ export function generatePaymentReceipt(data: ReceiptData): Promise<Buffer> {
         doc.fontSize(12).font('Helvetica-Bold').text('POR CONCEPTO DE:');
         doc.moveDown(0.5);
         doc.fontSize(11).font('Helvetica');
-        doc.text(`Arrendamiento: ${(payment.lease as any)?.unit?.name || 'Unidad'}`);
+        doc.text(`Arrendamiento: ${payment.lease.unit?.name || 'Unidad'}`);
         doc.text(`Período: ${formatMonth(payment.periodStart)} - ${formatMonth(payment.periodEnd)}`);
         doc.moveDown(2);
 

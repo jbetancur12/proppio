@@ -1,5 +1,5 @@
-import { EntityManager } from "@mikro-orm/core";
-import { Expense } from "../entities/Expense";
+import { EntityManager, FilterQuery } from "@mikro-orm/core";
+import { Expense, ExpenseCategory, ExpenseStatus } from "../entities/Expense";
 import { CreateExpenseDto, UpdateExpenseDto } from "../dtos/expense.dto";
 import { PropertyEntity } from "../../properties/entities/Property";
 import { UnitEntity } from "../../properties/entities/Unit";
@@ -9,8 +9,8 @@ export class ExpensesService {
     constructor(private readonly em: EntityManager) { }
 
     async findAll(propertyId?: string): Promise<Expense[]> {
-        const where: any = {};
-        if (propertyId) where.property = { id: propertyId };
+        const where: FilterQuery<Expense> = {};
+        if (propertyId) where.property = { id: propertyId } as any;
         return this.em.find(Expense, where, { populate: ['property', 'unit'], orderBy: { date: 'DESC' } });
     }
 
@@ -36,8 +36,8 @@ export class ExpensesService {
         const expense = new Expense({
             ...data,
             date: new Date(data.date),
-            category: data.category as any,
-            status: data.status as any,
+            category: data.category as ExpenseCategory,
+            status: data.status as ExpenseStatus,
             property,
             unit
         });
@@ -52,8 +52,8 @@ export class ExpensesService {
         if (data.description) expense.description = data.description;
         if (data.amount) expense.amount = data.amount;
         if (data.date) expense.date = new Date(data.date);
-        if (data.category) expense.category = data.category as any;
-        if (data.status) expense.status = data.status as any;
+        if (data.category) expense.category = data.category as ExpenseCategory;
+        if (data.status) expense.status = data.status as ExpenseStatus;
         if (data.supplier !== undefined) expense.supplier = data.supplier;
         if (data.invoiceNumber !== undefined) expense.invoiceNumber = data.invoiceNumber;
 
