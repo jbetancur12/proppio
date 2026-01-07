@@ -40,6 +40,9 @@ export class Lease extends BaseTenantEntity {
     @Property({ type: 'string', nullable: true })
     contractPdfPath?: string;
 
+    @Property({ type: 'date', nullable: true })
+    lastIncreaseDate?: Date;
+
     constructor(partial?: Partial<Lease>) {
         super();
         Object.assign(this, partial);

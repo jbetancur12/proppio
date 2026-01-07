@@ -126,4 +126,68 @@ export class LeasesController {
             next(error);
         }
     }
+
+    // Rent Increase Methods
+    async previewIncreases(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { increasePercentage } = req.query;
+            const { RentIncreaseService } = await import('../services/rent-increase.service');
+            const service = new RentIncreaseService(RequestContext.getEntityManager()!);
+
+            const previews = await service.previewIncreases(Number(increasePercentage));
+            ApiResponse.success(res, previews);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async applyIncrease(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { RentIncreaseService } = await import('../services/rent-increase.service');
+            const service = new RentIncreaseService(RequestContext.getEntityManager()!);
+
+            await service.applyIncrease(req.body);
+            ApiResponse.success(res, null, 'Aumento aplicado exitosamente');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async bulkApplyIncreases(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { RentIncreaseService } = await import('../services/rent-increase.service');
+            const service = new RentIncreaseService(RequestContext.getEntityManager()!);
+
+            await service.bulkApplyIncreases(req.body);
+            ApiResponse.success(res, null, `${req.body.increases.length} aumentos aplicados exitosamente`);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getIPC(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { year } = req.params;
+            const { RentIncreaseService } = await import('../services/rent-increase.service');
+            const service = new RentIncreaseService(RequestContext.getEntityManager()!);
+
+            const ipc = await service.getIPCForYear(Number(year));
+            ApiResponse.success(res, { year: Number(year), ipcRate: ipc });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async setIPC(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { year, ipcRate } = req.body;
+            const { RentIncreaseService } = await import('../services/rent-increase.service');
+            const service = new RentIncreaseService(RequestContext.getEntityManager()!);
+
+            await service.setIPCForYear(Number(year), Number(ipcRate));
+            ApiResponse.success(res, null, `IPC ${year} configurado: ${ipcRate}%`);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
