@@ -2,6 +2,7 @@ import { EntityManager, EntityRepository, wrap } from '@mikro-orm/core';
 import { UnitEntity } from '../entities/Unit';
 import { PropertyEntity } from '../entities/Property';
 import { CreateUnitDto, UpdateUnitDto } from '../dtos/unit.dto';
+import { Lease, LeaseStatus } from '../../leases/entities/Lease';
 
 export class UnitsService {
     private unitRepo: EntityRepository<UnitEntity>;
@@ -27,7 +28,30 @@ export class UnitsService {
     }
 
     async findAllByProperty(propertyId: string) {
-        return this.unitRepo.find({ property: { id: propertyId } });
+        const units = await this.unitRepo.find({ property: { id: propertyId } });
+        if (units.length === 0) return [];
+
+        const unitIds = units.map(u => u.id);
+        const activeLeases = await this.em.find(Lease, {
+            unit: { $in: unitIds },
+            status: LeaseStatus.ACTIVE
+        }, { populate: ['renter'] });
+
+        // Map lease info to units
+        // We return a plain object or extended entity. For simplicity in JS/TS, we can return the entity with attached property
+        // or map to a DTO. Here we will attach it dynamically.
+
+        return units.map(unit => {
+            const lease = activeLeases.find(l => l.unit.id === unit.id);
+            return {
+                ...wrap(unit).toObject(),
+                activeLease: lease ? {
+                    id: lease.id,
+                    renterName: `${lease.renter.firstName} ${lease.renter.lastName}`,
+                    endDate: lease.endDate
+                } : null
+            };
+        });
     }
 
     async update(id: string, dto: UpdateUnitDto) {

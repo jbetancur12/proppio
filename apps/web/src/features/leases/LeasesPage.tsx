@@ -1,18 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, FileText } from "lucide-react";
 import { useLeases, useCreateLease, useActivateLease, useTerminateLease } from "./hooks/useLeases";
 import { useRenters } from "../renters/hooks/useRenters";
 import { useProperties } from "../properties/hooks/useProperties";
 import { LeaseCard } from "./components/LeaseCard";
 
+import { useSearchParams } from "react-router-dom";
+
 /**
  * LeasesPage - Container component
  * Following design_guidelines.md section 3.1
  */
 export function LeasesPage() {
+    const [searchParams] = useSearchParams();
     const [isCreating, setIsCreating] = useState(false);
 
     // Form state
@@ -29,6 +32,17 @@ export function LeasesPage() {
     const createMutation = useCreateLease();
     const activateMutation = useActivateLease();
     const terminateMutation = useTerminateLease();
+
+    // Effect to handle URL params for creation
+    useEffect(() => {
+        if (searchParams.get('create') === 'true') {
+            setIsCreating(true);
+        }
+        const unitId = searchParams.get('unitId');
+        if (unitId) {
+            setSelectedUnit(unitId);
+        }
+    }, [searchParams]);
 
     // Flatten units from all properties
     const allUnits = properties?.flatMap((p: any) =>

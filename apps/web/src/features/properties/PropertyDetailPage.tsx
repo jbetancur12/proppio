@@ -99,7 +99,7 @@ export function PropertyDetailPage() {
                             {loadingUnits ? <p>Cargando...</p> : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {units?.map((u: any) => (
-                                        <Card key={u.id} className="hover:border-indigo-300 transition-colors cursor-pointer group">
+                                        <Card key={u.id} className={`hover:border-indigo-300 transition-colors group ${u.activeLease ? 'border-green-100 bg-green-50/20' : ''}`}>
                                             <CardContent className="p-4 flex justify-between items-center">
                                                 <div>
                                                     <h4 className="font-bold text-lg text-gray-800 group-hover:text-indigo-600">{u.name}</h4>
@@ -110,7 +110,35 @@ export function PropertyDetailPage() {
                                                         <span>{u.area ? `${u.area} m²` : '-- m²'}</span>
                                                     </div>
                                                 </div>
-                                                <div className="h-2 w-2 rounded-full bg-red-500" title="Vacante (Demo)"></div>
+                                                <div className="text-right">
+                                                    {u.activeLease ? (
+                                                        <div className="space-y-1">
+                                                            <div className="h-2 w-2 rounded-full bg-green-500 ml-auto" title="Ocupado"></div>
+                                                            <div
+                                                                className="text-xs font-semibold text-indigo-600 cursor-pointer hover:underline flex items-center justify-end gap-1"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    navigate(`/leases/${u.activeLease.id}`);
+                                                                }}
+                                                            >
+                                                                <User size={10} />
+                                                                {u.activeLease.renterName.split(' ')[0]}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="h-7 text-xs border-dashed border-gray-400 text-gray-500 hover:text-indigo-600 hover:border-indigo-600 hover:bg-indigo-50"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(`/leases?create=true&unitId=${u.id}`);
+                                                            }}
+                                                        >
+                                                            <Plus size={12} className="mr-1" /> Asignar
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </CardContent>
                                         </Card>
                                     ))}
