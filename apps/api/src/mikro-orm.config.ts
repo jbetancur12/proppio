@@ -18,6 +18,7 @@ import { BaseTenantEntity } from './shared/entities/BaseTenantEntity';
 import { RentIncrease } from './features/leases/entities/RentIncrease';
 import { User } from './features/auth/entities/User';
 import { TenantUser } from './features/auth/entities/TenantUser';
+import { AuditLog } from './features/admin/entities/AuditLog';
 
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -40,7 +41,8 @@ export default defineConfig({
         MaintenanceTicket,
         RentIncrease,
         User,
-        TenantUser
+        TenantUser,
+        AuditLog
     ],
     subscribers: [new TenantSubscriber()],
     debug: process.env.NODE_ENV !== 'production',
