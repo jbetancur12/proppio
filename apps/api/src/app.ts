@@ -13,6 +13,7 @@ import paymentRoutes from './features/payments/routes';
 import statsRoutes from './features/stats/routes';
 import expenseRoutes from './features/expenses/routes';
 import maintenanceRoutes from './features/maintenance/routes';
+import adminRoutes from './features/admin/routes';
 
 export const createApp = async () => {
     // 1. Initialize ORM
@@ -45,6 +46,9 @@ export const createApp = async () => {
     apiRouter.use('/stats', statsRoutes);
     apiRouter.use('/expenses', expenseRoutes);
     apiRouter.use('/maintenance', maintenanceRoutes);
+
+    // Admin Routes (Super Admin only)
+    apiRouter.use('/admin', adminRoutes);
 
     // Example protected route to verify context
     apiRouter.get('/me', (req, res) => {
