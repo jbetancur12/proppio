@@ -30,6 +30,9 @@ router.get('/:id/exit-notices', (req, res, next) => controller.getExitNotices(re
 router.post('/exit-notices/:noticeId/confirm', (req, res, next) => controller.confirmExitNotice(req, res, next));
 router.post('/exit-notices/:noticeId/cancel', (req, res, next) => controller.cancelExitNotice(req, res, next));
 
+// Test endpoint for manual lease renewal (for testing)
+router.post('/test-renewals', (req, res, next) => controller.testLeaseRenewals(req, res, next));
+
 router.post('/:id/terminate', (req, res, next) => controller.terminate(req, res, next));
 
 export default router;
