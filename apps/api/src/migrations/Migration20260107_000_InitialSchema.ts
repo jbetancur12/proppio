@@ -58,8 +58,8 @@ export class Migration20260107_InitialSchema extends Migration {
         first_name VARCHAR(255) NOT NULL,
         last_name VARCHAR(255) NOT NULL,
         email VARCHAR(255),
-        phone VARCHAR(50),
-        identification_number VARCHAR(100),
+        phone VARCHAR(50) NOT NULL,
+        identification VARCHAR(100) NOT NULL,
         tenant_id UUID NOT NULL,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
