@@ -21,6 +21,7 @@ import { Building2 } from "lucide-react"
 const formSchema = z.object({
     email: z.string().email("Correo inválido"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
+    remember: z.boolean().default(true),
 })
 
 export function LoginPage() {
@@ -32,16 +33,17 @@ export function LoginPage() {
         defaultValues: {
             email: "admin@demo.com",
             password: "",
+            remember: true
         },
     })
 
     const mutation = useMutation({
         mutationFn: async (values: z.infer<typeof formSchema>) => {
-            const res = await api.post("/auth/login", values)
-            return res.data
+            const res = await api.post("/auth/login", { email: values.email, password: values.password })
+            return { ...res.data, remember: values.remember }
         },
         onSuccess: (data) => {
-            login(data.token, data.user)
+            login(data.token, data.user, data.remember)
             toast.success(data.user.globalRole === 'SUPER_ADMIN'
                 ? "¡Bienvenido Super Admin!"
                 : "¡Bienvenido!")
@@ -106,13 +108,24 @@ export function LoginPage() {
                                 )}
                             />
 
-                            <div className="flex items-center justify-between text-sm">
-                                <label className="flex items-center gap-2 text-gray-600 cursor-pointer select-none">
-                                    <input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-                                    Recordarme
-                                </label>
-                                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">¿Olvidaste tu contraseña?</a>
-                            </div>
+                            <FormField
+                                control={form.control}
+                                name="remember"
+                                render={({ field }) => (
+                                    <div className="flex items-center justify-between text-sm">
+                                        <label className="flex items-center gap-2 text-gray-600 cursor-pointer select-none">
+                                            <input
+                                                type="checkbox"
+                                                checked={field.value}
+                                                onChange={field.onChange}
+                                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            Recordarme
+                                        </label>
+                                        <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">¿Olvidaste tu contraseña?</a>
+                                    </div>
+                                )}
+                            />
 
                             <Button type="submit" className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-base shadow-lg shadow-indigo-200 transition-all" disabled={mutation.isPending}>
                                 {mutation.isPending ? "Entrando..." : "Iniciar Sesión"}

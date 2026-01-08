@@ -13,7 +13,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     token: string | null;
-    login: (token: string, user: User) => void;
+    login: (token: string, user: User, remember?: boolean) => void;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -21,9 +21,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+    // Helper to get token from either storage
+    const getStoredToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
+
+    const [token, setToken] = useState<string | null>(getStoredToken());
+
+    // Synchronous initialization for user state
     const [user, setUser] = useState<User | null>(() => {
-        const storedToken = localStorage.getItem('token');
+        const storedToken = getStoredToken();
         if (storedToken) {
             try {
                 const decoded = jwtDecode<User>(storedToken);
@@ -40,7 +45,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (token) {
             try {
                 const decoded = jwtDecode<User>(token);
-                // Check expiry?
                 setUser(decoded);
                 api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             } catch (e) {
@@ -51,14 +55,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [token]);
 
-    const login = (newToken: string, newUser: User) => {
-        localStorage.setItem('token', newToken);
+    const login = (newToken: string, newUser: User, remember: boolean = true) => {
+        if (remember) {
+            localStorage.setItem('token', newToken);
+            sessionStorage.removeItem('token');
+        } else {
+            sessionStorage.setItem('token', newToken);
+            localStorage.removeItem('token');
+        }
         setToken(newToken);
         setUser(newUser);
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
         setToken(null);
         setUser(null);
     };
