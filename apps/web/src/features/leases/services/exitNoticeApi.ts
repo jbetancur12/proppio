@@ -19,22 +19,29 @@ export interface CreateExitNoticeDto {
     mutualAgreement?: boolean;
 }
 
+// New interface to accommodate the change in the create function's data parameter
+export interface CreateExitNoticeData extends CreateExitNoticeDto {
+    leaseId: string;
+}
+
 export const exitNoticeApi = {
-    create: async (leaseId: string, data: CreateExitNoticeDto): Promise<ExitNotice> => {
-        const response = await api.post(`/leases/${leaseId}/exit-notice`, data);
+    create: async (data: CreateExitNoticeData): Promise<ExitNotice> => {
+        const response = await api.post(`/api/leases/${data.leaseId}/exit-notice`, data);
         return response.data.data;
     },
 
     getByLease: async (leaseId: string): Promise<ExitNotice[]> => {
-        const response = await api.get(`/leases/${leaseId}/exit-notices`);
+        const response = await api.get(`/api/leases/${leaseId}/exit-notices`);
         return response.data.data;
     },
 
-    confirm: async (noticeId: string): Promise<void> => {
-        await api.post(`/leases/exit-notices/${noticeId}/confirm`);
+    confirm: async (noticeId: string): Promise<ExitNotice> => {
+        const response = await api.post(`/api/leases/exit-notices/${noticeId}/confirm`);
+        return response.data.data;
     },
 
-    cancel: async (noticeId: string): Promise<void> => {
-        await api.post(`/leases/exit-notices/${noticeId}/cancel`);
+    cancel: async (noticeId: string): Promise<ExitNotice> => {
+        const response = await api.post(`/api/leases/exit-notices/${noticeId}/cancel`);
+        return response.data.data;
     }
 };
