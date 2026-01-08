@@ -42,8 +42,15 @@ export function LoginPage() {
         },
         onSuccess: (data) => {
             login(data.token, data.user)
-            toast.success("¡Bienvenido!")
-            navigate("/dashboard")
+            toast.success(data.user.globalRole === 'SUPER_ADMIN'
+                ? "¡Bienvenido Super Admin!"
+                : "¡Bienvenido!")
+
+            if (data.user.globalRole === 'SUPER_ADMIN') {
+                navigate("/admin")
+            } else {
+                navigate("/dashboard")
+            }
         },
         onError: () => {
             toast.error("Credenciales inválidas")

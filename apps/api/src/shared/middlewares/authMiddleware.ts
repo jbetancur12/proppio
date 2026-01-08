@@ -59,6 +59,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             }
 
             // Continue without tenant context if not impersonating
+            (req as any).user = decoded; // Attach to req for legacy middleware
             requestContext.run(decoded, () => {
                 next();
             });
@@ -99,11 +100,13 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        // CRITICAL: Set PostgreSQL RLS variable for Row Level Security
+        // Crits: Set PostgreSQL RLS variable for Row Level Security
         // This enables the third layer of multi-tenancy defense
         await em.getConnection().execute(
             `SET LOCAL app.current_tenant = '${decoded.tenantId}'`
         );
+
+        (req as any).user = decoded; // Attach to req for legacy middleware
 
         // Wrap the next() call in the AsyncLocalStorage context
         requestContext.run(decoded, () => {

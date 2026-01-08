@@ -55,11 +55,26 @@ export class LeasesService {
         });
 
         await this.em.persistAndFlush(lease);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'CREATE_LEASE',
+                resourceType: 'Lease',
+                resourceId: lease.id,
+                newValues: { ...data, unitId: data.unitId, renterId: data.renterId }
+            });
+        } catch (error) {
+            console.error('Audit log failed for create lease:', error);
+        }
+
         return lease;
     }
 
     async update(id: string, data: UpdateLeaseDto): Promise<Lease> {
         const lease = await this.findOne(id);
+        const oldValues = { ...lease }; // Shallow copy of entity state significantly restricted, better to map if possible, but for audit strictness maybe acceptable
 
         if (data.startDate) lease.startDate = new Date(data.startDate);
         if (data.endDate) lease.endDate = new Date(data.endDate);
@@ -69,6 +84,28 @@ export class LeasesService {
         if (data.notes !== undefined) lease.notes = data.notes;
 
         await this.em.flush();
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'UPDATE_LEASE',
+                resourceType: 'Lease',
+                resourceId: lease.id,
+                oldValues: {
+                    startDate: oldValues.startDate,
+                    endDate: oldValues.endDate,
+                    monthlyRent: oldValues.monthlyRent,
+                    securityDeposit: oldValues.securityDeposit,
+                    status: oldValues.status,
+                    notes: oldValues.notes
+                },
+                newValues: data
+            });
+        } catch (error) {
+            console.error('Audit log failed for update lease:', error);
+        }
+
         return lease;
     }
 
@@ -78,6 +115,7 @@ export class LeasesService {
             throw new ValidationError('Solo contratos en borrador pueden activarse');
         }
 
+        const oldStatus = lease.status;
         lease.status = LeaseStatus.ACTIVE;
 
         // Auto-update unit status to OCCUPIED
@@ -87,6 +125,21 @@ export class LeasesService {
         }
 
         await this.em.flush();
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'ACTIVATE_LEASE',
+                resourceType: 'Lease',
+                resourceId: lease.id,
+                oldValues: { status: oldStatus },
+                newValues: { status: LeaseStatus.ACTIVE }
+            });
+        } catch (error) {
+            console.error('Audit log failed for activate lease:', error);
+        }
+
         return lease;
     }
 
@@ -96,6 +149,7 @@ export class LeasesService {
             throw new ValidationError('Solo contratos activos pueden terminarse');
         }
 
+        const oldStatus = lease.status;
         lease.status = LeaseStatus.TERMINATED;
 
         // Auto-update unit status to VACANT
@@ -105,6 +159,21 @@ export class LeasesService {
         }
 
         await this.em.flush();
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'TERMINATE_LEASE',
+                resourceType: 'Lease',
+                resourceId: lease.id,
+                oldValues: { status: oldStatus },
+                newValues: { status: LeaseStatus.TERMINATED }
+            });
+        } catch (error) {
+            console.error('Audit log failed for terminate lease:', error);
+        }
+
         return lease;
     }
 

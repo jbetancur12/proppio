@@ -4,8 +4,10 @@ import { api } from '../api/client';
 
 interface User {
     userId: string;
-    tenantId: string;
-    role: string;
+    tenantId?: string;
+    role?: string;
+    globalRole?: string;
+    email?: string;
 }
 
 interface AuthContextType {
@@ -20,7 +22,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(() => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+            try {
+                const decoded = jwtDecode<User>(storedToken);
+                api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+                return decoded;
+            } catch (e) {
+                return null;
+            }
+        }
+        return null;
+    });
 
     useEffect(() => {
         if (token) {

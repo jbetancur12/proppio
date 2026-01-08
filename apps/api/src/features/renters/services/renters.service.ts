@@ -28,11 +28,26 @@ export class RentersService {
 
         const renter = new Renter(data);
         await this.em.persistAndFlush(renter);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'CREATE_RENTER',
+                resourceType: 'Renter',
+                resourceId: renter.id,
+                newValues: data
+            });
+        } catch (error) {
+            console.error('Audit log failed for create renter:', error);
+        }
+
         return renter;
     }
 
     async update(id: string, data: UpdateRenterDto): Promise<Renter> {
         const renter = await this.findOne(id);
+        const oldValues = { ...renter }; // Shallow copy
 
         // If updating identification, check uniqueness
         if (data.identification && data.identification !== renter.identification) {
@@ -42,12 +57,51 @@ export class RentersService {
 
         this.em.assign(renter, data);
         await this.em.flush();
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'UPDATE_RENTER',
+                resourceType: 'Renter',
+                resourceId: renter.id,
+                oldValues: {
+                    firstName: oldValues.firstName,
+                    lastName: oldValues.lastName,
+                    email: oldValues.email,
+                    phone: oldValues.phone,
+                    identification: oldValues.identification
+                },
+                newValues: data
+            });
+        } catch (error) {
+            console.error('Audit log failed for update renter:', error);
+        }
+
         return renter;
     }
 
     async delete(id: string): Promise<void> {
         const renter = await this.findOne(id);
+        const oldValues = {
+            name: `${renter.firstName} ${renter.lastName}`,
+            email: renter.email
+        };
+
         await this.em.removeAndFlush(renter);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'DELETE_RENTER',
+                resourceType: 'Renter',
+                resourceId: id,
+                oldValues
+            });
+        } catch (error) {
+            console.error('Audit log failed for delete renter:', error);
+        }
     }
 
     async getHistory(id: string) {

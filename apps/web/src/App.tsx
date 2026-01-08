@@ -25,12 +25,23 @@ import { CreateTenantPage } from './features/admin/CreateTenantPage';
 import { TenantDetailPage } from './features/admin/TenantDetailPage';
 import { UsersPage } from './features/admin/UsersPage';
 import { AuditLogsPage } from './features/admin/AuditLogsPage';
+import { FinancialMetricsPage } from './features/admin/FinancialMetricsPage';
+import { RequireSuperAdmin } from './features/admin/components/RequireSuperAdmin';
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <DashboardLayout>{children}</DashboardLayout> : <Navigate to="/login" />;
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) return <Navigate to="/login" />;
+
+  // Block Super Admin from accessing regular dashboard unless impersonating
+  // (Impersonation logic usually adds something to indicate it, but here we can check if they lack tenantId)
+  if (user?.globalRole === 'SUPER_ADMIN' && !localStorage.getItem('isImpersonating')) {
+    return <Navigate to="/admin" />;
+  }
+
+  return <DashboardLayout>{children}</DashboardLayout>;
 }
 
 function App() {
@@ -94,12 +105,42 @@ function App() {
             <Route path="/subscription-suspended" element={<SubscriptionSuspendedPage />} />
 
             {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
-            <Route path="/admin/tenants" element={<AdminLayout><TenantsPage /></AdminLayout>} />
-            <Route path="/admin/tenants/create" element={<AdminLayout><CreateTenantPage /></AdminLayout>} />
-            <Route path="/admin/tenants/:id" element={<AdminLayout><TenantDetailPage /></AdminLayout>} />
-            <Route path="/admin/users" element={<AdminLayout><UsersPage /></AdminLayout>} />
-            <Route path="/admin/audit-logs" element={<AdminLayout><AuditLogsPage /></AdminLayout>} />
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+              <RequireSuperAdmin>
+                <AdminLayout><AdminDashboardPage /></AdminLayout>
+              </RequireSuperAdmin>
+            } />
+            <Route path="/admin/tenants" element={
+              <RequireSuperAdmin>
+                <AdminLayout><TenantsPage /></AdminLayout>
+              </RequireSuperAdmin>
+            } />
+            <Route path="/admin/tenants/create" element={
+              <RequireSuperAdmin>
+                <AdminLayout><CreateTenantPage /></AdminLayout>
+              </RequireSuperAdmin>
+            } />
+            <Route path="/admin/tenants/:id" element={
+              <RequireSuperAdmin>
+                <AdminLayout><TenantDetailPage /></AdminLayout>
+              </RequireSuperAdmin>
+            } />
+            <Route path="/admin/users" element={
+              <RequireSuperAdmin>
+                <AdminLayout><UsersPage /></AdminLayout>
+              </RequireSuperAdmin>
+            } />
+            <Route path="/admin/audit-logs" element={
+              <RequireSuperAdmin>
+                <AdminLayout><AuditLogsPage /></AdminLayout>
+              </RequireSuperAdmin>
+            } />
+            <Route path="/admin/financial-metrics" element={
+              <RequireSuperAdmin>
+                <AdminLayout><FinancialMetricsPage /></AdminLayout>
+              </RequireSuperAdmin>
+            } />
 
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>

@@ -96,5 +96,10 @@ export const adminApi = {
     getAuditLogs: async (filters: AuditLogFilters): Promise<{ logs: AuditLog[]; count: number }> => {
         const response = await api.get('/api/admin/audit-logs', { params: filters });
         return response.data.data;
+    },
+
+    getFinancialMetrics: async () => {
+        const response = await api.get('/api/admin/metrics/financial');
+        return response.data.data;
     }
 };

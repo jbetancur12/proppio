@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Building2, Users, BarChart3, FileText, Settings } from 'lucide-react';
+import { Building2, Users, BarChart3, FileText, Settings, TrendingUp } from 'lucide-react';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -13,6 +13,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: 'Dashboard', href: '/admin', icon: BarChart3 },
         { name: 'Tenants', href: '/admin/tenants', icon: Building2 },
         { name: 'Users', href: '/admin/users', icon: Users },
+        { name: 'Financial Metrics', href: '/admin/financial-metrics', icon: TrendingUp },
         { name: 'Audit Logs', href: '/admin/audit-logs', icon: FileText },
         { name: 'Settings', href: '/admin/settings', icon: Settings }
     ];

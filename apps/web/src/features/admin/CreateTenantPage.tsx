@@ -67,7 +67,14 @@ export function CreateTenantPage() {
                             <Input
                                 required
                                 value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                onChange={(e) => {
+                                    const name = e.target.value;
+                                    setFormData({
+                                        ...formData,
+                                        name,
+                                        slug: name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+                                    });
+                                }}
                                 placeholder="Ej: Acme Corporation"
                             />
                         </div>

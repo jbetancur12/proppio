@@ -123,6 +123,25 @@ export class AuthService {
 
         await this.em.persistAndFlush(user);
 
+        // Audit Log (need to construct service manually since we are in AuthService)
+        // We can reuse the import if not circular, but AuthService is in 'auth' and AuditLogService in 'admin'.
+        // To avoid circular dependency issues at module level, dynamic import or just using the class if standard import works.
+        // Earlier I used dynamic import in PropertiesService. I'll do the same here to be safe.
+        try {
+            const audit = new AuditLogService(this.em);
+            await audit.log({
+                action: 'REGISTER_USER',
+                resourceType: 'User',
+                resourceId: user.id,
+                newValues: { email: user.email, globalRole: user.globalRole },
+                // If register is called by a logged in user (e.g. admin adding member), context should have userId.
+                // If it's public registration (not implemented yet), then userId might be null, but AuditLogService expects context.
+                // For tenant member addition, it's usually an authenticated action.
+            });
+        } catch (error) {
+            console.error('Audit log failed for register user:', error);
+        }
+
         return { message: 'Usuario creado exitosamente' };
     }
 }

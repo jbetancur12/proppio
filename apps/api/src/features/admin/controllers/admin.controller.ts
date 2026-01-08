@@ -4,6 +4,7 @@ import { AdminService } from '../services/admin.service';
 import { TenantProvisioningService } from '../services/tenant-provisioning.service';
 import { ApiResponse } from '../../../shared/utils/ApiResponse';
 import { AuditLogService } from '../services/audit-log.service';
+import { MetricsService } from '../services/metrics.service';
 
 export class AdminController {
     private getAdminService(): AdminService {
@@ -22,6 +23,12 @@ export class AdminController {
         const em = RequestContext.getEntityManager();
         if (!em) throw new Error('EntityManager not found in context');
         return new AuditLogService(em);
+    }
+
+    private getMetricsService(): MetricsService {
+        const em = RequestContext.getEntityManager();
+        if (!em) throw new Error('EntityManager not found in context');
+        return new MetricsService(em);
     }
 
     async listTenants(req: Request, res: Response, next: NextFunction) {
@@ -99,6 +106,16 @@ export class AdminController {
         try {
             const service = this.getAdminService();
             const metrics = await service.getGlobalMetrics();
+            ApiResponse.success(res, metrics);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getFinancialMetrics(req: Request, res: Response, next: NextFunction) {
+        try {
+            const service = this.getMetricsService();
+            const metrics = await service.getFinancialMetrics();
             ApiResponse.success(res, metrics);
         } catch (error) {
             next(error);
