@@ -31,32 +31,60 @@ export class UnitsService {
     }
 
     async findAllByProperty(propertyId: string) {
-        const units = await this.unitRepo.find({ property: { id: propertyId } });
+        // Use deep populate to get everything in one query (or few optimized queries)
+        const units = await this.unitRepo.find({ property: { id: propertyId } }, {
+            populate: ['leases', 'leases.renter', 'leases.payments'] as any
+        });
+
         if (units.length === 0) return [];
 
-        const unitIds = units.map(u => u.id);
-        const activeLeases = await this.em.find(Lease, {
-            unit: { $in: unitIds },
-            status: LeaseStatus.ACTIVE
-        }, { populate: ['renter'] });
-
-        // Map lease info to units
-        // We return a plain object or extended entity. For simplicity in JS/TS, we can return the entity with attached property
-        // or map to a DTO. Here we will attach it dynamically.
+        const today = new Date();
+        const warningDate = new Date();
+        warningDate.setDate(today.getDate() + 60);
 
         return units.map(unit => {
-            const lease = activeLeases.find(l => l.unit.id === unit.id);
+            // Find active lease from populated collection
+            const leases = unit.leases.getItems();
+            let activeLease: Lease | undefined;
+
+            const alerts: string[] = [];
+            let hasPendingPayments = false;
+            let hasExpiringLeases = false;
+
+            for (const lease of leases) {
+                if (lease.status === LeaseStatus.ACTIVE) {
+                    activeLease = lease;
+
+                    // Check Expiry
+                    const endDate = new Date(lease.endDate);
+                    if (endDate <= warningDate && endDate >= today) {
+                        hasExpiringLeases = true;
+                    }
+
+                    // Check Pending Payments
+                    const payments = lease.payments.getItems();
+                    const pending = payments.some(p => p.status === 'PENDING');
+                    if (pending) {
+                        hasPendingPayments = true;
+                    }
+                }
+            }
+
+            if (hasPendingPayments) alerts.push('PENDING_PAYMENTS');
+            if (hasExpiringLeases) alerts.push('EXPIRING_LEASE');
+
             return {
                 ...wrap(unit).toObject(),
-                activeLease: lease ? {
-                    id: lease.id,
-                    renterId: lease.renter.id,
-                    renterName: `${lease.renter.firstName} ${lease.renter.lastName}`,
-                    email: lease.renter.email,
-                    phone: lease.renter.phone,
-                    startDate: lease.startDate,
-                    endDate: lease.endDate,
-                    monthlyRent: lease.monthlyRent
+                alerts,
+                activeLease: activeLease ? {
+                    id: activeLease.id,
+                    renterId: activeLease.renter.id,
+                    renterName: `${activeLease.renter.firstName} ${activeLease.renter.lastName}`,
+                    email: activeLease.renter.email,
+                    phone: activeLease.renter.phone,
+                    startDate: activeLease.startDate,
+                    endDate: activeLease.endDate,
+                    monthlyRent: activeLease.monthlyRent
                 } : null
             };
         });

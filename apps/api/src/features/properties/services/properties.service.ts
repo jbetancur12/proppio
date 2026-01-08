@@ -10,11 +10,101 @@ export class PropertiesService {
     }
 
     async findAll() {
-        return this.repo.findAll({ populate: ['units'] });
+        // Populate deeply to check for alerts
+        // Note: In a high-scale system, this should be optimized with a custom query or view
+        const properties = await this.repo.findAll({
+            populate: ['units', 'units.leases', 'units.leases.payments'] as any
+        });
+
+        const today = new Date();
+        const warningDate = new Date();
+        warningDate.setDate(today.getDate() + 60); // 60 days warning
+
+        return properties.map(property => {
+            const alerts: string[] = [];
+            const units = property.units.getItems();
+
+            let hasPendingPayments = false;
+            let hasExpiringLeases = false;
+
+            for (const unit of units) {
+                // Safe check for leases in case population failed or type mismatch (though we fixed entity now)
+                const leases = unit.leases?.getItems() || [];
+                for (const lease of leases) {
+                    // Check for Expiring Leases (Active only)
+                    if (lease.status === 'ACTIVE') {
+                        const endDate = new Date(lease.endDate);
+                        if (endDate <= warningDate && endDate >= today) {
+                            hasExpiringLeases = true;
+                        }
+
+                        // Check for Pending Payments
+                        const payments = lease.payments?.getItems() || [];
+                        const pending = payments.some((p: any) => p.status === 'PENDING');
+                        if (pending) {
+                            hasPendingPayments = true;
+                        }
+                    }
+                }
+            }
+
+            if (hasPendingPayments) alerts.push('PENDING_PAYMENTS');
+            if (hasExpiringLeases) alerts.push('EXPIRING_LEASE');
+
+            return {
+                ...property, // properties of the entity
+                units: property.units, // keep units collection
+                alerts // Add alerts
+            };
+        });
     }
 
     async findOne(id: string) {
-        return this.repo.findOneOrFail({ id });
+        const property = await this.repo.findOneOrFail({ id }, {
+            populate: ['units', 'units.leases', 'units.leases.payments'] as any
+        });
+
+        const today = new Date();
+        const warningDate = new Date();
+        warningDate.setDate(today.getDate() + 60);
+
+        // Calculate alerts per unit
+        const unitsWithAlerts = property.units.getItems().map(unit => {
+            const alerts: string[] = [];
+            const leases = unit.leases?.getItems() || [];
+
+            let hasPendingPayments = false;
+            let hasExpiringLeases = false;
+
+            for (const lease of leases) {
+                if (lease.status === 'ACTIVE') {
+                    const endDate = new Date(lease.endDate);
+                    if (endDate <= warningDate && endDate >= today) {
+                        hasExpiringLeases = true;
+                    }
+
+                    const payments = lease.payments?.getItems() || [];
+                    const pending = payments.some((p: any) => p.status === 'PENDING');
+                    if (pending) {
+                        hasPendingPayments = true;
+                    }
+                }
+            }
+
+            if (hasPendingPayments) alerts.push('PENDING_PAYMENTS');
+            if (hasExpiringLeases) alerts.push('EXPIRING_LEASE');
+
+            return {
+                ...unit,
+                alerts
+            };
+        });
+
+        // Return property with modified units
+        return {
+            ...property,
+            units: unitsWithAlerts
+        };
     }
 
     async create(dto: CreatePropertyDto) {

@@ -1,7 +1,8 @@
-import { Entity, Property, ManyToOne, Enum } from "@mikro-orm/core";
+import { Entity, Property, ManyToOne, Enum, OneToMany, Collection } from "@mikro-orm/core";
 import { BaseTenantEntity } from "../../../shared/entities/BaseTenantEntity";
 import { UnitEntity } from "../../properties/entities/Unit";
 import { Renter } from "../../renters/entities/Renter";
+import { Payment } from "../../payments/entities/Payment";
 
 export enum LeaseStatus {
     DRAFT = 'DRAFT',
@@ -54,6 +55,9 @@ export class Lease extends BaseTenantEntity {
 
     @Property({ type: 'date', nullable: true })
     lastIncreaseDate?: Date;
+
+    @OneToMany(() => Payment, payment => payment.lease)
+    payments = new Collection<Payment>(this);
 
     constructor(partial?: Partial<Lease>) {
         super();

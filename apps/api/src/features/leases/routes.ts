@@ -6,6 +6,7 @@ const router = Router();
 const controller = new LeasesController();
 
 router.get('/', (req, res, next) => controller.list(req, res, next));
+router.post('/', (req, res, next) => controller.create(req, res, next));
 router.get('/expiring', (req, res, next) => controller.getExpiring(req, res, next));
 
 // Rent increase routes (before :id to avoid conflicts)

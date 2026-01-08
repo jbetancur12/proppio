@@ -1,6 +1,7 @@
-import { Entity, Property, ManyToOne, Rel, Enum } from '@mikro-orm/core';
+import { Entity, Property, ManyToOne, Rel, Enum, OneToMany, Collection } from '@mikro-orm/core';
 import { BaseTenantEntity } from '../../../shared/entities/BaseTenantEntity';
 import { PropertyEntity } from './Property';
+import { Lease } from '../../leases/entities/Lease';
 
 export enum UnitStatus {
     VACANT = 'VACANT',
@@ -33,4 +34,7 @@ export class UnitEntity extends BaseTenantEntity {
 
     @ManyToOne({ entity: 'PropertyEntity', ref: true })
     property!: Rel<PropertyEntity>;
+
+    @OneToMany(() => Lease, lease => lease.unit)
+    leases = new Collection<Lease>(this);
 }

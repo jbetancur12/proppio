@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { ArrowLeft, Home, User, Settings, BedDouble, Bath, Plus, Trash2, Edit } from "lucide-react";
+import { ArrowLeft, Home, User, Settings, BedDouble, Bath, Plus, Trash2, Edit, Wallet, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProperty, useUnits, useCreateUnit, useUpdateProperty, useDeleteProperty, useUpdateUnit, useDeleteUnit } from "./hooks/useProperties";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -146,6 +146,18 @@ export function PropertyDetailPage() {
                                                         {(u.activeLease || u.status === 'OCCUPIED') && <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none shadow-none">Ocupado</Badge>}
                                                         {(!u.activeLease && u.status === 'MAINTENANCE') && <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none shadow-none">Mantenimiento</Badge>}
                                                         {(!u.activeLease && (!u.status || u.status === 'VACANT')) && <Badge variant="outline" className="text-gray-500 border-gray-200">Vacante</Badge>}
+
+                                                        {/* Alerts */}
+                                                        {u.alerts?.includes('PENDING_PAYMENTS') && (
+                                                            <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none shadow-none flex gap-1 px-1.5">
+                                                                <Wallet size={10} /> Pagos
+                                                            </Badge>
+                                                        )}
+                                                        {u.alerts?.includes('EXPIRING_LEASE') && (
+                                                            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none shadow-none flex gap-1 px-1.5">
+                                                                <Clock size={10} /> Vence
+                                                            </Badge>
+                                                        )}
                                                     </div>
 
                                                     {u.activeLease ? (

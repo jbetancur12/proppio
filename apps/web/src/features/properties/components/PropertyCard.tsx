@@ -1,4 +1,4 @@
-import { Building, MapPin } from "lucide-react";
+import { Building, MapPin, Wallet, Clock } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 interface PropertyCardProps {
@@ -7,6 +7,7 @@ interface PropertyCardProps {
         name: string;
         address: string;
         units?: unknown[];
+        alerts?: string[];
     };
     onClick?: () => void;
 }
@@ -16,6 +17,9 @@ interface PropertyCardProps {
  * Following design_guidelines.md section 3.1
  */
 export function PropertyCard({ property, onClick }: PropertyCardProps) {
+    const hasPendingPayments = property.alerts?.includes('PENDING_PAYMENTS');
+    const hasExpiringLease = property.alerts?.includes('EXPIRING_LEASE');
+
     return (
         <Card
             className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border-gray-200"
@@ -25,8 +29,24 @@ export function PropertyCard({ property, onClick }: PropertyCardProps) {
                 <div className="absolute inset-0 bg-gradient-to-tr from-gray-200 to-gray-100 flex items-center justify-center text-gray-300">
                     <Building size={48} />
                 </div>
+
+                {/* Unit Count Badge */}
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded-md text-xs font-bold shadow-sm">
                     {property.units?.length || 0} Unidades
+                </div>
+
+                {/* Alerts Section */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    {hasPendingPayments && (
+                        <div className="bg-red-100 text-red-700 px-2 py-1 rounded-md text-xs font-bold shadow-sm flex items-center gap-1 border border-red-200 animate-in fade-in zoom-in">
+                            <Wallet size={12} /> Pagos
+                        </div>
+                    )}
+                    {hasExpiringLease && (
+                        <div className="bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-xs font-bold shadow-sm flex items-center gap-1 border border-amber-200 animate-in fade-in zoom-in">
+                            <Clock size={12} /> Vence pronto
+                        </div>
+                    )}
                 </div>
             </div>
             <CardContent className="p-5">
