@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # --- INFRASTRUCTURE ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: rent_manager_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-rent_manager_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  redis:
+    image: redis:alpine
+    container_name: rent_manager_redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+  minio:
+    image: minio/minio
+    container_name: rent_manager_minio
+    restart: always
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: [ "server", "/data", "--console-address", ":9001" ]
+    volumes:
+      - minio_data:/data
+    networks:
+      - app_network
+
+  # --- APPLICATIONS ---
+  api:
+    build: ./apps/api
+    container_name: rent_manager_api
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-rent_manager_db}
+      - REDIS_HOST=redis
+      - MINIO_ENDPOINT=minio
+      - CORS_ORIGIN=http://localhost,https://app.tusass.com
+      - JWT_SECRET=${JWT_SECRET:-supersecret}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    networks:
+      - app_network
+
+  web:
+    build: ./apps/web
+    container_name: rent_manager_web
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+
+networks:
+  app_network:
+    driver: bridge
