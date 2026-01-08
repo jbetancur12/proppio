@@ -281,7 +281,7 @@ export class LeasesController {
     // Manual test endpoint for lease renewals (for testing purposes)
     async testLeaseRenewals(req: Request, res: Response, next: NextFunction) {
         try {
-            const { processLeaseRenewals } = await import('../../jobs/lease-renewal.job');
+            const { processLeaseRenewals } = await import('../../../jobs/lease-renewal.job');
             const em = RequestContext.getEntityManager()!;
 
             const result = await processLeaseRenewals(em);

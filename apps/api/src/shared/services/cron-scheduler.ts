@@ -1,9 +1,9 @@
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { MikroORM } from '@mikro-orm/core';
 import { processLeaseRenewals } from '../../jobs/lease-renewal.job';
 
 export class CronScheduler {
-    private static tasks: cron.ScheduledTask[] = [];
+    private static tasks: ScheduledTask[] = [];
 
     static async start(orm: MikroORM) {
         console.log('[CRON] Starting cron scheduler...');
