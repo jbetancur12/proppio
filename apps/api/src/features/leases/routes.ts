@@ -33,6 +33,9 @@ router.post('/exit-notices/:noticeId/cancel', (req, res, next) => controller.can
 // Test endpoint for manual lease renewal (for testing)
 router.post('/test-renewals', (req, res, next) => controller.testLeaseRenewals(req, res, next));
 
+// Pending payments
+router.get('/:id/pending-payments', (req, res, next) => controller.getPendingPayments(req, res, next));
+
 router.post('/:id/terminate', (req, res, next) => controller.terminate(req, res, next));
 
 export default router;

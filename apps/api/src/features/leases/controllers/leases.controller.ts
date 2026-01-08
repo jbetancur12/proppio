@@ -291,4 +291,19 @@ export class LeasesController {
             next(error);
         }
     }
+
+    // Get pending payments for a lease
+    async getPendingPayments(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id: leaseId } = req.params;
+            const { PaymentTrackingService } = await import('../../payments/services/payment-tracking.service');
+            const service = new PaymentTrackingService(RequestContext.getEntityManager()!);
+
+            const pendingPayments = await service.getPendingPayments(leaseId);
+
+            ApiResponse.success(res, pendingPayments);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

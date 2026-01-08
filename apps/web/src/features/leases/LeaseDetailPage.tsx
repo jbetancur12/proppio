@@ -9,6 +9,7 @@ import { PaymentCard } from "../payments/components/PaymentCard";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { LeaseRenewalSection } from "./components/LeaseRenewalSection";
+import { usePendingPayments } from "../payments/hooks/usePaymentTracking";
 
 const statusConfig = {
     DRAFT: { label: 'Borrador', color: 'bg-gray-100 text-gray-700', icon: FileText },
@@ -22,6 +23,7 @@ export function LeaseDetailPage() {
     const navigate = useNavigate();
     const { data: lease, isLoading } = useLease(id!);
     const { data: payments } = usePayments(id);
+    const { data: pendingPayments = [] } = usePendingPayments(id!);
     const terminateMutation = useTerminateLease();
     const activateMutation = useActivateLease();
     const uploadContractMutation = useUploadContract();
@@ -99,6 +101,11 @@ export function LeaseDetailPage() {
                             <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 flex items-center gap-1">
                                 <Clock size={12} /> {calculateTenure()}
                             </Badge>
+                            {pendingPayments.length > 0 && (
+                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
+                                    <AlertTriangle size={12} /> {pendingPayments.length} {pendingPayments.length === 1 ? 'pago pendiente' : 'pagos pendientes'}
+                                </Badge>
+                            )}
                         </h1>
                         <p className="text-gray-500 text-sm">
                             {lease.unit?.name} • {lease.renter?.firstName} {lease.renter?.lastName}
@@ -158,6 +165,30 @@ export function LeaseDetailPage() {
                             Quedan <strong>{daysUntilExpiry} días</strong> para finalizar (Fecha fin: {formatDate(lease.endDate)}).
                             Considera contactar al inquilino para renovar o coordinar la entrega.
                         </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Pending Payments Alert */}
+            {pendingPayments.length > 0 && (
+                <div className="p-4 rounded-lg border bg-red-50 border-red-100 text-red-800 flex items-start gap-3">
+                    <AlertTriangle className="mt-0.5 flex-shrink-0" size={20} />
+                    <div className="flex-1">
+                        <h3 className="font-bold">Pagos Pendientes</h3>
+                        <p className="text-sm opacity-90 mb-2">
+                            {pendingPayments.length} {pendingPayments.length === 1 ? 'mes sin pago registrado' : 'meses sin pagos registrados'}
+                        </p>
+                        <ul className="text-sm space-y-1">
+                            {pendingPayments.slice(0, 5).map((pending, index) => (
+                                <li key={index} className="flex justify-between">
+                                    <span>• {pending.monthName}</span>
+                                    <span className="font-semibold">{formatCurrency(pending.amount)}</span>
+                                </li>
+                            ))}
+                            {pendingPayments.length > 5 && (
+                                <li className="text-xs opacity-75">... y {pendingPayments.length - 5} más</li>
+                            )}
+                        </ul>
                     </div>
                 </div>
             )}
