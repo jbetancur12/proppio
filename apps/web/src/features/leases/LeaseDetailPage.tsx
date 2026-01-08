@@ -8,6 +8,7 @@ import { usePayments } from "../payments/hooks/usePayments";
 import { PaymentCard } from "../payments/components/PaymentCard";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { LeaseRenewalSection } from "./components/LeaseRenewalSection";
 
 const statusConfig = {
     DRAFT: { label: 'Borrador', color: 'bg-gray-100 text-gray-700', icon: FileText },
@@ -81,28 +82,38 @@ export function LeaseDetailPage() {
                         </Button>
                     )}
                     {lease.status === 'ACTIVE' && (
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive">
-                                    <AlertOctagon size={16} className="mr-2" /> Terminar Contrato
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Esta acción terminará el contrato y marcará la unidad como vacante.
-                                        Esta acción no se puede deshacer fácilmente.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleTerminate} className="bg-red-600 hover:bg-red-700">
-                                        Sí, Terminar
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
+                        <>
+                            <LeaseRenewalSection
+                                leaseId={id!}
+                                monthlyRent={lease.monthlyRent}
+                                startDate={lease.startDate}
+                                renewalCount={(lease as any).renewalCount}
+                                noticeRequiredDays={(lease as any).noticeRequiredDays}
+                                earlyTerminationPenalty={(lease as any).earlyTerminationPenalty}
+                            />
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive">
+                                        <AlertOctagon size={16} className="mr-2" /> Terminar Contrato
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Esta acción terminará el contrato y marcará la unidad como vacante.
+                                            Esta acción no se puede deshacer fácilmente.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleTerminate} className="bg-red-600 hover:bg-red-700">
+                                            Sí, Terminar
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </>
                     )}
                 </div>
             </div>
