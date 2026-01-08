@@ -72,5 +72,10 @@ export const leasesApi = {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         return res.data.data;
+    },
+
+    getContractUrl: async (id: string): Promise<string> => {
+        const res = await api.get(`/api/leases/${id}/contract`);
+        return res.data.data.url;
     }
 };

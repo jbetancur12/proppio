@@ -15,6 +15,7 @@ import multer from 'multer';
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/:id/documents', upload.single('file'), (req, res, next) => controller.uploadContract(req, res, next));
+router.get('/:id/contract', (req, res, next) => controller.getContractUrl(req, res, next));
 
 // Rent increase routes
 router.get('/increases/preview', (req, res, next) => controller.previewIncreases(req, res, next));

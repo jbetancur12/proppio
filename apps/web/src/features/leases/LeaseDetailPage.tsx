@@ -190,11 +190,25 @@ export function LeaseDetailPage() {
                                             }}
                                         />
                                         {lease.contractPdfPath ? (
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 items-center">
                                                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                                                     Subido
                                                 </Badge>
-                                                {/* Future: Add Download Button */}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={async () => {
+                                                        try {
+                                                            const { leasesApi } = await import("./services/leasesApi");
+                                                            const url = await leasesApi.getContractUrl(id!);
+                                                            window.open(url, '_blank');
+                                                        } catch (error) {
+                                                            toast.error("Error al descargar el contrato");
+                                                        }
+                                                    }}
+                                                >
+                                                    <FileText size={14} className="mr-1" /> Ver/Descargar
+                                                </Button>
                                             </div>
                                         ) : (
                                             <Button

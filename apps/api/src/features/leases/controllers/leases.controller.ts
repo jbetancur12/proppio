@@ -135,6 +135,25 @@ export class LeasesController {
         }
     }
 
+    async getContractUrl(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const service = this.getService(req);
+            const lease = await service.findOne(id);
+
+            if (!lease.contractPdfPath) {
+                throw new ValidationError('El contrato no tiene un archivo PDF adjunto');
+            }
+
+            const bucketName = process.env.STORAGE_BUCKET || 'rent-manager-documents';
+            const url = await storageService.getPresignedUrl(bucketName, lease.contractPdfPath);
+
+            ApiResponse.success(res, { url });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // Rent Increase Methods
     async previewIncreases(req: Request, res: Response, next: NextFunction) {
         try {
