@@ -8,6 +8,7 @@ interface LeaseCardProps {
     lease: LeaseData;
     onActivate?: () => void;
     onTerminate?: () => void;
+    onClick?: () => void;
 }
 
 const statusConfig = {
@@ -21,14 +22,17 @@ const statusConfig = {
  * Presentational component for Lease
  * Following design_guidelines.md section 3.1
  */
-export function LeaseCard({ lease, onActivate, onTerminate }: LeaseCardProps) {
+export function LeaseCard({ lease, onActivate, onTerminate, onClick }: LeaseCardProps) {
     const status = statusConfig[lease.status];
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('es-CO');
     const formatCurrency = (amount: number) =>
         new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
 
     return (
-        <Card className="hover:shadow-lg transition-all duration-300 border-gray-200">
+        <Card
+            className={cn("hover:shadow-lg transition-all duration-300 border-gray-200", onClick && "cursor-pointer")}
+            onClick={onClick}
+        >
             <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">

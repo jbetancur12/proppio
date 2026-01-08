@@ -8,13 +8,14 @@ import { useRenters } from "../renters/hooks/useRenters";
 import { useProperties } from "../properties/hooks/useProperties";
 import { LeaseCard } from "./components/LeaseCard";
 
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 /**
  * LeasesPage - Container component
  * Following design_guidelines.md section 3.1
  */
 export function LeasesPage() {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [isCreating, setIsCreating] = useState(false);
 
@@ -194,6 +195,7 @@ export function LeasesPage() {
                                 lease={lease}
                                 onActivate={() => activateMutation.mutate(lease.id)}
                                 onTerminate={() => terminateMutation.mutate(lease.id)}
+                                onClick={() => navigate(`/leases/${lease.id}`)}
                             />
                         ))}
                         {leases?.length === 0 && (

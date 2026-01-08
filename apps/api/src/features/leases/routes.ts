@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { LeasesController } from './controllers/leases.controller';
+import multer from 'multer';
 
 const router = Router();
 const controller = new LeasesController();
@@ -21,24 +22,23 @@ router.post('/test-renewals', (req, res, next) => controller.testLeaseRenewals(r
 router.post('/exit-notices/:noticeId/confirm', (req, res, next) => controller.confirmExitNotice(req, res, next));
 router.post('/exit-notices/:noticeId/cancel', (req, res, next) => controller.cancelExitNotice(req, res, next));
 
-// Now the :id routes
-router.get('/:id', (req, res, next) => controller.getOne(req, res, next));
-router.post('/', (req, res, next) => controller.create(req, res, next));
-router.put('/:id', (req, res, next) => controller.update(req, res, next));
-router.post('/:id/activate', (req, res, next) => controller.activate(req, res, next));
-import multer from 'multer';
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-router.post('/:id/documents', upload.single('file'), (req, res, next) => controller.uploadContract(req, res, next));
-router.get('/:id/contract', (req, res, next) => controller.getContractUrl(req, res, next));
-
-// Exit notice routes for specific lease
+// Exit notice routes specific to lease
 router.post('/:id/exit-notice', (req, res, next) => controller.createExitNotice(req, res, next));
 router.get('/:id/exit-notices', (req, res, next) => controller.getExitNotices(req, res, next));
 
 // Pending payments
 router.get('/:id/pending-payments', (req, res, next) => controller.getPendingPayments(req, res, next));
+
+router.post('/:id/terminate', (req, res, next) => controller.terminate(req, res, next));
+
+const upload = multer({ storage: multer.memoryStorage() });
+router.post('/:id/documents', upload.single('file'), (req, res, next) => controller.uploadContract(req, res, next));
+router.get('/:id/contract', (req, res, next) => controller.getContractUrl(req, res, next));
+router.post('/:id/activate', (req, res, next) => controller.activate(req, res, next));
+
+// Generic ID routes (MUST BE LAST to avoid shadowing specific sub-routes)
+router.get('/:id', (req, res, next) => controller.getOne(req, res, next));
+router.put('/:id', (req, res, next) => controller.update(req, res, next));
 
 router.post('/:id/terminate', (req, res, next) => controller.terminate(req, res, next));
 
