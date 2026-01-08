@@ -21,6 +21,9 @@ export class UnitsService {
         unit.name = dto.name;
         unit.type = dto.type;
         unit.area = dto.area;
+        unit.bedrooms = dto.bedrooms;
+        unit.bathrooms = dto.bathrooms;
+        unit.baseRent = dto.baseRent;
         unit.property = property;
 
         await this.em.persistAndFlush(unit);

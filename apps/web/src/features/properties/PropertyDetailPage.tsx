@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { ArrowLeft, Home, User, Settings, BedDouble, Bath, Plus } from "lucide-react";
+import { ArrowLeft, Home, User, Settings, BedDouble, Bath, Plus, Trash2, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useProperty, useUnits, useCreateUnit } from "./hooks/useProperties";
+import { useProperty, useUnits, useCreateUnit, useUpdateProperty, useDeleteProperty, useUpdateUnit, useDeleteUnit } from "./hooks/useProperties";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 /**
  * Container component for Property Details
@@ -16,16 +19,42 @@ export function PropertyDetailPage() {
     const navigate = useNavigate();
     const [unitName, setUnitName] = useState("");
     const [unitType, setUnitType] = useState("");
+    const [unitBedrooms, setUnitBedrooms] = useState("");
+    const [unitBathrooms, setUnitBathrooms] = useState("");
+    const [unitArea, setUnitArea] = useState("");
+    const [unitRent, setUnitRent] = useState("");
+    const [editingUnit, setEditingUnit] = useState<any>(null);
     const [activeTab, setActiveTab] = useState("units");
 
     const { data: property, isLoading: loadingProp } = useProperty(id || "");
     const { data: units, isLoading: loadingUnits } = useUnits(id || "");
     const createUnitMutation = useCreateUnit(id || "");
+    const updateUnitMutation = useUpdateUnit(id || "");
+    const deleteUnitMutation = useDeleteUnit(id || "");
+    const updatePropertyMutation = useUpdateProperty();
+    const deletePropertyMutation = useDeleteProperty();
 
     const handleCreateUnit = () => {
         createUnitMutation.mutate(
-            { propertyId: id!, name: unitName, type: unitType || "Apartamento" },
-            { onSuccess: () => setUnitName("") }
+            {
+                propertyId: id!,
+                name: unitName,
+                type: unitType || "Apartamento",
+                bedrooms: unitBedrooms ? parseInt(unitBedrooms) : undefined,
+                bathrooms: unitBathrooms ? parseInt(unitBathrooms) : undefined,
+                area: unitArea ? parseFloat(unitArea) : undefined,
+                baseRent: unitRent ? parseFloat(unitRent) : undefined
+            },
+            {
+                onSuccess: () => {
+                    setUnitName("");
+                    setUnitType("");
+                    setUnitBedrooms("");
+                    setUnitBathrooms("");
+                    setUnitArea("");
+                    setUnitRent("");
+                }
+            }
         );
     };
 
@@ -105,14 +134,20 @@ export function PropertyDetailPage() {
                                                     <h4 className="font-bold text-lg text-gray-800 group-hover:text-indigo-600">{u.name}</h4>
                                                     <p className="text-sm text-gray-500 capitalize">{u.type || "Apartamento"}</p>
                                                     <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                                                        <span className="flex items-center gap-1"><BedDouble size={12} /> 2</span>
-                                                        <span className="flex items-center gap-1"><Bath size={12} /> 1</span>
+                                                        <span className="flex items-center gap-1"><BedDouble size={12} /> {u.bedrooms || '--'}</span>
+                                                        <span className="flex items-center gap-1"><Bath size={12} /> {u.bathrooms || '--'}</span>
                                                         <span>{u.area ? `${u.area} m²` : '-- m²'}</span>
                                                     </div>
                                                 </div>
-                                                <div className="text-right">
+                                                <div className="text-right flex flex-col items-end gap-2">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        {(u.activeLease || u.status === 'OCCUPIED') && <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none shadow-none">Ocupado</Badge>}
+                                                        {(!u.activeLease && u.status === 'MAINTENANCE') && <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none shadow-none">Mantenimiento</Badge>}
+                                                        {(!u.activeLease && (!u.status || u.status === 'VACANT')) && <Badge variant="outline" className="text-gray-500 border-gray-200">Vacante</Badge>}
+                                                    </div>
+
                                                     {u.activeLease ? (
-                                                        <div className="space-y-1">
+                                                        <div className="space-y-1 text-right">
                                                             <div className="h-2 w-2 rounded-full bg-green-500 ml-auto" title="Ocupado"></div>
                                                             <div
                                                                 className="text-xs font-semibold text-indigo-600 cursor-pointer hover:underline flex items-center justify-end gap-1"
@@ -126,18 +161,47 @@ export function PropertyDetailPage() {
                                                             </div>
                                                         </div>
                                                     ) : (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="h-7 text-xs border-dashed border-gray-400 text-gray-500 hover:text-indigo-600 hover:border-indigo-600 hover:bg-indigo-50"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                navigate(`/leases?create=true&unitId=${u.id}`);
-                                                            }}
-                                                        >
-                                                            <Plus size={12} className="mr-1" /> Asignar
-                                                        </Button>
+                                                        <div className="flex items-center gap-1">
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-7 w-7 text-gray-400 hover:text-blue-600"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setEditingUnit(u);
+                                                                }}
+                                                            >
+                                                                <Edit size={14} />
+                                                            </Button>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-7 w-7 text-gray-400 hover:text-red-600"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    if (confirm("¿Eliminar unidad?")) {
+                                                                        deleteUnitMutation.mutate(u.id);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="h-7 text-xs border-dashed border-gray-400 text-gray-500 hover:text-indigo-600 hover:border-indigo-600 hover:bg-indigo-50"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    navigate(`/leases?create=true&unitId=${u.id}`);
+                                                                }}
+                                                            >
+                                                                <Plus size={12} className="mr-1" /> Asignar
+                                                            </Button>
+                                                        </div>
                                                     )}
+                                                    <div className="text-xs font-medium text-gray-500">
+                                                        {u.baseRent ? `$${u.baseRent.toLocaleString()}` : <span className="text-gray-300">Sin precio</span>}
+                                                    </div>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -145,6 +209,66 @@ export function PropertyDetailPage() {
                                     {units?.length === 0 && <p className="text-gray-500 col-span-2">Sin unidades aún.</p>}
                                 </div>
                             )}
+
+                            {/* Edit Unit Dialog */}
+                            <Dialog open={!!editingUnit} onOpenChange={(open) => !open && setEditingUnit(null)}>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Editar Unidad</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Nombre / Número</label>
+                                            <Input defaultValue={editingUnit?.name} onChange={e => setEditingUnit({ ...editingUnit, name: e.target.value })} />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Habitaciones</label>
+                                                <Input type="number" defaultValue={editingUnit?.bedrooms} onChange={e => setEditingUnit({ ...editingUnit, bedrooms: parseInt(e.target.value) })} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Baños</label>
+                                                <Input type="number" defaultValue={editingUnit?.bathrooms} onChange={e => setEditingUnit({ ...editingUnit, bathrooms: parseInt(e.target.value) })} />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Área (m²)</label>
+                                                <Input type="number" defaultValue={editingUnit?.area} onChange={e => setEditingUnit({ ...editingUnit, area: parseFloat(e.target.value) })} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Canon Base</label>
+                                                <Input type="number" defaultValue={editingUnit?.baseRent} onChange={e => setEditingUnit({ ...editingUnit, baseRent: parseFloat(e.target.value) })} />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Estado</label>
+                                            <Select
+                                                value={editingUnit?.status || 'VACANT'}
+                                                onValueChange={(val) => setEditingUnit({ ...editingUnit, status: val })}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Seleccionar estado" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="VACANT">Vacante</SelectItem>
+                                                    <SelectItem value="OCCUPIED">Ocupado</SelectItem>
+                                                    <SelectItem value="MAINTENANCE">Mantenimiento</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setEditingUnit(null)}>Cancelar</Button>
+                                        <Button onClick={() => {
+                                            updateUnitMutation.mutate({ id: editingUnit.id, data: editingUnit }, {
+                                                onSuccess: () => setEditingUnit(null)
+                                            });
+                                        }}>Guardar Cambios</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </div>
 
                         <div>
@@ -160,6 +284,26 @@ export function PropertyDetailPage() {
                                     <div className="space-y-2">
                                         <label className="text-xs font-semibold uppercase text-gray-500">Tipo</label>
                                         <Input placeholder="Ej. Apartamento" value={unitType} onChange={e => setUnitType(e.target.value)} />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold uppercase text-gray-500">Habitaciones</label>
+                                            <Input type="number" placeholder="2" value={unitBedrooms} onChange={e => setUnitBedrooms(e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold uppercase text-gray-500">Baños</label>
+                                            <Input type="number" placeholder="1" value={unitBathrooms} onChange={e => setUnitBathrooms(e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold uppercase text-gray-500">Área (m²)</label>
+                                            <Input type="number" placeholder="65" value={unitArea} onChange={e => setUnitArea(e.target.value)} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold uppercase text-gray-500">Canon Base</label>
+                                            <Input type="number" placeholder="$" value={unitRent} onChange={e => setUnitRent(e.target.value)} />
+                                        </div>
                                     </div>
                                     <Button className="w-full bg-gray-900 text-white hover:bg-black" onClick={handleCreateUnit} disabled={!unitName}>
                                         Crear Unidad
@@ -181,8 +325,54 @@ export function PropertyDetailPage() {
                     </div>
                 )}
                 {activeTab === 'settings' && (
-                    <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed">
-                        Configuración de propiedad próximamente...
+                    <div className="space-y-6 max-w-2xl mx-auto">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Información de la Propiedad</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Nombre de la Propiedad</label>
+                                    <Input
+                                        defaultValue={property.name}
+                                        onBlur={(e) => updatePropertyMutation.mutate({ id: property.id, data: { ...property, name: e.target.value } })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Dirección</label>
+                                    <Input
+                                        defaultValue={property.address}
+                                        onBlur={(e) => updatePropertyMutation.mutate({ id: property.id, data: { ...property, address: e.target.value } })}
+                                    />
+                                </div>
+                                <p className="text-sm text-gray-500 italic">
+                                    Los cambios se guardan automáticamente al salir del campo.
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-red-100 bg-red-50/20">
+                            <CardHeader>
+                                <CardTitle className="text-red-700">Zona de Peligro</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <p className="text-sm text-gray-600">
+                                    Si eliminas esta propiedad, se perderá toda la información asociada, incluyendo unidades y contratos activos. Esta acción no se puede deshacer.
+                                </p>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => {
+                                        if (confirm("¿Estás seguro de que quieres eliminar esta propiedad? Esta acción es irreversible.")) {
+                                            deletePropertyMutation.mutate(property.id, {
+                                                onSuccess: () => navigate('/properties')
+                                            });
+                                        }
+                                    }}
+                                >
+                                    Eliminar Propiedad
+                                </Button>
+                            </CardContent>
+                        </Card>
                     </div>
                 )}
             </div>

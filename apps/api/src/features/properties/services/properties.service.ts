@@ -10,7 +10,7 @@ export class PropertiesService {
     }
 
     async findAll() {
-        return this.repo.findAll();
+        return this.repo.findAll({ populate: ['units'] });
     }
 
     async findOne(id: string) {

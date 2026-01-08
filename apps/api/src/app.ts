@@ -27,7 +27,15 @@ export const createApp = async () => {
 
     // 3. MikroORM Context Middleware (forks EM per request)
     // Important: This must be before routes/auth
-    app.use((req, res, next) => RequestContext.create(orm.em, next));
+    // 3. MikroORM Context Middleware (forks EM per request)
+    // Important: This must be before routes/auth
+    app.use((req, res, next) => {
+        RequestContext.create(orm.em, () => {
+            // Attach EM to request for manual retrieval if context is lost (e.g. by Multer)
+            (req as any).em = RequestContext.getEntityManager();
+            next();
+        });
+    });
 
     // 4. Public Routes (e.g. Health Check, Login)
     app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));

@@ -5,6 +5,9 @@ export const createUnitSchema = z.object({
     name: z.string().min(1, "Name is required"),
     type: z.string().optional(),
     area: z.number().optional(),
+    bedrooms: z.number().optional(),
+    bathrooms: z.number().optional(),
+    baseRent: z.number().optional(),
 });
 
 export type CreateUnitDto = z.infer<typeof createUnitSchema>;

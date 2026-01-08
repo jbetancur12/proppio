@@ -8,6 +8,7 @@ import { DashboardLayout } from './components/layout/DashboardLayout';
 
 // Feature-based imports (following design_guidelines.md 3.3 Co-location)
 import { DashboardPage } from './features/dashboard/DashboardPage';
+import { PropertiesPage } from './features/properties/PropertiesPage';
 import { PropertyDetailPage } from './features/properties/PropertyDetailPage';
 import { RentersPage } from './features/renters/RentersPage';
 import { LeasesPage } from './features/leases/LeasesPage';
@@ -55,6 +56,11 @@ function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/properties" element={
+              <ProtectedRoute>
+                <PropertiesPage />
               </ProtectedRoute>
             } />
             <Route path="/properties/:id" element={

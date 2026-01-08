@@ -28,5 +28,7 @@ router.get('/:propertyId/units', unitsController.listByProperty.bind(unitsContro
 // We need to support creating a unit. The specific controller method reads body.
 // Ideally: POST /api/properties/units
 router.post('/units', unitsController.create.bind(unitsController));
+router.put('/units/:id', unitsController.update.bind(unitsController));
+router.delete('/units/:id', unitsController.delete.bind(unitsController));
 
 export default router;

@@ -17,7 +17,7 @@ export class LeasesService {
     }
 
     async findOne(id: string): Promise<Lease> {
-        const lease = await this.em.findOne(Lease, { id }, { populate: ['unit', 'renter'] });
+        const lease = await this.em.findOne(Lease, { id }, { populate: ['unit', 'renter', 'unit.property'] });
         if (!lease) throw new NotFoundError('Contrato no encontrado');
         return lease;
     }

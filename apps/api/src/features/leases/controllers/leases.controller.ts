@@ -13,8 +13,14 @@ import { storageService } from '../../../shared/services/storage.service';
  */
 export class LeasesController {
 
-    private getService(): LeasesService {
-        const em = RequestContext.getEntityManager();
+    private getService(req?: Request): LeasesService {
+        let em = RequestContext.getEntityManager();
+
+        // Fallback: Check if EM is attached to request (fixing Multer context loss)
+        if (!em && req && (req as any).em) {
+            em = (req as any).em;
+        }
+
         if (!em) throw new Error('EntityManager not found in context');
         return new LeasesService(em);
     }
@@ -106,6 +112,9 @@ export class LeasesController {
 
     async uploadContract(req: Request, res: Response, next: NextFunction) {
         try {
+            // Capture service (and EM context) early to prevent Context loss during async storage ops
+            // Pass req to use attached fallback EM if needed
+            const service = this.getService(req);
             const { id } = req.params;
             const file = req.file;
             if (!file) throw new ValidationError('No se proporcionó ningún archivo');
@@ -118,7 +127,6 @@ export class LeasesController {
             await storageService.uploadBuffer(bucketName, key, file.buffer, file.mimetype);
 
             // Update lease record
-            const service = this.getService();
             const lease = await service.updateContractPdf(id, key);
 
             ApiResponse.success(res, lease, 'Contrato subido exitosamente');

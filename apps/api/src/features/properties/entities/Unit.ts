@@ -19,6 +19,12 @@ export class UnitEntity extends BaseTenantEntity {
     @Property({ nullable: true, type: 'number' })
     area?: number;
 
+    @Property({ nullable: true, type: 'number' })
+    bedrooms?: number;
+
+    @Property({ nullable: true, type: 'number' })
+    bathrooms?: number;
+
     @Enum({ items: () => UnitStatus, type: 'string', default: UnitStatus.VACANT })
     status: UnitStatus = UnitStatus.VACANT;
 

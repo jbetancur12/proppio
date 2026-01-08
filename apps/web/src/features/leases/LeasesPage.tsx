@@ -19,9 +19,11 @@ export function LeasesPage() {
     const [isCreating, setIsCreating] = useState(false);
 
     // Form state
+    // Form state
     const [selectedUnit, setSelectedUnit] = useState("");
     const [selectedRenter, setSelectedRenter] = useState("");
     const [startDate, setStartDate] = useState("");
+    const [duration, setDuration] = useState("12"); // Default 12 months
     const [endDate, setEndDate] = useState("");
     const [monthlyRent, setMonthlyRent] = useState("");
     const [deposit, setDeposit] = useState("");
@@ -44,6 +46,23 @@ export function LeasesPage() {
         }
     }, [searchParams]);
 
+    // Auto-calculate End Date
+    useEffect(() => {
+        if (startDate && duration) {
+            const start = new Date(startDate);
+            if (!isNaN(start.getTime())) {
+                const end = new Date(start);
+                end.setMonth(end.getMonth() + parseInt(duration));
+                // Subtract 1 day to be precise? Usually rent contracts are X months e.g. Jan 1 to Dec 31 (which is 12 months)
+                // If I add 1 month to Jan 1, I get Feb 1. But 1 month contract is Jan 1 - Jan 31?
+                // Standard logic: End Date = StartDate + Months - 1 Day.
+                end.setDate(end.getDate() - 1);
+
+                setEndDate(end.toISOString().split('T')[0]);
+            }
+        }
+    }, [startDate, duration]);
+
     // Flatten units from all properties
     const allUnits = properties?.flatMap((p: any) =>
         (p.units || []).map((u: any) => ({ ...u, propertyName: p.name }))
@@ -64,6 +83,7 @@ export function LeasesPage() {
                     setSelectedUnit("");
                     setSelectedRenter("");
                     setStartDate("");
+                    setDuration("12");
                     setEndDate("");
                     setMonthlyRent("");
                     setDeposit("");
@@ -122,6 +142,10 @@ export function LeasesPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Fecha Inicio</label>
                             <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-white" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Duración (Meses)</label>
+                            <Input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="bg-white" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Fecha Fin</label>

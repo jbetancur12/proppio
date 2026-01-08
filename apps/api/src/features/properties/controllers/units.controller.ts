@@ -41,4 +41,32 @@ export class UnitsController {
             next(error);
         }
     }
+
+    async update(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const validation = updateUnitSchema.safeParse(req.body);
+            if (!validation.success) {
+                // In a real app, map ZodError to a clean format
+                throw new AppError('Validation failed', 400);
+            }
+
+            const service = this.getService();
+            const unit = await service.update(id, validation.data);
+            ApiResponse.success(res, unit, 'Unit updated successfully');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async delete(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const service = this.getService();
+            await service.delete(id);
+            ApiResponse.noContent(res);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
