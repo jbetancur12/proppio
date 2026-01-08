@@ -51,6 +51,25 @@ export class PaymentsService {
         });
 
         await this.em.persistAndFlush(payment);
+
+        // Send Email Receipt
+        try {
+            // Re-fetch with populated renter to ensure email availability
+            // Or rely on the fact that payment.lease is loaded (but is renter loaded?)
+            // 'lease' was loaded via findOne at line 35. Need to ensure populated.
+            // Actually line 35 is: const lease = await this.em.findOne(Lease, { id: data.leaseId });
+            // It does NOT populate renter. We need to populate it.
+            const fullPayment = await this.em.findOne(Payment, { id: payment.id }, { populate: ['lease', 'lease.renter', 'lease.unit'] });
+            if (fullPayment && fullPayment.lease?.renter?.email) {
+                const { EmailService } = await import('../../../shared/services/EmailService');
+                const emailService = new EmailService();
+                // Fire and forget (don't await confirmation or block response)
+                emailService.sendPaymentReceipt(fullPayment).catch(console.error);
+            }
+        } catch (error) {
+            console.error('Error sending receipt email:', error);
+        }
+
         return payment;
     }
 
