@@ -23,9 +23,9 @@ export class Migration20260107_005_ExitNotices extends Migration {
 
         // Create indexes for performance
         await this.execute(`
-            CREATE INDEX idx_exit_notices_tenant ON exit_notices(tenant_id);
-            CREATE INDEX idx_exit_notices_lease ON exit_notices(lease_id);
-            CREATE INDEX idx_exit_notices_status ON exit_notices(status);
+            CREATE INDEX IF NOT EXISTS idx_exit_notices_tenant ON exit_notices(tenant_id);
+            CREATE INDEX IF NOT EXISTS idx_exit_notices_lease ON exit_notices(lease_id);
+            CREATE INDEX IF NOT EXISTS idx_exit_notices_status ON exit_notices(status);
         `);
     }
 
