@@ -22,7 +22,7 @@ export class LeaseRenewalService {
      * Renew a lease by extending endDate by 1 year and incrementing renewal count
      */
     async renewLease(leaseId: string): Promise<void> {
-        const lease = await this.em.findOne(Lease, { id: leaseId }, { populate: ['tenant'] });
+        const lease = await this.em.findOne(Lease, { id: leaseId });
 
         if (!lease) {
             throw new Error('Lease not found');

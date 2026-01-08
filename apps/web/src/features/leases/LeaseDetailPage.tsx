@@ -50,6 +50,33 @@ export function LeaseDetailPage() {
 
     const daysUntilExpiry = Math.ceil((new Date(lease.endDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
 
+    // Calculate tenant tenure (how long they've been living there)
+    const calculateTenure = () => {
+        const startDate = new Date(lease.startDate);
+        const today = new Date();
+
+        const yearsDiff = today.getFullYear() - startDate.getFullYear();
+        const monthsDiff = today.getMonth() - startDate.getMonth();
+
+        let totalMonths = yearsDiff * 12 + monthsDiff;
+
+        // Adjust if the day hasn't been reached yet this month
+        if (today.getDate() < startDate.getDate()) {
+            totalMonths--;
+        }
+
+        const years = Math.floor(totalMonths / 12);
+        const months = totalMonths % 12;
+
+        if (totalMonths < 12) {
+            return `${totalMonths} ${totalMonths === 1 ? 'mes' : 'meses'} de antigüedad`;
+        } else if (months === 0) {
+            return `${years} ${years === 1 ? 'año' : 'años'} de antigüedad`;
+        } else {
+            return `${years} ${years === 1 ? 'año' : 'años'} y ${months} ${months === 1 ? 'mes' : 'meses'} de antigüedad`;
+        }
+    };
+
     // Calculate totals
     const totalPaid = payments?.reduce((sum, p) => p.status === 'COMPLETED' ? sum + p.amount : sum, 0) || 0;
     // Expected rent roughly: months duration * monthlyRent. (This is a simplified estimation)
@@ -64,10 +91,13 @@ export function LeaseDetailPage() {
                         <ArrowLeft size={20} />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2 flex-wrap">
                             Contrato #{lease.id.slice(0, 8)}
                             <Badge variant="outline" className={`${statusColor} border-0 flex items-center gap-1`}>
                                 <StatusIcon size={12} /> {statusLabel}
+                            </Badge>
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 flex items-center gap-1">
+                                <Clock size={12} /> {calculateTenure()}
                             </Badge>
                         </h1>
                         <p className="text-gray-500 text-sm">
