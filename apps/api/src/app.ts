@@ -14,6 +14,7 @@ import statsRoutes from './features/stats/routes';
 import expenseRoutes from './features/expenses/routes';
 import maintenanceRoutes from './features/maintenance/routes';
 import adminRoutes from './features/admin/routes';
+import { CronScheduler } from './shared/services/cron-scheduler';
 
 export const createApp = async () => {
     // 1. Initialize ORM
@@ -67,6 +68,12 @@ export const createApp = async () => {
     });
 
     app.use('/api', apiRouter);
+
+    // 7. Error Handler (must be last)
+    app.use(errorMiddleware);
+
+    // 8. Start Cron Jobs
+    await CronScheduler.start(orm);
 
     return { app, orm };
 };
