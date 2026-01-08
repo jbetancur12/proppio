@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { LeaseRenewalSection } from "./components/LeaseRenewalSection";
 import { usePendingPayments } from "../payments/hooks/usePaymentTracking";
 import { paymentTrackingApi } from "../payments/services/paymentTrackingApi";
+import { addDays, differenceInMonths } from "date-fns";
 
 const statusConfig = {
     DRAFT: { label: 'Borrador', color: 'bg-gray-100 text-gray-700', icon: FileText },
@@ -389,7 +390,8 @@ export function LeaseDetailPage() {
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-indigo-700">Duración</span>
                                     <span className="font-bold text-indigo-900">
-                                        {Math.ceil((new Date(lease.endDate).getTime() - new Date(lease.startDate).getTime()) / (1000 * 3600 * 24 * 30))} meses
+                                        {/* Add 1 day to end date to calculate full duration cycle (e.g. Jan 1 to Dec 31 is 12 months) */
+                                            differenceInMonths(addDays(new Date(lease.endDate), 1), new Date(lease.startDate))} meses
                                     </span>
                                 </div>
                             </div>

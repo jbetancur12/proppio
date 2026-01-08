@@ -48,7 +48,13 @@ export function PaymentCard({ payment, onAction, onDelete }: PaymentCardProps) {
     const status = statusConfig[payment.status];
     const StatusIcon = status.icon;
 
-    const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('es-CO');
+    const formatDate = (dateStr: string) => {
+        // Handle timezone offset: server sends UTC 00:00, browser shifts to previous day.
+        // We force noon (12:00) to ensure it stays on the correct day in local time.
+        const date = new Date(dateStr);
+        const bufferDate = new Date(date.toISOString().split('T')[0] + 'T12:00:00');
+        return bufferDate.toLocaleDateString('es-CO');
+    };
     const formatCurrency = (amount: number) =>
         new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
     const formatMonth = (dateStr: string) => {
