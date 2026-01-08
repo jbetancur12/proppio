@@ -46,4 +46,14 @@ export class PropertiesController {
             res.status(404).json({ message: 'Property not found' });
         }
     }
+
+    async getStats(req: Request, res: Response) {
+        try {
+            const service = this.getService();
+            const stats = await service.getStats(req.params.id);
+            res.json(stats);
+        } catch (error) {
+            res.status(500).json({ message: 'Error fetching property stats', error });
+        }
+    }
 }

@@ -50,8 +50,13 @@ export class UnitsService {
                 ...wrap(unit).toObject(),
                 activeLease: lease ? {
                     id: lease.id,
+                    renterId: lease.renter.id,
                     renterName: `${lease.renter.firstName} ${lease.renter.lastName}`,
-                    endDate: lease.endDate
+                    email: lease.renter.email,
+                    phone: lease.renter.phone,
+                    startDate: lease.startDate,
+                    endDate: lease.endDate,
+                    monthlyRent: lease.monthlyRent
                 } : null
             };
         });

@@ -7,6 +7,7 @@ const controller = new PropertiesController();
 // We bind the methods to the controller instance to preserve 'this'
 router.get('/', controller.list.bind(controller));
 router.post('/', controller.create.bind(controller));
+router.get('/:id/stats', controller.getStats.bind(controller));
 router.get('/:id', controller.get.bind(controller));
 
 // router.put('/:id', controller.update.bind(controller)); 

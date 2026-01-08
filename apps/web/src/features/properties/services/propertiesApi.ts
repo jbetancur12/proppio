@@ -42,5 +42,10 @@ export const propertiesApi = {
 
     deleteUnit: async (id: string) => {
         await api.delete(`/api/properties/units/${id}`);
+    },
+
+    getStats: async (id: string) => {
+        const res = await api.get(`/api/properties/${id}/stats`);
+        return res.data;
     }
 };

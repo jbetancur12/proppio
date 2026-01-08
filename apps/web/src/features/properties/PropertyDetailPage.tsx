@@ -9,6 +9,8 @@ import { useProperty, useUnits, useCreateUnit, useUpdateProperty, useDeletePrope
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { PropertyOverviewTab } from "./components/PropertyOverviewTab";
+import { PropertyTenantsTab } from "./components/PropertyTenantsTab";
 
 /**
  * Container component for Property Details
@@ -315,14 +317,10 @@ export function PropertyDetailPage() {
                 )}
 
                 {activeTab === 'overview' && (
-                    <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed">
-                        Estadísticas próximamente...
-                    </div>
+                    <PropertyOverviewTab propertyId={id!} />
                 )}
                 {activeTab === 'tenants' && (
-                    <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed">
-                        Gestión de inquilinos próximamente...
-                    </div>
+                    <PropertyTenantsTab propertyId={id!} />
                 )}
                 {activeTab === 'settings' && (
                     <div className="space-y-6 max-w-2xl mx-auto">

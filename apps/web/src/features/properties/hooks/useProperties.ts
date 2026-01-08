@@ -105,3 +105,11 @@ export function useDeleteUnit(propertyId: string) {
         onError: () => toast.error("Error al eliminar unidad")
     });
 }
+
+export function usePropertyStats(id: string) {
+    return useQuery({
+        queryKey: ['propertyStats', id],
+        queryFn: () => propertiesApi.getStats(id),
+        enabled: !!id
+    });
+}

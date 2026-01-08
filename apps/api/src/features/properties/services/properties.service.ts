@@ -69,4 +69,49 @@ export class PropertiesService {
 
         return property;
     }
+
+    async getStats(id: string) {
+        // 1. Get Property with Units to calculate occupancy
+        const property = await this.repo.findOneOrFail({ id }, { populate: ['units'] });
+        const units = property.units.getItems();
+        const totalUnits = units.length;
+
+        // 2. Get Active Leases for this property to calculate revenue and occupied count accurately
+        // (Assuming a unit is occupied if it has an active lease)
+        const { Lease, LeaseStatus } = await import('../../leases/entities/Lease');
+        const activeLeases = await this.em.find(Lease, {
+            unit: { property: { id } },
+            status: LeaseStatus.ACTIVE
+        });
+
+        // Occupancy calculation
+        // We can map active leases to units.
+        const occupiedUnitIds = new Set(activeLeases.map(l => l.unit.id));
+
+        // Also consider units marked as OCCUPIED manually even if no lease (though less likely in this system)
+        const occupiedCount = units.filter(u =>
+            u.status === 'OCCUPIED' || occupiedUnitIds.has(u.id)
+        ).length;
+
+        const occupancyRate = totalUnits > 0 ? (occupiedCount / totalUnits) * 100 : 0;
+
+        // 3. Projected Revenue (Sum of monthly rent of active leases)
+        const projectedRevenue = activeLeases.reduce((sum, lease) => sum + lease.monthlyRent, 0);
+
+        // 4. Maintenance Tickets
+        const { MaintenanceTicket, TicketStatus } = await import('../../maintenance/entities/MaintenanceTicket');
+        const openTickets = await this.em.count(MaintenanceTicket, {
+            unit: { property: { id } },
+            status: { $in: [TicketStatus.OPEN, TicketStatus.IN_PROGRESS] }
+        });
+
+        return {
+            totalUnits,
+            occupiedUnits: occupiedCount,
+            vacantUnits: totalUnits - occupiedCount,
+            occupancyRate: Math.round(occupancyRate * 10) / 10,
+            projectedRevenue,
+            openMaintenanceTickets: openTickets
+        };
+    }
 }
