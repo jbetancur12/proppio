@@ -220,4 +220,61 @@ export class LeasesController {
             next(error);
         }
     }
+
+    // Exit Notice Management
+    async createExitNotice(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id: leaseId } = req.params;
+            const { ExitNoticeService } = await import('../services/exit-notice.service');
+            const service = new ExitNoticeService(RequestContext.getEntityManager()!);
+
+            const exitNotice = await service.createExitNotice({
+                leaseId,
+                ...req.body
+            });
+
+            ApiResponse.success(res, exitNotice, 'Aviso de salida registrado exitosamente');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getExitNotices(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id: leaseId } = req.params;
+            const { ExitNoticeService } = await import('../services/exit-notice.service');
+            const service = new ExitNoticeService(RequestContext.getEntityManager()!);
+
+            const notices = await service.getExitNotices(leaseId);
+            ApiResponse.success(res, notices);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async confirmExitNotice(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { noticeId } = req.params;
+            const { ExitNoticeService } = await import('../services/exit-notice.service');
+            const service = new ExitNoticeService(RequestContext.getEntityManager()!);
+
+            await service.confirmExitNotice(noticeId);
+            ApiResponse.success(res, null, 'Aviso de salida confirmado');
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async cancelExitNotice(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { noticeId } = req.params;
+            const { ExitNoticeService } = await import('../services/exit-notice.service');
+            const service = new ExitNoticeService(RequestContext.getEntityManager()!);
+
+            await service.cancelExitNotice(noticeId);
+            ApiResponse.success(res, null, 'Aviso de salida cancelado');
+        } catch (error) {
+            next(error);
+        }
+    }
 }

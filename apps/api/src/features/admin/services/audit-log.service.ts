@@ -14,6 +14,7 @@ export interface AuditLogDto {
     details?: any;
     userId?: string;   // Explicit override
     tenantId?: string; // Explicit override
+    performedBy?: string; // User ID or SYSTEM
 }
 
 export class AuditLogService {

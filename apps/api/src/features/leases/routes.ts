@@ -24,6 +24,12 @@ router.post('/increases/bulk-apply', (req, res, next) => controller.bulkApplyInc
 router.get('/increases/ipc/:year', (req, res, next) => controller.getIPC(req, res, next));
 router.post('/increases/ipc', (req, res, next) => controller.setIPC(req, res, next));
 
+// Exit notice routes
+router.post('/:id/exit-notice', (req, res, next) => controller.createExitNotice(req, res, next));
+router.get('/:id/exit-notices', (req, res, next) => controller.getExitNotices(req, res, next));
+router.post('/exit-notices/:noticeId/confirm', (req, res, next) => controller.confirmExitNotice(req, res, next));
+router.post('/exit-notices/:noticeId/cancel', (req, res, next) => controller.cancelExitNotice(req, res, next));
+
 router.post('/:id/terminate', (req, res, next) => controller.terminate(req, res, next));
 
 export default router;

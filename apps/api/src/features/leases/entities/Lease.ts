@@ -41,6 +41,18 @@ export class Lease extends BaseTenantEntity {
     contractPdfPath?: string;
 
     @Property({ type: 'date', nullable: true })
+    originalEndDate?: Date;
+
+    @Property({ type: 'number', default: 0 })
+    renewalCount: number = 0;
+
+    @Property({ type: 'number', default: 90 })
+    noticeRequiredDays: number = 90;
+
+    @Property({ type: 'number', nullable: true })
+    earlyTerminationPenalty?: number;
+
+    @Property({ type: 'date', nullable: true })
     lastIncreaseDate?: Date;
 
     constructor(partial?: Partial<Lease>) {
