@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core';
-import { Lease } from '../../leases/entities/Lease';
-import { Payment, PaymentStatus } from '../entities/Payment';
+import { Lease, LeaseStatus } from '../../leases/entities/Lease';
+import { Payment, PaymentStatus, PaymentMethod } from '../entities/Payment';
 
 export interface PendingPaymentMonth {
     month: number;
@@ -14,85 +14,111 @@ export class PaymentTrackingService {
     constructor(private readonly em: EntityManager) { }
 
     /**
-     * Calculate all expected payment months from lease start to current date
+     * Generate pending payments for a specific lease if due
      */
-    private calculateExpectedPayments(lease: Lease): PendingPaymentMonth[] {
-        const startDate = new Date(lease.startDate);
+    async generatePendingPaymentForLease(lease: Lease): Promise<void> {
         const today = new Date();
-        const expectedPayments: PendingPaymentMonth[] = [];
+        const startDay = new Date(lease.startDate).getDate();
 
-        // Start from the first month of the lease
-        const currentMonth = new Date(startDate);
-        currentMonth.setDate(1); // Set to first day of month
+        // Calculate the current period start date based on lease start day
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth();
 
-        while (currentMonth <= today) {
-            const month = currentMonth.getMonth();
-            const year = currentMonth.getFullYear();
+        // Determine the period start for "this month"
+        let periodStart = new Date(currentYear, currentMonth, startDay);
 
-            // Calculate due date properly handling month lengths
-            // If start date is 31st, and current month only has 30 days (or 28/29), use last day of month
-            const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-            const dueDay = Math.min(startDate.getDate(), lastDayOfMonth);
-            const dueDate = new Date(year, month, dueDay);
-
-            // strict check: if due date is in the future, don't count it yet
-            // This handles cases where we are in the same month but before the start day
-            if (dueDate > today) {
-                break;
-            }
-
-            expectedPayments.push({
-                month,
-                year,
-                monthName: currentMonth.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }),
-                amount: lease.monthlyRent,
-                dueDate
-            });
-
-            // Move to next month
-            currentMonth.setMonth(currentMonth.getMonth() + 1);
-            currentMonth.setDate(1); // Ensure we stay on 1st to avoid skipping shorter months issues
+        // Handle month-end issues (e.g. lease starts 31st, but it's Feb)
+        const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        if (startDay > lastDayOfMonth) {
+            periodStart = new Date(currentYear, currentMonth, lastDayOfMonth);
         }
 
-        return expectedPayments;
+        const dueDay = Math.min(startDay, new Date(currentYear, currentMonth + 1, 0).getDate());
+        const targetDueDate = new Date(currentYear, currentMonth, dueDay);
+
+        if (today >= targetDueDate) {
+            await this.ensurePaymentExists(lease, targetDueDate);
+        } else {
+            // Check previous month just in case (catch-up)
+            const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
+            const prevDueDay = Math.min(startDay, new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth() + 1, 0).getDate());
+            const prevTargetDueDate = new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth(), prevDueDay);
+            await this.ensurePaymentExists(lease, prevTargetDueDate);
+        }
+    }
+
+    private async ensurePaymentExists(lease: Lease, periodStart: Date): Promise<void> {
+        // Calculate period end (start + 1 month)
+        const periodEnd = new Date(periodStart);
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+        // Check if ANY payment covers this specific period start
+        const count = await this.em.count(Payment, {
+            lease: lease.id,
+            periodStart: periodStart
+        });
+
+        if (count === 0) {
+            // Create PENDING payment
+            const payment = new Payment({
+                lease: lease,
+                tenantId: lease.tenantId,
+                amount: lease.monthlyRent,
+                paymentDate: periodStart, // Due date
+                periodStart: periodStart,
+                periodEnd: periodEnd,
+                status: PaymentStatus.PENDING,
+                method: PaymentMethod.OTHER, // Default
+                notes: `Canon de arrendamiento ${periodStart.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}`
+            });
+
+            this.em.persist(payment);
+        }
     }
 
     /**
-     * Get pending payments for a lease
+     * Process all active leases
      */
-    async getPendingPayments(leaseId: string): Promise<PendingPaymentMonth[]> {
-        const lease = await this.em.findOne(Lease, { id: leaseId });
+    async generateAllPendingPayments(): Promise<{ generated: number; errors: string[] }> {
+        const leases = await this.em.find(Lease, {
+            status: LeaseStatus.ACTIVE
+        });
 
-        if (!lease) {
-            throw new Error('Lease not found');
+        let generated = 0;
+        const errors: string[] = [];
+
+        for (const lease of leases) {
+            try {
+                await this.generatePendingPaymentForLease(lease);
+                generated++;
+            } catch (error) {
+                errors.push(`Failed to generate payment for lease ${lease.id}: ${error}`);
+            }
         }
 
-        // Get all completed payments for this lease
-        const completedPayments = await this.em.find(Payment, {
+        await this.em.flush();
+        return { generated, errors };
+    }
+
+    /**
+     * Get pending payments for a lease (from DB)
+     */
+    async getPendingPayments(leaseId: string): Promise<Payment[]> {
+        return this.em.find(Payment, {
             lease: leaseId,
-            status: PaymentStatus.COMPLETED
+            status: PaymentStatus.PENDING
+        }, {
+            orderBy: { periodStart: 'ASC' }
         });
-
-        // Calculate expected payments
-        const expectedPayments = this.calculateExpectedPayments(lease);
-
-        // Filter out months that have completed payments
-        const pendingPayments = expectedPayments.filter(expected => {
-            return !completedPayments.some(payment => {
-                const paymentDate = new Date(payment.paymentDate);
-                return paymentDate.getMonth() === expected.month &&
-                    paymentDate.getFullYear() === expected.year;
-            });
-        });
-
-        return pendingPayments;
     }
 
     /**
      * Get count of pending payments
      */
     async getPendingPaymentCount(leaseId: string): Promise<number> {
-        const pending = await this.getPendingPayments(leaseId);
-        return pending.length;
+        return this.em.count(Payment, {
+            lease: leaseId,
+            status: PaymentStatus.PENDING
+        });
     }
 }

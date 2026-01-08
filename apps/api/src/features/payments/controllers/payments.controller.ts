@@ -75,6 +75,17 @@ export class PaymentsController {
         }
     }
 
+    async delete(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const service = this.getService();
+            await service.delete(id);
+            ApiResponse.noContent(res); // 204 No Content
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getSummary(req: Request, res: Response, next: NextFunction) {
         try {
             const { leaseId } = req.params;

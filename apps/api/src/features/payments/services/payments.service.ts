@@ -76,4 +76,13 @@ export class PaymentsService {
             count: payments.length
         };
     }
+    async delete(id: string): Promise<void> {
+        const payment = await this.findOne(id);
+
+        // Optional: Add logic to restrict deletion of COMPLETED payments if needed
+        // For now, allow deletion but perhaps we should check status?
+        // if (payment.status === PaymentStatus.COMPLETED) ...
+
+        await this.em.removeAndFlush(payment);
+    }
 }

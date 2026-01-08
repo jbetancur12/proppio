@@ -6,6 +6,7 @@ import { ApiResponse } from '../../../shared/utils/ApiResponse';
 import { ValidationError } from '../../../shared/errors/AppError';
 
 import { storageService } from '../../../shared/services/storage.service';
+import { PaymentTrackingService } from '../../payments/services/payment-tracking.service';
 
 /**
  * LeasesController - HTTP layer only, delegates to service
@@ -295,12 +296,10 @@ export class LeasesController {
     // Get pending payments for a lease
     async getPendingPayments(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id: leaseId } = req.params;
+            const { id } = req.params;
             const { PaymentTrackingService } = await import('../../payments/services/payment-tracking.service');
             const service = new PaymentTrackingService(RequestContext.getEntityManager()!);
-
-            const pendingPayments = await service.getPendingPayments(leaseId);
-
+            const pendingPayments = await service.getPendingPayments(id);
             ApiResponse.success(res, pendingPayments);
         } catch (error) {
             next(error);
