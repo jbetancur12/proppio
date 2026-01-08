@@ -52,41 +52,72 @@ export class TreasuryService {
         };
     }
 
-    async getUnifiedTransactions(): Promise<UnifiedTransaction[]> {
-        // Fetch all sources
+    async getUnifiedTransactions(filters: { startDate?: Date; endDate?: Date; page?: number; limit?: number } = {}): Promise<{ data: UnifiedTransaction[], total: number }> {
+        const { startDate, endDate, page = 1, limit = 50 } = filters;
+
+        const wherePayment: any = { status: PaymentStatus.COMPLETED };
+        const whereExpense: any = { status: ExpenseStatus.PAID };
+        const whereTreasury: any = {};
+
+        if (startDate) {
+            // Broaden range by 1 day to handle timezone mismatches safely
+            const start = new Date(startDate);
+            start.setDate(start.getDate() - 1);
+            const startStr = start.toISOString().split('T')[0];
+
+            wherePayment.paymentDate = { $gte: startStr };
+            whereExpense.date = { $gte: startStr };
+            whereTreasury.date = { $gte: startStr };
+        }
+
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setDate(end.getDate() + 1);
+            const endStr = end.toISOString().split('T')[0];
+
+            wherePayment.paymentDate = { ...wherePayment.paymentDate, $lte: endStr };
+            whereExpense.date = { ...whereExpense.date, $lte: endStr };
+            whereTreasury.date = { ...whereTreasury.date, $lte: endStr };
+        }
+
+        // Fetch filtered sources
         const [payments, expenses, treasuryTx] = await Promise.all([
-            this.em.find(Payment, { status: PaymentStatus.COMPLETED }, { populate: ['lease', 'lease.unit'] }),
-            this.em.find(Expense, { status: ExpenseStatus.PAID }, { populate: ['property'] }),
-            this.em.find(TreasuryTransaction, {})
+            this.em.find(Payment, wherePayment, { populate: ['lease', 'lease.unit'] }),
+            this.em.find(Expense, whereExpense, { populate: ['property'] }),
+            this.em.find(TreasuryTransaction, whereTreasury)
         ]);
 
         const unified: UnifiedTransaction[] = [];
 
         // Map Payments
         payments.forEach(p => {
-            unified.push({
-                id: p.id,
-                date: p.paymentDate,
-                amount: Number(p.amount),
-                type: 'INCOME',
-                category: 'RENT',
-                description: `Pago Arriendo - ${p.lease.unit.name}`,
-                source: 'LEASE_PAYMENT',
-                reference: p.reference
-            });
+            try {
+                unified.push({
+                    id: p.id,
+                    date: new Date(p.paymentDate),
+                    amount: Number(p.amount),
+                    type: 'INCOME',
+                    category: 'RENT',
+                    description: `Pago Arriendo - ${p.lease?.unit?.name || 'N/A'}`,
+                    source: 'LEASE_PAYMENT',
+                    reference: p.reference
+                });
+            } catch (err) {
+                console.error('Error mapping payment:', p.id, err);
+            }
         });
 
         // Map Expenses
         expenses.forEach(e => {
             unified.push({
                 id: e.id,
-                date: e.date,
+                date: new Date(e.date),
                 amount: Number(e.amount),
                 type: 'EXPENSE',
                 category: e.category,
                 description: `Gasto Propiedad - ${e.property?.name || 'General'}`,
                 source: 'PROPERTY_EXPENSE',
-                reference: e.description // Use description as reference or allow helper
+                reference: e.description
             });
         });
 
@@ -94,7 +125,7 @@ export class TreasuryService {
         treasuryTx.forEach(t => {
             unified.push({
                 id: t.id,
-                date: t.date,
+                date: new Date(t.date),
                 amount: Number(t.amount),
                 type: t.type === TransactionType.INCOME ? 'INCOME' : 'EXPENSE',
                 category: t.category,
@@ -105,7 +136,20 @@ export class TreasuryService {
         });
 
         // Sort by date desc
-        return unified.sort((a, b) => b.date.getTime() - a.date.getTime());
+        unified.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+        // Pagination (In-Memory)
+        const total = unified.length;
+        console.log('Total unified records before pagination:', total);
+
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const slicedData = unified.slice(startIndex, endIndex);
+
+        return {
+            data: slicedData,
+            total
+        };
     }
 
     async createTransaction(data: Partial<TreasuryTransaction>): Promise<TreasuryTransaction> {

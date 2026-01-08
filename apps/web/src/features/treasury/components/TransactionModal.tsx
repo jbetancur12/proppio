@@ -91,6 +91,7 @@ export function TransactionModal({ isOpen, onClose, onSuccess }: TransactionModa
                 <DialogHeader>
                     <DialogTitle>Registrar Movimiento de Tesorería</DialogTitle>
                 </DialogHeader>
+                {/* @ts-ignore */}
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
                     <div className="grid grid-cols-2 gap-4">

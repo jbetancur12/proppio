@@ -35,7 +35,7 @@ export const paymentsApi = {
         paymentDate: string;
         periodStart: string;
         periodEnd: string;
-        method?: string;
+        method?: 'CASH' | 'TRANSFER' | 'CHECK' | 'CARD' | 'OTHER' | string;
         reference?: string;
         notes?: string;
     }) => {

@@ -26,12 +26,24 @@ export class TreasuryController {
             const em = RequestContext.getEntityManager();
             if (!em) throw new Error('EntityManager not found');
 
+            const { startDate, endDate, page, limit } = req.query;
+
             const service = new TreasuryService(em);
-            const transactions = await service.getUnifiedTransactions();
+            const result = await service.getUnifiedTransactions({
+                startDate: startDate ? new Date(startDate as string) : undefined,
+                endDate: endDate ? new Date(endDate as string) : undefined,
+                page: page ? Number(page) : 1,
+                limit: limit ? Number(limit) : 50
+            });
 
             res.json({
                 success: true,
-                data: transactions
+                data: result.data,
+                meta: {
+                    total: result.total,
+                    page: page ? Number(page) : 1,
+                    limit: limit ? Number(limit) : 50
+                }
             });
         } catch (error) {
             console.error('Error fetching transactions:', error);

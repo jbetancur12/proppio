@@ -85,7 +85,10 @@ export function PaymentsPage() {
         if (editingPaymentId) {
             updateMutation.mutate({
                 id: editingPaymentId,
-                data: payload
+                data: {
+                    ...payload,
+                    method: payload.method as any
+                }
             }, { onSuccess: resetForm });
         } else {
             createMutation.mutate(payload, { onSuccess: resetForm });

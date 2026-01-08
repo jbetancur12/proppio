@@ -42,16 +42,17 @@ export const treasuryApi = {
         return response.data.data;
     },
 
-    getTransactions: async () => {
-        const response = await axios.get<{ success: boolean; data: UnifiedTransaction[] }>(
+    getTransactions: async (params?: { startDate?: string; endDate?: string; page?: number; limit?: number }) => {
+        const response = await axios.get<{ success: boolean; data: UnifiedTransaction[]; meta: { total: number; page: number; limit: number } }>(
             `${API_URL}/treasury/transactions`,
             {
+                params,
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             }
         );
-        return response.data.data;
+        return response.data;
     },
 
     createTransaction: async (data: Partial<TreasuryTransaction>) => {
