@@ -2,10 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { rentIncreaseApi, IncreasePreview, ApplyIncreaseDto } from '../services/rentIncreaseApi';
 import { toast } from 'sonner';
 
-export function useRentIncreasePreviews(increasePercentage: number) {
+export function useRentIncreasePreviews(increasePercentage: number, targetDate?: string) {
     return useQuery<IncreasePreview[]>({
-        queryKey: ['rent-increase-preview', increasePercentage],
-        queryFn: () => rentIncreaseApi.previewIncreases(increasePercentage),
+        queryKey: ['rent-increase-preview', increasePercentage, targetDate],
+        queryFn: () => rentIncreaseApi.previewIncreases(increasePercentage, targetDate),
         enabled: increasePercentage > 0
     });
 }

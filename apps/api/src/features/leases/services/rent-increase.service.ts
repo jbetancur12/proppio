@@ -19,23 +19,43 @@ export class RentIncreaseService {
     /**
      * Preview rent increases for all active leases
      */
-    async previewIncreases(increasePercentage: number): Promise<IncreasePreview[]> {
+    async previewIncreases(increasePercentage: number, targetDateStr?: string): Promise<IncreasePreview[]> {
+        const targetDate = targetDateStr ? new Date(targetDateStr) : new Date();
+
         const leases = await this.em.find(
             Lease,
             { status: LeaseStatus.ACTIVE },
             { populate: ['unit', 'unit.property', 'renter'] }
         );
 
-        return leases.map(lease => ({
-            leaseId: lease.id,
-            propertyName: lease.unit.property?.name || 'N/A',
-            unitName: lease.unit.name,
-            renterName: `${lease.renter.firstName} ${lease.renter.lastName}`,
-            currentRent: lease.monthlyRent,
-            suggestedRent: this.calculateIncrease(lease.monthlyRent, increasePercentage),
-            increasePercentage,
-            lastIncreaseDate: lease.lastIncreaseDate
-        }));
+        // Calculate eligibility for each lease
+        return leases.map(lease => {
+            const referenceDate = lease.lastIncreaseDate ? new Date(lease.lastIncreaseDate) : new Date(lease.startDate);
+            const nextIncreaseDate = new Date(referenceDate);
+            nextIncreaseDate.setFullYear(nextIncreaseDate.getFullYear() + 1);
+
+            // Check eligibility (ignore time portion for fair comparison)
+            const isEligible = targetDate >= nextIncreaseDate;
+
+            let rejectionReason: string | undefined;
+            if (!isEligible) {
+                const dateStr = nextIncreaseDate.toLocaleDateString('es-CO');
+                rejectionReason = `Debe esperar hasta ${dateStr} (1 año desde ${lease.lastIncreaseDate ? 'último aumento' : 'inicio contrato'})`;
+            }
+
+            return {
+                leaseId: lease.id,
+                propertyName: (lease.unit.property as any)?.name ?? (lease.unit.property as any)?.getProperty?.('name') ?? 'N/A',
+                unitName: lease.unit.name,
+                renterName: `${lease.renter.firstName} ${lease.renter.lastName}`,
+                currentRent: lease.monthlyRent,
+                suggestedRent: this.calculateIncrease(lease.monthlyRent, increasePercentage),
+                increasePercentage,
+                lastIncreaseDate: lease.lastIncreaseDate,
+                eligible: isEligible,
+                rejectionReason
+            };
+        });
     }
 
     /**

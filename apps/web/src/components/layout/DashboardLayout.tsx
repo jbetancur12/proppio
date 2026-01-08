@@ -29,6 +29,7 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
         { label: "Propiedades", href: "/properties", icon: Building },
         { label: "Inquilinos", href: "/renters", icon: Users },
         { label: "Contratos", href: "/leases", icon: FileText },
+        { label: "Aumentos IPC", href: "/rent-increases", icon: TrendingUp },
         { label: "Pagos", href: "/payments", icon: DollarSign },
         { label: "Gastos", href: "/expenses", icon: TrendingDown },
         { label: "Mantenimiento", href: "/maintenance", icon: Hammer },
@@ -55,8 +56,8 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
                             to={item.href}
                             onClick={onClose}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                    ? 'bg-indigo-50 text-indigo-600 font-medium'
-                                    : 'text-gray-700 hover:bg-gray-50'
+                                ? 'bg-indigo-50 text-indigo-600 font-medium'
+                                : 'text-gray-700 hover:bg-gray-50'
                                 }`}
                         >
                             <Icon className="h-5 w-5" />

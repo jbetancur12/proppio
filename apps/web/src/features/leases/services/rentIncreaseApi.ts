@@ -8,7 +8,9 @@ export interface IncreasePreview {
     currentRent: number;
     suggestedRent: number;
     increasePercentage: number;
-    lastIncreaseDate?: string;
+    lastIncreaseDate?: string; // Date comes as string from JSON
+    eligible: boolean;
+    rejectionReason?: string;
 }
 
 export interface ApplyIncreaseDto {
@@ -20,9 +22,10 @@ export interface ApplyIncreaseDto {
 }
 
 export const rentIncreaseApi = {
-    previewIncreases: async (increasePercentage: number): Promise<IncreasePreview[]> => {
-        const response = await api.get(`/api/leases/increases/preview?increasePercentage=${increasePercentage}`);
-        return response.data.data;
+    previewIncreases: async (increasePercentage: number, targetDate?: string): Promise<IncreasePreview[]> => {
+        const query = `?increasePercentage=${increasePercentage}${targetDate ? `&targetDate=${targetDate}` : ''}`;
+        const res = await api.get(`/api/leases/increases/preview${query}`);
+        return res.data.data;
     },
 
     applyIncrease: async (data: ApplyIncreaseDto): Promise<void> => {

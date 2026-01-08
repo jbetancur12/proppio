@@ -15,17 +15,24 @@ export function RentIncreasePage() {
     const [effectiveDate, setEffectiveDate] = useState<string>(`${currentYear + 1}-01-01`);
     const [ipcYear, setIpcYear] = useState<number>(currentYear);
     const [ipcRate, setIpcRate] = useState<string>('');
+    const [rentOverrides, setRentOverrides] = useState<Record<string, number>>({});
+    const [showIneligible, setShowIneligible] = useState(false);
 
-    const { data: previews = [], isLoading } = useRentIncreasePreviews(increasePercentage);
+    const { data: previews = [], isLoading } = useRentIncreasePreviews(increasePercentage, effectiveDate);
+
+    // Derived state
+    const eligiblePreviews = previews.filter(p => p.eligible);
+    const filteredPreviews = showIneligible ? previews : eligiblePreviews;
+
     const bulkApply = useBulkApplyIncreases();
     const { data: ipcConfig } = useIPCConfig(ipcYear);
     const setIPCMutation = useSetIPC();
 
     const handleToggleAll = () => {
-        if (selectedLeases.size === previews.length) {
+        if (selectedLeases.size === eligiblePreviews.length && eligiblePreviews.length > 0) {
             setSelectedLeases(new Set());
         } else {
-            setSelectedLeases(new Set(previews.map(p => p.leaseId)));
+            setSelectedLeases(new Set(eligiblePreviews.map(p => p.leaseId)));
         }
     };
 
@@ -39,24 +46,45 @@ export function RentIncreasePage() {
         setSelectedLeases(newSelected);
     };
 
+    const handleRentChange = (leaseId: string, value: string) => {
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue)) {
+            setRentOverrides(prev => ({
+                ...prev,
+                [leaseId]: numValue
+            }));
+            // Auto-select when modified
+            if (!selectedLeases.has(leaseId)) {
+                handleToggleLease(leaseId);
+            }
+        }
+    };
+
     const handleApplyIncreases = () => {
         if (selectedLeases.size === 0) return;
 
         const increases: ApplyIncreaseDto[] = previews
             .filter(p => selectedLeases.has(p.leaseId))
-            .map(p => ({
-                leaseId: p.leaseId,
-                newRent: p.suggestedRent,
-                increasePercentage: p.increasePercentage,
-                effectiveDate,
-                reason: `Aumento IPC ${p.increasePercentage}%`
-            }));
+            .map(p => {
+                const newRent = rentOverrides[p.leaseId] ?? p.suggestedRent;
+                // Recalculate percentage if rent changed manually
+                const effectivePercentage = ((newRent - p.currentRent) / p.currentRent) * 100;
+
+                return {
+                    leaseId: p.leaseId,
+                    newRent: newRent,
+                    increasePercentage: Number(effectivePercentage.toFixed(2)),
+                    effectiveDate,
+                    reason: `Aumento IPC ${p.increasePercentage}%${newRent !== p.suggestedRent ? ' (Ajustado manualmente)' : ''}`
+                };
+            });
 
         if (confirm(`¿Aplicar ${increases.length} aumentos? Esta acción actualizará los contratos seleccionados.`)) {
             bulkApply.mutate(increases, {
                 onSuccess: () => {
                     setSelectedLeases(new Set());
                     setIncreasePercentage(0);
+                    setRentOverrides({});
                 }
             });
         }
@@ -169,7 +197,7 @@ export function RentIncreasePage() {
                     {increasePercentage > 0 && (
                         <div className="bg-amber-50 border border-amber-200 p-3 rounded-md flex items-start gap-2 text-sm">
                             <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
-                            <span>Se calcularán aumentos del <strong>{increasePercentage}%</strong> para todos los contratos activos.</span>
+                            <span>Se calcularán aumentos del <strong>{increasePercentage}%</strong> para todos los contratos elegibles.</span>
                         </div>
                     )}
                 </CardContent>
@@ -182,18 +210,28 @@ export function RentIncreasePage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <CardTitle>Vista Previa de Aumentos</CardTitle>
-                                <CardDescription>{selectedLeases.size} de {previews.length} contratos seleccionados</CardDescription>
+                                <CardDescription>
+                                    {Array.from(selectedLeases).filter(leaseId => eligiblePreviews.some(p => p.leaseId === leaseId)).length} de {eligiblePreviews.length} contratos aptos seleccionados
+                                </CardDescription>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="show-ineligible"
+                                        checked={showIneligible}
+                                        onCheckedChange={(checked) => setShowIneligible(checked === true)}
+                                    />
+                                    <Label htmlFor="show-ineligible">Mostrar no aptos</Label>
+                                </div>
                                 <Button variant="outline" onClick={handleToggleAll}>
-                                    {selectedLeases.size === previews.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
+                                    {Array.from(selectedLeases).filter(leaseId => eligiblePreviews.some(p => p.leaseId === leaseId)).length === eligiblePreviews.length ? 'Deseleccionar Aptos' : 'Seleccionar Aptos'}
                                 </Button>
                                 <Button
                                     onClick={handleApplyIncreases}
                                     disabled={selectedLeases.size === 0 || bulkApply.isPending}
                                     className="bg-indigo-600 hover:bg-indigo-700"
                                 >
-                                    Aplicar {selectedLeases.size} Aumentos
+                                    Aplicar {Array.from(selectedLeases).filter(leaseId => eligiblePreviews.some(p => p.leaseId === leaseId)).length} Aumentos
                                 </Button>
                             </div>
                         </div>
@@ -204,9 +242,9 @@ export function RentIncreasePage() {
                                 <table className="w-full">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-12">
                                                 <Checkbox
-                                                    checked={selectedLeases.size === previews.length}
+                                                    checked={Array.from(selectedLeases).filter(leaseId => eligiblePreviews.some(p => p.leaseId === leaseId)).length > 0 && Array.from(selectedLeases).filter(leaseId => eligiblePreviews.some(p => p.leaseId === leaseId)).length === eligiblePreviews.length}
                                                     onCheckedChange={handleToggleAll}
                                                 />
                                             </th>
@@ -214,33 +252,61 @@ export function RentIncreasePage() {
                                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Unidad</th>
                                             <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Inquilino</th>
                                             <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Renta Actual</th>
-                                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Nueva Renta</th>
+                                            <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 w-40">Nueva Renta</th>
                                             <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Aumento</th>
+                                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Estado</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
-                                        {previews.map((preview) => (
-                                            <tr key={preview.leaseId} className="hover:bg-gray-50">
-                                                <td className="px-4 py-3">
-                                                    <Checkbox
-                                                        checked={selectedLeases.has(preview.leaseId)}
-                                                        onCheckedChange={() => handleToggleLease(preview.leaseId)}
-                                                    />
-                                                </td>
-                                                <td className="px-4 py-3 text-sm">{preview.propertyName}</td>
-                                                <td className="px-4 py-3 text-sm">{preview.unitName}</td>
-                                                <td className="px-4 py-3 text-sm">{preview.renterName}</td>
-                                                <td className="px-4 py-3 text-sm text-right font-mono">{formatCurrency(preview.currentRent)}</td>
-                                                <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-green-600">
-                                                    {formatCurrency(preview.suggestedRent)}
-                                                </td>
-                                                <td className="px-4 py-3 text-sm text-right">
-                                                    <span className="text-green-600 font-medium">
-                                                        +{formatCurrency(preview.suggestedRent - preview.currentRent)}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {filteredPreviews.map((preview) => {
+                                            const newRent = rentOverrides[preview.leaseId] ?? preview.suggestedRent;
+                                            const diff = newRent - preview.currentRent;
+
+                                            const isOverridden = rentOverrides[preview.leaseId] !== undefined && rentOverrides[preview.leaseId] !== preview.suggestedRent;
+                                            const isEligible = preview.eligible;
+
+                                            return (
+                                                <tr key={preview.leaseId} className={`hover:bg-gray-50 ${!isEligible ? 'bg-gray-50 opacity-60' : ''}`}>
+                                                    <td className="px-4 py-3">
+                                                        <Checkbox
+                                                            checked={selectedLeases.has(preview.leaseId)}
+                                                            onCheckedChange={() => handleToggleLease(preview.leaseId)}
+                                                            disabled={!isEligible}
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm">{preview.propertyName}</td>
+                                                    <td className="px-4 py-3 text-sm">{preview.unitName}</td>
+                                                    <td className="px-4 py-3 text-sm">{preview.renterName}</td>
+                                                    <td className="px-4 py-3 text-sm text-right font-mono">{formatCurrency(preview.currentRent)}</td>
+                                                    <td className="px-4 py-3 text-sm text-right">
+                                                        <Input
+                                                            type="number"
+                                                            className={`text-right h-8 w-full font-mono ${isOverridden ? 'border-amber-400 bg-amber-50' : 'border-gray-200'}`}
+                                                            value={newRent}
+                                                            onChange={(e) => handleRentChange(preview.leaseId, e.target.value)}
+                                                            disabled={!isEligible}
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-right">
+                                                        <span className={`font-medium ${diff > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                                                            +{formatCurrency(diff)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm">
+                                                        {!isEligible ? (
+                                                            <div className="text-amber-600 text-xs flex items-center gap-1 cursor-help" title={preview.rejectionReason}>
+                                                                <AlertCircle size={14} />
+                                                                <span className="truncate max-w-[120px]">{preview.rejectionReason}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-green-600 text-xs font-medium px-2 py-1 bg-green-50 rounded-full">
+                                                                Apto
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>

@@ -19,6 +19,8 @@ export interface IncreasePreview {
     suggestedRent: number;
     increasePercentage: number;
     lastIncreaseDate?: Date;
+    eligible: boolean;
+    rejectionReason?: string;
 }
 
 export interface IPCConfigDto {

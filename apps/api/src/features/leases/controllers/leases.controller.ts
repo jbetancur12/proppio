@@ -157,11 +157,14 @@ export class LeasesController {
     // Rent Increase Methods
     async previewIncreases(req: Request, res: Response, next: NextFunction) {
         try {
-            const { increasePercentage } = req.query;
+            const { increasePercentage, targetDate } = req.query;
             const { RentIncreaseService } = await import('../services/rent-increase.service');
             const service = new RentIncreaseService(RequestContext.getEntityManager()!);
 
-            const previews = await service.previewIncreases(Number(increasePercentage));
+            const previews = await service.previewIncreases(
+                Number(increasePercentage),
+                targetDate as string
+            );
             ApiResponse.success(res, previews);
         } catch (error) {
             next(error);
