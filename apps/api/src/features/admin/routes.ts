@@ -20,4 +20,7 @@ router.get('/users', (req, res, next) => controller.listUsers(req, res, next));
 // Metrics
 router.get('/metrics/global', (req, res, next) => controller.getGlobalMetrics(req, res, next));
 
+// Audit Logs
+router.get('/audit-logs', (req, res, next) => controller.getAuditLogs(req, res, next));
+
 export default router;

@@ -24,6 +24,7 @@ import { TenantsPage } from './features/admin/TenantsPage';
 import { CreateTenantPage } from './features/admin/CreateTenantPage';
 import { TenantDetailPage } from './features/admin/TenantDetailPage';
 import { UsersPage } from './features/admin/UsersPage';
+import { AuditLogsPage } from './features/admin/AuditLogsPage';
 
 const queryClient = new QueryClient();
 
@@ -98,6 +99,7 @@ function App() {
             <Route path="/admin/tenants/create" element={<AdminLayout><CreateTenantPage /></AdminLayout>} />
             <Route path="/admin/tenants/:id" element={<AdminLayout><TenantDetailPage /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><UsersPage /></AdminLayout>} />
+            <Route path="/admin/audit-logs" element={<AdminLayout><AuditLogsPage /></AdminLayout>} />
 
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>

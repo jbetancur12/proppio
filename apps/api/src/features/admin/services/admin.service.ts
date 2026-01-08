@@ -4,6 +4,7 @@ import { User } from '../../auth/entities/User';
 import { TenantUser } from '../../auth/entities/TenantUser';
 import { PropertyEntity } from '../../properties/entities/Property';
 import { Lease } from '../../leases/entities/Lease';
+import { AuditLogService } from './audit-log.service';
 
 export interface TenantStats {
     propertiesCount: number;
@@ -40,6 +41,14 @@ export class AdminService {
 
         tenant.status = TenantStatus.SUSPENDED;
         await this.em.flush();
+
+        const audit = new AuditLogService(this.em);
+        await audit.log({
+            action: 'SUSPEND_TENANT',
+            resourceType: 'Tenant',
+            resourceId: tenant.id,
+            details: { name: tenant.name }
+        });
     }
 
     async activateTenant(id: string): Promise<void> {
@@ -48,6 +57,14 @@ export class AdminService {
 
         tenant.status = TenantStatus.ACTIVE;
         await this.em.flush();
+
+        const audit = new AuditLogService(this.em);
+        await audit.log({
+            action: 'ACTIVATE_TENANT',
+            resourceType: 'Tenant',
+            resourceId: tenant.id,
+            details: { name: tenant.name }
+        });
     }
 
     async getAllUsers(): Promise<User[]> {

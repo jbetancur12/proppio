@@ -1,8 +1,9 @@
-import { EntityManager } from '@mikro-orm/postgresql'; // Use postgresql specific manager or core
+import { EntityManager } from '@mikro-orm/core';
+import { EntityManager as SqlEntityManager } from '@mikro-orm/postgresql';
 import { AuditLog } from '../entities/AuditLog';
 import { User } from '../../auth/entities/User';
 import { Tenant } from '../../tenants/entities/Tenant';
-import { requestContext } from '../../../shared/utils/RequestContext'; // Correct import name
+import { getContext } from '../../../shared/utils/RequestContext';
 
 export interface AuditLogDto {
     action: string;
@@ -11,6 +12,8 @@ export interface AuditLogDto {
     oldValues?: any;
     newValues?: any;
     details?: any;
+    userId?: string;   // Explicit override
+    tenantId?: string; // Explicit override
 }
 
 export class AuditLogService {
@@ -18,16 +21,29 @@ export class AuditLogService {
 
     async log(data: AuditLogDto): Promise<void> {
         try {
-            const ctx = requestContext.current(); // Use correct casing
-            const em = this.em.fork(); // Always fork to avoid context pollution
+            let ctx;
+            try {
+                ctx = getContext();
+            } catch (e) {
+                // Ignore if no context available and overrides provided
+            }
 
-            if (!ctx.userId) {
-                // console.warn('AuditLog: No userId in context', data);
+            // Use fork to ensure we have a clean state/context if needed, 
+            // but usually for logging we might want to share transaction or not. 
+            // Original code used fork(), let's keep it but check if it's needed.
+            // If em is generic, fork() returns generic EM.
+            const em = this.em.fork();
+
+            // Use explicit values or fallback to context
+            const userId = data.userId || ctx?.userId;
+            const tenantId = data.tenantId || ctx?.tenantId;
+
+            if (!userId) {
                 return;
             }
 
-            const user = await em.getReference(User, ctx.userId);
-            const tenant = ctx.tenantId ? await em.getReference(Tenant, ctx.tenantId) : undefined;
+            const user = await em.getReference(User, userId);
+            const tenant = tenantId ? await em.getReference(Tenant, tenantId) : undefined;
 
             const log = new AuditLog(user, data.action, {
                 tenant,
@@ -35,8 +51,8 @@ export class AuditLogService {
                 resourceId: data.resourceId,
                 oldValues: data.oldValues,
                 newValues: data.newValues || data.details,
-                ipAddress: (ctx as any).ip, // Assuming IP might be added to context
-                userAgent: (ctx as any).userAgent // Assuming UserAgent might be added to context
+                // ipAddress: (ctx as any).ip, 
+                // userAgent: (ctx as any).userAgent 
             });
 
             await em.persistAndFlush(log);
@@ -54,7 +70,8 @@ export class AuditLogService {
         limit?: number;
         offset?: number;
     }) {
-        const qb = this.em.createQueryBuilder(AuditLog, 'l'); // EntityManager should have createQueryBuilder
+        // Cast to SqlEntityManager to use createQueryBuilder
+        const qb = (this.em as SqlEntityManager).createQueryBuilder(AuditLog, 'l');
 
         qb.select('*')
             .leftJoinAndSelect('l.user', 'u')

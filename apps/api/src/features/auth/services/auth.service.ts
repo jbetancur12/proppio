@@ -5,6 +5,7 @@ import { User, GlobalRole } from '../entities/User';
 import { TenantUser } from '../entities/TenantUser';
 import { LoginDto, RegisterDto } from '../dtos/auth.dto';
 import { UnauthorizedError, ValidationError } from '../../../shared/errors/AppError';
+import { AuditLogService } from '../../admin/services/audit-log.service';
 
 export class AuthService {
     constructor(private readonly em: EntityManager) { }
@@ -25,6 +26,8 @@ export class AuthService {
             throw new UnauthorizedError('Credenciales inválidas');
         }
 
+        const audit = new AuditLogService(this.em);
+
         // Check if Super Admin
         if (user.globalRole === GlobalRole.SUPER_ADMIN) {
             // Super Admin: Token WITHOUT tenantId
@@ -35,6 +38,13 @@ export class AuthService {
             };
 
             const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+
+            // Log login audit
+            await audit.log({
+                action: 'LOGIN',
+                userId: user.id,
+                details: { role: GlobalRole.SUPER_ADMIN }
+            });
 
             return {
                 token,
@@ -66,6 +76,14 @@ export class AuthService {
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+
+        // Log login audit
+        await audit.log({
+            action: 'LOGIN',
+            userId: user.id,
+            tenantId: tenantUser.tenant.id,
+            details: { role: tenantUser.role }
+        });
 
         return {
             token,

@@ -55,3 +55,10 @@ export function useGlobalMetrics() {
         queryFn: () => adminApi.getGlobalMetrics()
     });
 }
+
+export function useAuditLogs(filters: any) {
+    return useQuery({
+        queryKey: ['admin-audit-logs', filters],
+        queryFn: () => adminApi.getAuditLogs(filters)
+    });
+}

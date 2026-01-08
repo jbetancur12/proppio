@@ -4,6 +4,7 @@ import { Tenant, TenantStatus } from '../../tenants/entities/Tenant';
 import { User, GlobalRole } from '../../auth/entities/User';
 import { TenantUser, TenantRole } from '../../auth/entities/TenantUser';
 import { ValidationError } from '../../../shared/errors/AppError';
+import { AuditLogService } from './audit-log.service';
 
 export interface CreateTenantDto {
     name: string;
@@ -59,6 +60,14 @@ export class TenantProvisioningService {
 
         // Persist all in transaction
         await this.em.persistAndFlush([tenant, adminUser, tenantUser]);
+
+        const audit = new AuditLogService(this.em);
+        await audit.log({
+            action: 'CREATE_TENANT',
+            resourceType: 'Tenant',
+            resourceId: tenant.id,
+            details: { name: tenant.name, slug: tenant.slug, plan: tenant.plan }
+        });
 
         return tenant;
     }

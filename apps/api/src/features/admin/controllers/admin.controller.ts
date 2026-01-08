@@ -3,6 +3,7 @@ import { RequestContext } from '@mikro-orm/core';
 import { AdminService } from '../services/admin.service';
 import { TenantProvisioningService } from '../services/tenant-provisioning.service';
 import { ApiResponse } from '../../../shared/utils/ApiResponse';
+import { AuditLogService } from '../services/audit-log.service';
 
 export class AdminController {
     private getAdminService(): AdminService {
@@ -15,6 +16,12 @@ export class AdminController {
         const em = RequestContext.getEntityManager();
         if (!em) throw new Error('EntityManager not found in context');
         return new TenantProvisioningService(em);
+    }
+
+    private getAuditService(): AuditLogService {
+        const em = RequestContext.getEntityManager();
+        if (!em) throw new Error('EntityManager not found in context');
+        return new AuditLogService(em);
     }
 
     async listTenants(req: Request, res: Response, next: NextFunction) {
@@ -93,6 +100,27 @@ export class AdminController {
             const service = this.getAdminService();
             const metrics = await service.getGlobalMetrics();
             ApiResponse.success(res, metrics);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getAuditLogs(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { tenantId, userId, action, startDate, endDate, limit, offset } = req.query;
+            const service = this.getAuditService();
+
+            const result = await service.getLogs({
+                tenantId: tenantId as string,
+                userId: userId as string,
+                action: action as string,
+                startDate: startDate ? new Date(startDate as string) : undefined,
+                endDate: endDate ? new Date(endDate as string) : undefined,
+                limit: limit ? Number(limit) : 20,
+                offset: offset ? Number(offset) : 0
+            });
+
+            ApiResponse.success(res, result);
         } catch (error) {
             next(error);
         }

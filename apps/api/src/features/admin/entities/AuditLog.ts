@@ -15,10 +15,10 @@ export class AuditLog {
     @Index()
     user!: User;
 
-    @Property()
+    @Property({ type: 'string' })
     action!: string;
 
-    @Property({ nullable: true })
+    @Property({ type: 'string', nullable: true })
     resourceType?: string;
 
     @Property({ nullable: true, type: 'uuid' })
@@ -30,13 +30,13 @@ export class AuditLog {
     @Property({ type: 'jsonb', nullable: true })
     newValues?: any;
 
-    @Property({ nullable: true })
+    @Property({ type: 'string', nullable: true })
     ipAddress?: string;
 
-    @Property({ nullable: true })
+    @Property({ type: 'text', nullable: true })
     userAgent?: string;
 
-    @Property()
+    @Property({ type: 'datetime' })
     @Index()
     createdAt: Date = new Date();
 

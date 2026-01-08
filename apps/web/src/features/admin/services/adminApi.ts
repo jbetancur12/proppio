@@ -34,6 +34,37 @@ export interface CreateTenantDto {
     };
 }
 
+export interface AuditLog {
+    id: string;
+    action: string;
+    resourceType?: string;
+    resourceId?: string;
+    details?: any;
+    ipAddress?: string;
+    userAgent?: string;
+    createdAt: string;
+    user: {
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+    };
+    tenant?: {
+        id: string;
+        name: string;
+    };
+}
+
+export interface AuditLogFilters {
+    tenantId?: string;
+    userId?: string;
+    action?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    offset?: number;
+}
+
 export const adminApi = {
     // Tenants
     getAllTenants: async (): Promise<Tenant[]> => {
@@ -58,6 +89,12 @@ export const adminApi = {
     // Metrics
     getGlobalMetrics: async (): Promise<GlobalMetrics> => {
         const response = await api.get('/api/admin/metrics/global');
+        return response.data.data;
+    },
+
+    // Audit Logs
+    getAuditLogs: async (filters: AuditLogFilters): Promise<{ logs: AuditLog[]; count: number }> => {
+        const response = await api.get('/api/admin/audit-logs', { params: filters });
         return response.data.data;
     }
 };

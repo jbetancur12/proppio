@@ -13,7 +13,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: 'Dashboard', href: '/admin', icon: BarChart3 },
         { name: 'Tenants', href: '/admin/tenants', icon: Building2 },
         { name: 'Users', href: '/admin/users', icon: Users },
-        { name: 'Audit Logs', href: '/admin/audit', icon: FileText },
+        { name: 'Audit Logs', href: '/admin/audit-logs', icon: FileText },
         { name: 'Settings', href: '/admin/settings', icon: Settings }
     ];
 
@@ -36,8 +36,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                 key={item.name}
                                 to={item.href}
                                 className={`flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${isActive
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                                     }`}
                             >
                                 <Icon className="h-5 w-5" />
