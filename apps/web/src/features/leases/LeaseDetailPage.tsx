@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, User, Home, DollarSign, FileText, CheckCircle, AlertTriangle, XCircle, Clock, AlertOctagon } from "lucide-react";
+import { ArrowLeft, Calendar, User, Home, DollarSign, FileText, CheckCircle, AlertTriangle, XCircle, Clock, AlertOctagon, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -194,40 +194,28 @@ export function LeaseDetailPage() {
                                             size="sm"
                                             className="h-7 text-xs bg-red-600 hover:bg-red-700"
                                             onClick={() => {
-                                                // Trigger payment modal with pre-filled data
-                                                // TODO: Implement openPaymentModal logic
-                                                // For now, simpler: Navigate to payments page or open separate modal?
-                                                // Better: "Registrar Pago" functionality needs a way to pass context.
-                                                // We can emit event or set state if PaymentModal is accessible.
-                                                // Assuming we can add a PaymentModal here or use existing mechanism.
-                                                navigate('/payments'); // Temporary until modal logic is refined
+                                                navigate(`/payments?paymentId=${pending.id}`);
                                             }}
                                         >
-                                            Pagar
+                                            Registrar Pago
                                         </Button>
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-7 w-7 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                            className="h-7 w-7 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
                                             onClick={() => {
                                                 if (confirm('¿Está seguro de eliminar este cobro pendiente?')) {
                                                     paymentTrackingApi.deletePayment(pending.id)
                                                         .then(() => {
                                                             toast.success('Cobro eliminado exitosamente');
-                                                            // Trigger refetch of pending payments
-                                                            // For now, simple page reload or we need query invalidation hook
-                                                            // Better: Invalidate query if we use useQuery properly
-                                                            // Since usePendingPayments uses useQuery, we can access queryClient
-                                                            // But simpler for quick fix: window.location.reload() or navigate
-                                                            // Let's rely on React Query cache invalidation if possible, but context is missing here.
-                                                            // Fallback: reload
                                                             window.location.reload();
                                                         })
                                                         .catch(() => toast.error('Error al eliminar cobro'));
                                                 }
                                             }}
+                                            title="Eliminar cobro"
                                         >
-                                            <XCircle size={16} />
+                                            <Trash2 size={16} />
                                         </Button>
                                     </div>
                                 </li>
@@ -420,7 +408,21 @@ export function LeaseDetailPage() {
                         ) : (
                             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                                 {payments?.map(payment => (
-                                    <PaymentCard key={payment.id} payment={payment} />
+                                    <PaymentCard
+                                        key={payment.id}
+                                        payment={payment}
+                                        onAction={(p) => navigate(`/payments?paymentId=${p.id}`)}
+                                        onDelete={(id) => {
+                                            if (confirm('¿Está seguro de eliminar este cobro pendiente?')) {
+                                                paymentTrackingApi.deletePayment(Number(id) ? String(id) : id) // Handle potentially numeric id? No, usually string. Safest to just pass id.
+                                                    .then(() => {
+                                                        toast.success('Cobro eliminado exitosamente');
+                                                        window.location.reload();
+                                                    })
+                                                    .catch(() => toast.error('Error al eliminar cobro'));
+                                            }
+                                        }}
+                                    />
                                 ))}
                             </div>
                         )}

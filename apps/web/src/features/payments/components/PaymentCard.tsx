@@ -1,4 +1,4 @@
-import { DollarSign, Calendar, CreditCard, CheckCircle, XCircle, Clock, Download, Loader2 } from "lucide-react";
+import { DollarSign, Calendar, CreditCard, CheckCircle, XCircle, Clock, Download, Loader2, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -6,9 +6,22 @@ import type { PaymentData } from "../services/paymentsApi";
 import { useState } from "react";
 import { paymentsApi } from "../services/paymentsApi";
 import { toast } from "sonner";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface PaymentCardProps {
     payment: PaymentData;
+    onAction?: (payment: PaymentData) => void;
+    onDelete?: (id: string) => void;
 }
 
 const statusConfig = {
@@ -30,7 +43,7 @@ const methodLabels: Record<string, string> = {
  * Presentational component for Payment
  * Following design_guidelines.md section 3.1
  */
-export function PaymentCard({ payment }: PaymentCardProps) {
+export function PaymentCard({ payment, onAction, onDelete }: PaymentCardProps) {
     const [isDownloading, setIsDownloading] = useState(false);
     const status = statusConfig[payment.status];
     const StatusIcon = status.icon;
@@ -86,6 +99,47 @@ export function PaymentCard({ payment }: PaymentCardProps) {
 
                 {payment.reference && (
                     <p className="text-xs text-gray-400 mt-2 truncate">Ref: {payment.reference}</p>
+                )}
+
+                {payment.status === 'PENDING' && (
+                    <div className="mt-4 pt-2 border-t border-gray-100 flex gap-2">
+                        <Button
+                            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs"
+                            onClick={() => onAction && onAction(payment)}
+                        >
+                            <CheckCircle size={14} className="mr-2" />
+                            Registrar Pago
+                        </Button>
+                        {onDelete && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200"
+                                    >
+                                        <Trash2 size={14} />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Esta acción eliminará el registro de pago pendiente.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={() => onDelete(payment.id)}
+                                            className="bg-red-600 hover:bg-red-700"
+                                        >
+                                            Eliminar
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                    </div>
                 )}
 
                 {payment.status === 'COMPLETED' && (

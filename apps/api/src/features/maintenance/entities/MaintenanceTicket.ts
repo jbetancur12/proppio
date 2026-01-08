@@ -35,7 +35,7 @@ export class MaintenanceTicket extends BaseTenantEntity {
     @ManyToOne({ entity: 'UnitEntity' })
     unit!: UnitEntity;
 
-    @ManyToOne({ entity: 'Renter', nullable: true })
+    @ManyToOne({ entity: 'Renter', nullable: true, fieldName: 'renter_id' })
     reportedBy?: Renter;
 
     @Property({ type: 'json', nullable: true })

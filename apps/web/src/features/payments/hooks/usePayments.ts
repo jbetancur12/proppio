@@ -33,6 +33,38 @@ export function useCreatePayment() {
     });
 }
 
+export function useUpdatePayment() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: paymentsApi.update,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            queryClient.invalidateQueries({ queryKey: ['leases'] }); // For pending payments count
+            toast.success("Pago actualizado exitosamente");
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error?.message || "Error al actualizar pago");
+        }
+    });
+}
+
+export function useDeletePayment() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: paymentsApi.delete,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['payments'] });
+            queryClient.invalidateQueries({ queryKey: ['leases'] });
+            toast.success("Pago eliminado");
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error?.message || "Error al eliminar pago");
+        }
+    });
+}
+
 export function usePaymentSummary(leaseId: string) {
     return useQuery({
         queryKey: ['payment-summary', leaseId],

@@ -43,6 +43,15 @@ export const paymentsApi = {
         return res.data.data;
     },
 
+    update: async (params: { id: string; data: Partial<PaymentData> }) => {
+        const res = await api.put(`/api/payments/${params.id}`, params.data);
+        return res.data.data;
+    },
+
+    delete: async (id: string) => {
+        await api.delete(`/api/payments/${id}`);
+    },
+
     getSummary: async (leaseId: string): Promise<{ total: number; count: number }> => {
         const res = await api.get(`/api/payments/summary/${leaseId}`);
         return res.data.data;

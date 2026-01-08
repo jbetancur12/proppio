@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search, DollarSign, TrendingUp } from "lucide-react";
-import { usePayments, useCreatePayment } from "./hooks/usePayments";
+import { useSearchParams } from "react-router-dom";
+import { usePayments, useCreatePayment, useUpdatePayment, useDeletePayment } from "./hooks/usePayments";
 import { useLeases } from "../leases/hooks/useLeases";
 import { PaymentCard } from "./components/PaymentCard";
+
+// ... existing code ...
 
 /**
  * PaymentsPage - Container component
@@ -13,6 +16,7 @@ import { PaymentCard } from "./components/PaymentCard";
  */
 export function PaymentsPage() {
     const [isCreating, setIsCreating] = useState(false);
+    const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
 
     // Form state
     const [selectedLease, setSelectedLease] = useState("");
@@ -23,9 +27,31 @@ export function PaymentsPage() {
     const [method, setMethod] = useState("TRANSFER");
     const [reference, setReference] = useState("");
 
+    const [searchParams] = useSearchParams();
+    const autoSelectPaymentId = searchParams.get('paymentId');
+
     const { data: payments, isLoading } = usePayments();
     const { data: leases } = useLeases();
+
+    // Auto-open modal if paymentId provided
+    useEffect(() => {
+        if (autoSelectPaymentId && payments) {
+            const payment = payments.find((p: any) => p.id === autoSelectPaymentId);
+            if (payment && payment.status === 'PENDING') {
+                handleRegister(payment);
+                // Optional: clear param
+                window.history.replaceState({}, '', '/payments');
+            }
+        }
+    }, [autoSelectPaymentId, payments]);
     const createMutation = useCreatePayment();
+    const updateMutation = useUpdatePayment();
+    const deleteMutation = useDeletePayment();
+
+    const handleDelete = (id: string) => {
+        deleteMutation.mutate(id);
+    };
+
 
     // Filter active leases
     const activeLeases = leases?.filter((l: any) => l.status === 'ACTIVE') || [];
@@ -34,28 +60,48 @@ export function PaymentsPage() {
     const totalReceived = payments?.filter((p: any) => p.status === 'COMPLETED')
         .reduce((sum: number, p: any) => sum + p.amount, 0) || 0;
 
-    const handleCreate = () => {
-        createMutation.mutate(
-            {
-                leaseId: selectedLease,
-                amount: Number(amount),
-                paymentDate,
-                periodStart,
-                periodEnd,
-                method,
-                reference: reference || undefined
-            },
-            {
-                onSuccess: () => {
-                    setSelectedLease("");
-                    setAmount("");
-                    setPeriodStart("");
-                    setPeriodEnd("");
-                    setReference("");
-                    setIsCreating(false);
-                }
-            }
-        );
+    const handleCreateOrUpdate = () => {
+        const payload = {
+            leaseId: selectedLease,
+            amount: Number(amount),
+            paymentDate,
+            periodStart,
+            periodEnd,
+            method,
+            reference: reference || undefined,
+            status: 'COMPLETED' as const
+        };
+
+        const resetForm = () => {
+            setSelectedLease("");
+            setAmount("");
+            setPeriodStart("");
+            setPeriodEnd("");
+            setReference("");
+            setIsCreating(false);
+            setEditingPaymentId(null);
+        };
+
+        if (editingPaymentId) {
+            updateMutation.mutate({
+                id: editingPaymentId,
+                data: payload
+            }, { onSuccess: resetForm });
+        } else {
+            createMutation.mutate(payload, { onSuccess: resetForm });
+        }
+    };
+
+    const handleRegister = (payment: any) => {
+        setEditingPaymentId(payment.id);
+        setSelectedLease(payment.lease.id);
+        setAmount(String(payment.amount));
+        setPaymentDate(new Date().toISOString().split('T')[0]); // Default to today for payment date
+        setPeriodStart(payment.periodStart.split('T')[0]);
+        setPeriodEnd(payment.periodEnd.split('T')[0]);
+        setMethod(payment.method || "TRANSFER");
+        setReference(payment.reference || "");
+        setIsCreating(true);
     };
 
     const formatCurrency = (value: number) =>
@@ -69,7 +115,7 @@ export function PaymentsPage() {
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900">Pagos</h1>
                     <p className="text-gray-500">Registro y seguimiento de pagos de arrendamiento.</p>
                 </div>
-                <Button onClick={() => setIsCreating(!isCreating)} className="bg-green-600 hover:bg-green-700">
+                <Button onClick={() => { setIsCreating(!isCreating); setEditingPaymentId(null); }} className="bg-green-600 hover:bg-green-700">
                     <Plus size={18} className="mr-2" /> Registrar Pago
                 </Button>
             </div>
@@ -115,7 +161,9 @@ export function PaymentsPage() {
             {isCreating && (
                 <Card className="animate-in fade-in slide-in-from-top-4 border-green-100 bg-green-50/50">
                     <CardHeader>
-                        <CardTitle className="text-green-900">Registrar Nuevo Pago</CardTitle>
+                        <CardTitle className="text-green-900">
+                            {editingPaymentId ? 'Completar Pago Pendiente' : 'Registrar Nuevo Pago'}
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2 md:col-span-2">
@@ -128,6 +176,7 @@ export function PaymentsPage() {
                                     const lease = activeLeases.find((l: any) => l.id === e.target.value);
                                     if (lease) setAmount(String(lease.monthlyRent));
                                 }}
+                                disabled={!!editingPaymentId}
                             >
                                 <option value="">Seleccionar contrato activo...</option>
                                 {activeLeases.map((l: any) => (
@@ -173,13 +222,13 @@ export function PaymentsPage() {
                         </div>
                     </CardContent>
                     <div className="px-6 pb-6 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setIsCreating(false)}>Cancelar</Button>
+                        <Button variant="ghost" onClick={() => { setIsCreating(false); setEditingPaymentId(null); }}>Cancelar</Button>
                         <Button
-                            onClick={handleCreate}
-                            disabled={!selectedLease || !amount || !periodStart || !periodEnd || createMutation.isPending}
+                            onClick={handleCreateOrUpdate}
+                            disabled={!selectedLease || !amount || !periodStart || !periodEnd || createMutation.isPending || updateMutation.isPending}
                             className="bg-green-600 hover:bg-green-700"
                         >
-                            {createMutation.isPending ? 'Guardando...' : 'Registrar Pago'}
+                            {createMutation.isPending || updateMutation.isPending ? 'Guardando...' : 'Registrar Pago'}
                         </Button>
                     </div>
                 </Card>
@@ -202,7 +251,12 @@ export function PaymentsPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {payments?.map((payment: any) => (
-                            <PaymentCard key={payment.id} payment={payment} />
+                            <PaymentCard
+                                key={payment.id}
+                                payment={payment}
+                                onAction={handleRegister}
+                                onDelete={handleDelete}
+                            />
                         ))}
                         {payments?.length === 0 && (
                             <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
