@@ -29,8 +29,17 @@ export class PaymentTrackingService {
             const month = currentMonth.getMonth();
             const year = currentMonth.getFullYear();
 
-            // Create due date (same day as lease start date)
-            const dueDate = new Date(year, month, startDate.getDate());
+            // Calculate due date properly handling month lengths
+            // If start date is 31st, and current month only has 30 days (or 28/29), use last day of month
+            const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+            const dueDay = Math.min(startDate.getDate(), lastDayOfMonth);
+            const dueDate = new Date(year, month, dueDay);
+
+            // strict check: if due date is in the future, don't count it yet
+            // This handles cases where we are in the same month but before the start day
+            if (dueDate > today) {
+                break;
+            }
 
             expectedPayments.push({
                 month,
@@ -42,6 +51,7 @@ export class PaymentTrackingService {
 
             // Move to next month
             currentMonth.setMonth(currentMonth.getMonth() + 1);
+            currentMonth.setDate(1); // Ensure we stay on 1st to avoid skipping shorter months issues
         }
 
         return expectedPayments;
