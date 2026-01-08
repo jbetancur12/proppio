@@ -28,6 +28,7 @@ import { UsersPage } from './features/admin/UsersPage';
 import { AuditLogsPage } from './features/admin/AuditLogsPage';
 import { FinancialMetricsPage } from './features/admin/FinancialMetricsPage';
 import { RequireSuperAdmin } from './features/admin/components/RequireSuperAdmin';
+import { TreasuryPage } from './features/treasury/TreasuryPage';
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,11 @@ function App() {
             <Route path="/rent-increases" element={
               <ProtectedRoute>
                 <RentIncreasePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/treasury" element={
+              <ProtectedRoute>
+                <TreasuryPage />
               </ProtectedRoute>
             } />
             <Route path="/subscription-suspended" element={<SubscriptionSuspendedPage />} />

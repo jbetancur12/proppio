@@ -71,6 +71,19 @@ export class AdminController {
         }
     }
 
+    async updateTenantConfig(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { config } = req.body;
+            const service = this.getAdminService();
+
+            await service.updateTenantConfig(id, config);
+            ApiResponse.success(res, null, 'Configuración actualizada exitosamente');
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async updateTenantStatus(req: Request, res: Response, next: NextFunction) {
         try {
             const { id } = req.params;

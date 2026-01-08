@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { useTenant } from './hooks/useAdmin';
 import { ImpersonateButton } from './components/ImpersonateButton';
 import { ArrowLeft, Building2, FileText, Users } from 'lucide-react';
+import { adminApi } from './services/adminApi';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
 
 export function TenantDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -106,8 +109,44 @@ export function TenantDetailPage() {
                 <CardHeader>
                     <CardTitle>Acciones</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                     <ImpersonateButton tenantId={tenant.id} tenantName={tenant.name} />
+                </CardContent>
+            </Card>
+
+            {/* Feature Flags */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Configuración de Módulos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <h4 className="font-medium text-base">Módulo de Tesorería</h4>
+                            <p className="text-sm text-gray-500">
+                                Habilita el registro de ingresos y egresos generales (Tesoreria)
+                            </p>
+                        </div>
+                        <Switch
+                            checked={(tenant as any).config?.features?.treasury || false}
+                            onCheckedChange={async (checked: boolean) => {
+                                try {
+                                    await adminApi.updateTenantConfig(tenant.id, {
+                                        features: {
+                                            ...((tenant as any).config?.features || {}),
+                                            treasury: checked
+                                        }
+                                    });
+                                    toast.success(`Módulo de tesorería ${checked ? 'activado' : 'desactivado'}`);
+                                    // Normally we revalidate here, but for now simple toast
+                                    window.location.reload(); // Quick refresh to update UI
+                                } catch (error) {
+                                    toast.error('Error al actualizar configuración');
+                                    console.error(error);
+                                }
+                            }}
+                        />
+                    </div>
                 </CardContent>
             </Card>
         </div>

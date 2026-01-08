@@ -8,6 +8,9 @@ interface User {
     role?: string;
     globalRole?: string;
     email?: string;
+    features?: {
+        treasury?: boolean;
+    };
 }
 
 interface AuthContextType {

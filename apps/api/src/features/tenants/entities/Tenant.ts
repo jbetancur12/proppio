@@ -11,6 +11,13 @@ export enum TenantPlan {
     PRO = 'PRO',
 }
 
+export interface TenantConfig {
+    features?: {
+        treasury?: boolean;
+    };
+    [key: string]: any;
+}
+
 @Entity({ tableName: 'tenants' })
 export class Tenant extends BaseEntity {
     @Property({ type: 'string' })
@@ -26,5 +33,5 @@ export class Tenant extends BaseEntity {
     plan?: string;
 
     @Property({ type: 'json', nullable: true })
-    config?: Record<string, unknown>;
+    config?: TenantConfig;
 }

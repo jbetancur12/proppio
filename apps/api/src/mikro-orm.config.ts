@@ -20,6 +20,7 @@ import { User } from './features/auth/entities/User';
 import { TenantUser } from './features/auth/entities/TenantUser';
 import { AuditLog } from './features/admin/entities/AuditLog';
 import { ExitNotice } from './features/leases/entities/ExitNotice';
+import { TreasuryTransaction } from './features/treasury/entities/TreasuryTransaction';
 
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -44,7 +45,8 @@ export default defineConfig({
         User,
         TenantUser,
         AuditLog,
-        ExitNotice
+        ExitNotice,
+        TreasuryTransaction
     ],
     subscribers: [new TenantSubscriber()],
     debug: process.env.NODE_ENV !== 'production',

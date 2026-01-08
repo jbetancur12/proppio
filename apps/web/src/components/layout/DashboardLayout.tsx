@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Building2, Users, FileText, DollarSign, Wrench, TrendingUp, Settings, Menu } from 'lucide-react';
+import { Home, Building2, Users, FileText, DollarSign, Wrench, TrendingUp, Settings, Menu, Wallet } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { ExitImpersonationBanner } from '@/features/admin/components/ExitImpersonationBanner';
 import { useImpersonation } from '@/features/admin/hooks/useImpersonation';
@@ -10,7 +10,7 @@ import { api } from '@/api/client';
 const { Building, TrendingDown, Hammer } = { Building: Building2, TrendingDown: TrendingUp, Hammer: Wrench };
 
 export function DashboardLayout({ children }: { children?: ReactNode }) {
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isImpersonating, impersonatedTenantId } = useImpersonation();
@@ -24,6 +24,8 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
         }
     }, [isImpersonating, impersonatedTenantId]);
 
+    // const { user } = useAuth(); // Removed redundant call
+
     const navItems = [
         { label: "Panel", href: "/dashboard", icon: Home },
         { label: "Propiedades", href: "/properties", icon: Building },
@@ -32,9 +34,10 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
         { label: "Aumentos IPC", href: "/rent-increases", icon: TrendingUp },
         { label: "Pagos", href: "/payments", icon: DollarSign },
         { label: "Gastos", href: "/expenses", icon: TrendingDown },
+        { label: "Tesorería", href: "/treasury", icon: Wallet, hidden: !user?.features?.treasury },
         { label: "Mantenimiento", href: "/maintenance", icon: Hammer },
         { label: "Configuración", href: "/settings", icon: Settings },
-    ];
+    ].filter(item => !item.hidden);
 
     const SidebarContent = ({ onClose }: { onClose?: () => void }) => (
         <div className="flex flex-col h-full bg-white">

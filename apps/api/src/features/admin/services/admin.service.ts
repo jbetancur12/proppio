@@ -51,6 +51,25 @@ export class AdminService {
         });
     }
 
+    async updateTenantConfig(id: string, config: any): Promise<void> {
+        const tenant = await this.em.findOne(Tenant, { id });
+        if (!tenant) throw new Error('Tenant not found');
+
+        tenant.config = {
+            ...tenant.config,
+            ...config
+        };
+        await this.em.flush();
+
+        const audit = new AuditLogService(this.em);
+        await audit.log({
+            action: 'UPDATE_TENANT_CONFIG',
+            resourceType: 'Tenant',
+            resourceId: tenant.id,
+            details: { config }
+        });
+    }
+
     async activateTenant(id: string): Promise<void> {
         const tenant = await this.em.findOne(Tenant, { id });
         if (!tenant) throw new Error('Tenant not found');

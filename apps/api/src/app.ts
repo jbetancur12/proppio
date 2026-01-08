@@ -14,6 +14,7 @@ import statsRoutes from './features/stats/routes';
 import expenseRoutes from './features/expenses/routes';
 import maintenanceRoutes from './features/maintenance/routes';
 import adminRoutes from './features/admin/routes';
+import treasuryRoutes from './features/treasury/routes';
 import { CronScheduler } from './shared/services/cron-scheduler';
 
 export const createApp = async () => {
@@ -58,6 +59,9 @@ export const createApp = async () => {
 
     // Admin Routes (Super Admin only)
     apiRouter.use('/admin', adminRoutes);
+
+    // Treasury Routes
+    apiRouter.use('/treasury', treasuryRoutes);
 
     // Example protected route to verify context
     apiRouter.get('/me', (req, res) => {

@@ -86,6 +86,10 @@ export const adminApi = {
         await api.patch(`/api/admin/tenants/${id}/status`, { status });
     },
 
+    updateTenantConfig: async (id: string, config: any): Promise<void> => {
+        await api.patch(`/api/admin/tenants/${id}/config`, { config });
+    },
+
     // Metrics
     getGlobalMetrics: async (): Promise<GlobalMetrics> => {
         const response = await api.get('/api/admin/metrics/global');

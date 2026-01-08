@@ -8,11 +8,12 @@ const controller = new AdminController();
 // Apply Super Admin requirement to all admin routes
 router.use(requireSuperAdmin);
 
-// Tenants
+// Tenant management
 router.get('/tenants', (req, res, next) => controller.listTenants(req, res, next));
 router.get('/tenants/:id', (req, res, next) => controller.getTenant(req, res, next));
 router.post('/tenants', (req, res, next) => controller.createTenant(req, res, next));
 router.patch('/tenants/:id/status', (req, res, next) => controller.updateTenantStatus(req, res, next));
+router.patch('/tenants/:id/config', (req, res, next) => controller.updateTenantConfig(req, res, next));
 
 // Users
 router.get('/users', (req, res, next) => controller.listUsers(req, res, next));
