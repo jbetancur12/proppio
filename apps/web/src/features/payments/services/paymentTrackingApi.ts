@@ -1,4 +1,4 @@
-import api from '../../../lib/api';
+import { api } from "../../../api/client";
 
 export interface PendingPaymentMonth {
     month: number;
