@@ -5,7 +5,7 @@ import { LeaseRenewalService } from '../features/leases/services/lease-renewal.s
  * Cron job to process automatic lease renewals daily
  * Schedule: Every day at 00:00 (midnight)
  */
-export async function processLeaseRenewals(em: EntityManager): Promise<void> {
+export async function processLeaseRenewals(em: EntityManager): Promise<{ renewed: number; errors: string[] }> {
     console.log('[CRON] Starting automatic lease renewal process...');
 
     const service = new LeaseRenewalService(em);
@@ -18,6 +18,8 @@ export async function processLeaseRenewals(em: EntityManager): Promise<void> {
         if (result.errors.length > 0) {
             console.error(`[CRON] Errors during renewal:`, result.errors);
         }
+
+        return result;
     } catch (error) {
         console.error('[CRON] Fatal error during lease renewal:', error);
         throw error;

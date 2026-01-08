@@ -1,6 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
 import { Lease, LeaseStatus } from '../entities/Lease';
-import { getContext } from '../../../shared/utils/RequestContext';
 import { AuditLogService } from '../../admin/services/audit-log.service';
 
 export class LeaseRenewalService {
@@ -23,8 +22,7 @@ export class LeaseRenewalService {
      * Renew a lease by extending endDate by 1 year and incrementing renewal count
      */
     async renewLease(leaseId: string): Promise<void> {
-        const { tenantId, userId } = getContext();
-        const lease = await this.em.findOne(Lease, { id: leaseId });
+        const lease = await this.em.findOne(Lease, { id: leaseId }, { populate: ['tenant'] });
 
         if (!lease) {
             throw new Error('Lease not found');
@@ -45,7 +43,7 @@ export class LeaseRenewalService {
 
         await this.em.flush();
 
-        // Log renewal to audit
+        // Log renewal to audit (system-initiated)
         const auditService = new AuditLogService(this.em);
         await auditService.log({
             action: 'LEASE_RENEWED',
@@ -53,7 +51,7 @@ export class LeaseRenewalService {
             resourceId: leaseId,
             oldValues: { endDate: oldEndDate, renewalCount: lease.renewalCount - 1 },
             newValues: { endDate: newEndDate, renewalCount: lease.renewalCount },
-            performedBy: userId || 'SYSTEM'
+            performedBy: 'SYSTEM'
         });
     }
 
