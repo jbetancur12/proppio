@@ -11,6 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { PropertyOverviewTab } from "./components/PropertyOverviewTab";
 import { PropertyTenantsTab } from "./components/PropertyTenantsTab";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createUnitSchema, CreateUnitDto } from "@proppio/shared";
+import { FormField } from "@/components/forms/FormField";
 
 /**
  * Container component for Property Details
@@ -19,12 +23,6 @@ import { PropertyTenantsTab } from "./components/PropertyTenantsTab";
 export function PropertyDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [unitName, setUnitName] = useState("");
-    const [unitType, setUnitType] = useState("");
-    const [unitBedrooms, setUnitBedrooms] = useState("");
-    const [unitBathrooms, setUnitBathrooms] = useState("");
-    const [unitArea, setUnitArea] = useState("");
-    const [unitRent, setUnitRent] = useState("");
     const [editingUnit, setEditingUnit] = useState<any>(null);
     const [activeTab, setActiveTab] = useState("units");
 
@@ -36,28 +34,20 @@ export function PropertyDetailPage() {
     const updatePropertyMutation = useUpdateProperty();
     const deletePropertyMutation = useDeleteProperty();
 
-    const handleCreateUnit = () => {
-        createUnitMutation.mutate(
-            {
-                propertyId: id!,
-                name: unitName,
-                type: unitType || "Apartamento",
-                bedrooms: unitBedrooms ? parseInt(unitBedrooms) : undefined,
-                bathrooms: unitBathrooms ? parseInt(unitBathrooms) : undefined,
-                area: unitArea ? parseFloat(unitArea) : undefined,
-                baseRent: unitRent ? parseFloat(unitRent) : undefined
-            },
-            {
-                onSuccess: () => {
-                    setUnitName("");
-                    setUnitType("");
-                    setUnitBedrooms("");
-                    setUnitBathrooms("");
-                    setUnitArea("");
-                    setUnitRent("");
-                }
+    // Unit form with validation
+    const { register: registerUnit, handleSubmit: handleSubmitUnit, formState: { errors: unitErrors }, reset: resetUnit } = useForm<CreateUnitDto>({
+        resolver: zodResolver(createUnitSchema),
+        defaultValues: {
+            propertyId: id || ""
+        }
+    });
+
+    const onSubmitUnit = (data: CreateUnitDto) => {
+        createUnitMutation.mutate(data, {
+            onSuccess: () => {
+                resetUnit({ propertyId: id || "" });
             }
-        );
+        });
     };
 
     if (loadingProp) return <div className="p-8">Cargando...</div>;
@@ -287,42 +277,66 @@ export function PropertyDetailPage() {
 
                         <div>
                             <Card className="sticky top-4">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2"><Plus size={18} /> Agregar Unidad</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold uppercase text-gray-500">Número / Nombre</label>
-                                        <Input placeholder="Ej. 101" value={unitName} onChange={e => setUnitName(e.target.value)} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold uppercase text-gray-500">Tipo</label>
-                                        <Input placeholder="Ej. Apartamento" value={unitType} onChange={e => setUnitType(e.target.value)} />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-semibold uppercase text-gray-500">Habitaciones</label>
-                                            <Input type="number" placeholder="2" value={unitBedrooms} onChange={e => setUnitBedrooms(e.target.value)} />
+                                <form onSubmit={handleSubmitUnit(onSubmitUnit)}>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2"><Plus size={18} /> Agregar Unidad</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <FormField label="Número / Nombre" error={unitErrors.name?.message} required>
+                                            <Input
+                                                placeholder="Ej. 101"
+                                                {...registerUnit('name')}
+                                                className={unitErrors.name ? 'border-destructive' : ''}
+                                            />
+                                        </FormField>
+                                        <FormField label="Tipo" error={unitErrors.type?.message}>
+                                            <Input
+                                                placeholder="Ej. Apartamento"
+                                                {...registerUnit('type')}
+                                                className={unitErrors.type ? 'border-destructive' : ''}
+                                            />
+                                        </FormField>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <FormField label="Habitaciones" error={unitErrors.bedrooms?.message}>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="2"
+                                                    {...registerUnit('bedrooms', { valueAsNumber: true })}
+                                                    className={unitErrors.bedrooms ? 'border-destructive' : ''}
+                                                />
+                                            </FormField>
+                                            <FormField label="Baños" error={unitErrors.bathrooms?.message}>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="1"
+                                                    {...registerUnit('bathrooms', { valueAsNumber: true })}
+                                                    className={unitErrors.bathrooms ? 'border-destructive' : ''}
+                                                />
+                                            </FormField>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-semibold uppercase text-gray-500">Baños</label>
-                                            <Input type="number" placeholder="1" value={unitBathrooms} onChange={e => setUnitBathrooms(e.target.value)} />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <FormField label="Área (m²)" error={unitErrors.area?.message}>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="65"
+                                                    {...registerUnit('area', { valueAsNumber: true })}
+                                                    className={unitErrors.area ? 'border-destructive' : ''}
+                                                />
+                                            </FormField>
+                                            <FormField label="Canon Base" error={unitErrors.baseRent?.message}>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="$"
+                                                    {...registerUnit('baseRent', { valueAsNumber: true })}
+                                                    className={unitErrors.baseRent ? 'border-destructive' : ''}
+                                                />
+                                            </FormField>
                                         </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-semibold uppercase text-gray-500">Área (m²)</label>
-                                            <Input type="number" placeholder="65" value={unitArea} onChange={e => setUnitArea(e.target.value)} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-semibold uppercase text-gray-500">Canon Base</label>
-                                            <Input type="number" placeholder="$" value={unitRent} onChange={e => setUnitRent(e.target.value)} />
-                                        </div>
-                                    </div>
-                                    <Button className="w-full bg-gray-900 text-white hover:bg-black" onClick={handleCreateUnit} disabled={!unitName}>
-                                        Crear Unidad
-                                    </Button>
-                                </CardContent>
+                                        <Button type="submit" className="w-full bg-gray-900 text-white hover:bg-black" disabled={createUnitMutation.isPending}>
+                                            {createUnitMutation.isPending ? 'Creando...' : 'Crear Unidad'}
+                                        </Button>
+                                    </CardContent>
+                                </form>
                             </Card>
                         </div>
                     </div>
