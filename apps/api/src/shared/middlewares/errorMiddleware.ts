@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
+import { logger } from '../logger';
 
 export const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
     let error = err;
@@ -9,16 +10,36 @@ export const errorMiddleware = (err: Error, req: Request, res: Response, next: N
     let message = 'Internal Server Error';
     let code = 'INTERNAL_ERROR';
 
+    // Log error with full context
+    const logData: any = {
+        err: {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+        },
+        method: req.method,
+        path: req.path,
+        query: req.query,
+        params: req.params,
+        body: req.body,
+        userId: (req as any).user?.id,
+        tenantId: (req as any).user?.tenantId,
+    };
+
     if (error instanceof AppError) {
         statusCode = error.statusCode;
         message = error.message;
         code = error.code || 'APP_ERROR';
-    } else {
-        console.error("Unhandled Error:", err);
-    }
+        logData.statusCode = statusCode;
+        logData.code = code;
+        logData.isOperational = error.isOperational;
 
-    // Handle specific errors (e.g., MikroORM, Zod) if needed
-    // if (err instanceof UniqueConstraintViolationException) ...
+        // Log as warning for operational errors
+        logger.warn(logData, `Operational error: ${message}`);
+    } else {
+        // Log as error for unexpected errors
+        logger.error(logData, `Unexpected error: ${message}`);
+    }
 
     res.status(statusCode).json({
         success: false,
