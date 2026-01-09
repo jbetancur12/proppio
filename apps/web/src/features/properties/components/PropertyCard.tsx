@@ -8,6 +8,7 @@ interface PropertyCardProps {
         address: string;
         units?: unknown[];
         alerts?: string[];
+        occupancyRate?: number;
     };
     onClick?: () => void;
 }
@@ -19,6 +20,7 @@ interface PropertyCardProps {
 export function PropertyCard({ property, onClick }: PropertyCardProps) {
     const hasPendingPayments = property.alerts?.includes('PENDING_PAYMENTS');
     const hasExpiringLease = property.alerts?.includes('EXPIRING_LEASE');
+    const occupancy = property.occupancyRate ?? 0;
 
     return (
         <Card
@@ -60,7 +62,9 @@ export function PropertyCard({ property, onClick }: PropertyCardProps) {
             </CardContent>
             <CardFooter className="p-5 pt-0 flex justify-between items-center text-sm text-gray-500 border-t border-gray-50 mt-4 pt-4">
                 <span>Ocupación</span>
-                <span className="font-medium text-gray-900">--%</span>
+                <span className={`font-medium ${occupancy === 100 ? 'text-green-600' : 'text-gray-900'}`}>
+                    {occupancy}%
+                </span>
             </CardFooter>
         </Card>
     );

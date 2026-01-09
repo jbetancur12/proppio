@@ -27,12 +27,24 @@ export class PropertiesService {
             let hasPendingPayments = false;
             let hasExpiringLeases = false;
 
+            let occupiedCount = 0;
+            const totalUnits = units.length;
+
             for (const unit of units) {
-                // Safe check for leases in case population failed or type mismatch (though we fixed entity now)
+                // Safe check for leases
                 const leases = unit.leases?.getItems() || [];
+                let isOccupied = false;
+
+                // Check unit status directly
+                if (unit.status === 'OCCUPIED') {
+                    isOccupied = true;
+                }
+
                 for (const lease of leases) {
                     // Check for Expiring Leases (Active only)
                     if (lease.status === 'ACTIVE') {
+                        isOccupied = true; // Mark as occupied if active lease exists
+
                         const endDate = new Date(lease.endDate);
                         if (endDate <= warningDate && endDate >= today) {
                             hasExpiringLeases = true;
@@ -46,7 +58,13 @@ export class PropertiesService {
                         }
                     }
                 }
+
+                if (isOccupied) {
+                    occupiedCount++;
+                }
             }
+
+            const occupancyRate = totalUnits > 0 ? (occupiedCount / totalUnits) * 100 : 0;
 
             if (hasPendingPayments) alerts.push('PENDING_PAYMENTS');
             if (hasExpiringLeases) alerts.push('EXPIRING_LEASE');
@@ -54,7 +72,8 @@ export class PropertiesService {
             return {
                 ...property, // properties of the entity
                 units: property.units, // keep units collection
-                alerts // Add alerts
+                alerts, // Add alerts
+                occupancyRate: Math.round(occupancyRate) // Add integer occupancy rate
             };
         });
     }
