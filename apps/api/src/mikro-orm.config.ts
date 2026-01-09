@@ -15,8 +15,7 @@ console.log('🔹 Entities Path (Dist):', path.join(process.cwd(), 'dist/feature
 export default defineConfig({
     // Adapting paths to your project structure (features + shared) with absolute paths for safety
     entities: [
-        path.join(process.cwd(), 'dist/features/**/entities/*.js'),
-        path.join(process.cwd(), 'dist/shared/entities/*.js')
+        path.join(process.cwd(), 'dist')
     ],
     entitiesTs: [
         path.join(process.cwd(), 'src/features/**/entities/*.ts'),
