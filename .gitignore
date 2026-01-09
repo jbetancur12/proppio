@@ -8,3 +8,5 @@ coverage
 *.log
 apps/api/node_modules
 .turbo
+temp/
+apps/api/temp/
