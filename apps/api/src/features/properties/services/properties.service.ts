@@ -207,10 +207,27 @@ export class PropertiesService {
     }
 
     async delete(id: string): Promise<void> {
-        const property = await this.repo.findOne(id);
+        const property = await this.repo.findOne(id, {
+            populate: ['units', 'units.leases']
+        });
+
         if (!property) {
             throw new Error('Property not found');
         }
+
+        // Check for active leases
+        const units = property.units.getItems();
+        const activeLeases = units.flatMap(unit =>
+            unit.leases.getItems().filter((lease: any) => lease.status === 'ACTIVE')
+        );
+
+        if (activeLeases.length > 0) {
+            throw new Error(
+                `No puedes borrar esta propiedad porque tiene ${activeLeases.length} contrato(s) activo(s). ` +
+                `Primero debes terminar o cancelar los contratos.`
+            );
+        }
+
         await this.em.removeAndFlush(property);
     }
 }
