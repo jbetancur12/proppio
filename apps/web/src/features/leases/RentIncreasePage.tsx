@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TrendingUp, Calculator, AlertCircle } from 'lucide-react';
@@ -46,8 +47,8 @@ export function RentIncreasePage() {
         setSelectedLeases(newSelected);
     };
 
-    const handleRentChange = (leaseId: string, value: string) => {
-        const numValue = parseFloat(value);
+    const handleRentChange = (leaseId: string, value: number) => {
+        const numValue = value;
         if (!isNaN(numValue)) {
             setRentOverrides(prev => ({
                 ...prev,
@@ -279,12 +280,12 @@ export function RentIncreasePage() {
                                                     <td className="px-4 py-3 text-sm">{preview.renterName}</td>
                                                     <td className="px-4 py-3 text-sm text-right font-mono">{formatCurrency(preview.currentRent)}</td>
                                                     <td className="px-4 py-3 text-sm text-right">
-                                                        <Input
-                                                            type="number"
+                                                        <CurrencyInput
                                                             className={`text-right h-8 w-full font-mono ${isOverridden ? 'border-amber-400 bg-amber-50' : 'border-gray-200'}`}
                                                             value={newRent}
-                                                            onChange={(e) => handleRentChange(preview.leaseId, e.target.value)}
+                                                            onChange={(val) => handleRentChange(preview.leaseId, val)}
                                                             disabled={!isEligible}
+                                                            placeholder="0"
                                                         />
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-right">
