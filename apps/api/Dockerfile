@@ -20,12 +20,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Copy package.json and install production dependencies
 COPY --from=builder /app/apps/api/package*.json ./
+# Copy shared package to parent directory (for file:../shared reference)
+COPY --from=builder /app/apps/shared ../shared
 RUN npm ci --only=production
+
+# Copy compiled code and source files
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/src ./src
 COPY --from=builder /app/apps/api/tsconfig.json ./
-COPY --from=builder /app/apps/shared ./apps/shared
 
 EXPOSE 3000
 
