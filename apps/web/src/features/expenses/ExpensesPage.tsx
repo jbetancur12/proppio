@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useExpenses, useCreateExpense } from "./hooks/useExpenses";
 import { ExpenseCard } from "./components/ExpenseCard";
@@ -15,7 +16,7 @@ export function ExpensesPage() {
     const [formData, setFormData] = useState({
         propertyId: "",
         description: "",
-        amount: "",
+        amount: "" as string | number,
         date: new Date().toISOString().split('T')[0],
         category: "MAINTENANCE",
         supplier: "",
@@ -112,11 +113,10 @@ export function ExpensesPage() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Monto *</label>
-                            <Input
-                                type="number"
+                            <CurrencyInput
+                                value={typeof formData.amount === 'number' ? formData.amount : undefined}
+                                onChange={(val) => setFormData({ ...formData, amount: val })}
                                 placeholder="0"
-                                value={formData.amount}
-                                onChange={e => setFormData({ ...formData, amount: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
