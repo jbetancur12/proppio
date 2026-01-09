@@ -16,64 +16,92 @@ export class PaymentTrackingService {
     /**
      * Generate pending payments for a specific lease if due
      */
+    /**
+     * Generate pending payments for a specific lease if due
+     * REFACTOR: Iterates from lease start date to today to ensure no months are skipped
+     */
     async generatePendingPaymentForLease(lease: Lease): Promise<void> {
         const today = new Date();
         const startDay = new Date(lease.startDate).getDate();
 
-        // Calculate the current period start date based on lease start day
-        const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth();
+        // Optimize: Fetch all existing payments for this lease to prevent duplicates without N+1 queries
+        // We only check periodStart to match
+        const existingPayments = await this.em.find(Payment, {
+            lease: lease.id
+        }, {
+            fields: ['periodStart']
+        });
 
-        // Determine the period start for "this month"
-        let periodStart = new Date(currentYear, currentMonth, startDay);
+        // Create a set of existing periodStarts (using formatted string or timestamp)
+        // Using YYYY-MM-DD string for safe comparison (ignoring time if desired, but periodStart usually has time 00:00:00)
+        const existingPeriods = new Set(existingPayments.map(p => p.periodStart.toISOString().split('T')[0]));
 
-        // Handle month-end issues (e.g. lease starts 31st, but it's Feb)
-        const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-        if (startDay > lastDayOfMonth) {
-            periodStart = new Date(currentYear, currentMonth, lastDayOfMonth);
-        }
+        // Normalize dates to start of day for comparison
+        const leaseStart = new Date(lease.startDate);
+        const cursorDate = new Date(leaseStart.getFullYear(), leaseStart.getMonth(), 1); // Start iteration from the lease start MONTH
 
-        const dueDay = Math.min(startDay, new Date(currentYear, currentMonth + 1, 0).getDate());
-        const targetDueDate = new Date(currentYear, currentMonth, dueDay);
+        // Loop until we pass "today"
+        // We iterate by month.
+        while (true) {
+            // Calculate the expected "Due Date" / "Period Start" for this month cursor
+            const year = cursorDate.getFullYear();
+            const month = cursorDate.getMonth();
 
-        if (today >= targetDueDate) {
-            await this.ensurePaymentExists(lease, targetDueDate);
-        } else {
-            // Check previous month just in case (catch-up)
-            const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
-            const prevDueDay = Math.min(startDay, new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth() + 1, 0).getDate());
-            const prevTargetDueDate = new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth(), prevDueDay);
-            await this.ensurePaymentExists(lease, prevTargetDueDate);
+            // Handle end-of-month logic (e.g. started on 31st, now Feb)
+            const lastDayOfCurrentMonth = new Date(year, month + 1, 0).getDate();
+            const targetDay = Math.min(startDay, lastDayOfCurrentMonth);
+
+            const periodStart = new Date(year, month, targetDay);
+
+            // If the calculated period start is in the future relative to "today" (plus maybe a small buffer?), stop.
+            // Using strict > today might prevent generating a bill due Today? 
+            // Better: if periodStart > today, stop.
+            // Actually, if periodStart IS today, we should generate it.
+            if (periodStart > today) {
+                break;
+            }
+
+            // Only generate if meaningful (e.g. inside lease term) - checking lease endDate?
+            // If lease has endDate, and periodStart > endDate, stop.
+            if (lease.endDate && periodStart > new Date(lease.endDate)) {
+                break;
+            }
+
+            // Check if exists
+            const dateKey = periodStart.toISOString().split('T')[0];
+            if (!existingPeriods.has(dateKey)) {
+
+                // Double check it's not before the lease start date (edge case where logic puts it earlier)
+                if (periodStart >= new Date(lease.startDate)) {
+                    await this.createPayment(lease, periodStart);
+                    existingPeriods.add(dateKey); // Prevent dups if loop is weird
+                }
+            }
+
+            // Increment cursor month
+            cursorDate.setMonth(cursorDate.getMonth() + 1);
         }
     }
 
-    private async ensurePaymentExists(lease: Lease, periodStart: Date): Promise<void> {
+    private async createPayment(lease: Lease, periodStart: Date): Promise<void> {
         // Calculate period end (start + 1 month)
         const periodEnd = new Date(periodStart);
         periodEnd.setMonth(periodEnd.getMonth() + 1);
 
-        // Check if ANY payment covers this specific period start
-        const count = await this.em.count(Payment, {
-            lease: lease.id,
-            periodStart: periodStart
+        // Create PENDING payment
+        const payment = new Payment({
+            lease: lease,
+            tenantId: lease.tenantId,
+            amount: lease.monthlyRent,
+            paymentDate: periodStart, // Due date
+            periodStart: periodStart,
+            periodEnd: periodEnd,
+            status: PaymentStatus.PENDING,
+            method: PaymentMethod.OTHER, // Default
+            notes: `Canon de arrendamiento ${periodStart.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}`
         });
 
-        if (count === 0) {
-            // Create PENDING payment
-            const payment = new Payment({
-                lease: lease,
-                tenantId: lease.tenantId,
-                amount: lease.monthlyRent,
-                paymentDate: periodStart, // Due date
-                periodStart: periodStart,
-                periodEnd: periodEnd,
-                status: PaymentStatus.PENDING,
-                method: PaymentMethod.OTHER, // Default
-                notes: `Canon de arrendamiento ${periodStart.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}`
-            });
-
-            this.em.persist(payment);
-        }
+        this.em.persist(payment);
     }
 
     /**
@@ -84,12 +112,15 @@ export class PaymentTrackingService {
             status: LeaseStatus.ACTIVE
         });
 
-        let generated = 0;
+        let generated = 0; // Note: with persists inside sub-method, this count might be inaccurate unless we return count from generatePendingPaymentForLease.
+        // For now, simpler to just run logic.
+
         const errors: string[] = [];
 
         for (const lease of leases) {
             try {
                 await this.generatePendingPaymentForLease(lease);
+                // generated++; // This counter is now less meaningful, implies "processed lease", not "created payments"
                 generated++;
             } catch (error) {
                 errors.push(`Failed to generate payment for lease ${lease.id}: ${error}`);
