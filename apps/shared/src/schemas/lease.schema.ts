@@ -8,6 +8,8 @@ export const createLeaseSchema = z.object({
     monthlyRent: z.number({ invalid_type_error: "El canon debe ser un número" }).positive("El canon debe ser mayor a 0"),
     securityDeposit: z.number({ invalid_type_error: "El depósito debe ser un número" }).nonnegative("El depósito no puede ser negativo").optional(),
     notes: z.string().optional(),
+    isExisting: z.boolean().optional(),
+    firstPaymentDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Fecha inválida").optional(),
 });
 
 export const updateLeaseSchema = z.object({
@@ -19,5 +21,6 @@ export const updateLeaseSchema = z.object({
     notes: z.string().optional(),
 });
 
+// DTOs inferred from Zod schemas
 export type CreateLeaseDto = z.infer<typeof createLeaseSchema>;
 export type UpdateLeaseDto = z.infer<typeof updateLeaseSchema>;

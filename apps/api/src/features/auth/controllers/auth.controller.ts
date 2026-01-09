@@ -24,4 +24,25 @@ export class AuthController {
             next(error);
         }
     }
+    async changePassword(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { currentPassword, newPassword } = req.body;
+            if (!currentPassword || !newPassword) {
+                res.status(400).json({ error: 'Faltan datos requeridos (currentPassword, newPassword)' });
+                return;
+            }
+
+            // Get userId from authenticated request
+            const userId = (req as any).user?.userId;
+            if (!userId) {
+                res.status(401).json({ error: 'No autenticado' });
+                return;
+            }
+
+            const result = await this.getService().changePassword(userId, { currentPassword, newPassword });
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

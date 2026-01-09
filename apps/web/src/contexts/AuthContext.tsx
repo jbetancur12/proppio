@@ -8,6 +8,8 @@ interface User {
     role?: string;
     globalRole?: string;
     email?: string;
+    firstName?: string;
+    lastName?: string;
     features?: {
         treasury?: boolean;
     };

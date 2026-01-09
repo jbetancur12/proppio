@@ -146,4 +146,34 @@ export class AuthService {
 
         return { message: 'Usuario creado exitosamente' };
     }
+    async changePassword(userId: string, dto: any) {
+        const user = await this.em.findOne(User, { id: userId });
+        if (!user) {
+            throw new UnauthorizedError('Usuario no encontrado');
+        }
+
+        const isValid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+        if (!isValid) {
+            throw new UnauthorizedError('La contraseña actual es incorrecta');
+        }
+
+        user.passwordHash = await bcrypt.hash(dto.newPassword, 10);
+        await this.em.flush();
+
+        // Audit Log
+        try {
+            const audit = new AuditLogService(this.em);
+            await audit.log({
+                action: 'CHANGE_PASSWORD',
+                resourceType: 'User',
+                resourceId: user.id,
+                userId: user.id, // Self-change
+                details: { method: 'user_initiated' }
+            });
+        } catch (error) {
+            console.error('Audit log failed for password change:', error);
+        }
+
+        return { message: 'Contraseña actualizada exitosamente' };
+    }
 }

@@ -18,6 +18,7 @@ import statsRoutes from './features/stats/routes';
 import expenseRoutes from './features/expenses/routes';
 import maintenanceRoutes from './features/maintenance/routes';
 import adminRoutes from './features/admin/routes';
+import tenantRoutes from './features/tenants/routes';
 import treasuryRoutes from './features/treasury/routes';
 
 export const startExpressServer = async () => {
@@ -59,10 +60,15 @@ export const startExpressServer = async () => {
     apiRouter.use('/maintenance', maintenanceRoutes);
     apiRouter.use('/admin', adminRoutes);
     apiRouter.use('/treasury', treasuryRoutes);
+    apiRouter.use('/tenants', tenantRoutes);
 
     apiRouter.get('/me', (req, res) => {
         res.json({ message: 'You are authenticated', user: (req as any).user });
     });
+
+    // Protected Auth Routes
+    const authController = new (await import('./features/auth/controllers/auth.controller')).AuthController();
+    apiRouter.post('/auth/change-password', (req, res, next) => authController.changePassword(req, res, next));
 
     app.use('/api', apiRouter);
 
