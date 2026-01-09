@@ -12,6 +12,7 @@ import { LeaseRenewalSection } from "./components/LeaseRenewalSection";
 import { usePendingPayments } from "../payments/hooks/usePaymentTracking";
 import { paymentTrackingApi } from "../payments/services/paymentTrackingApi";
 import { addDays, differenceInMonths } from "date-fns";
+import { leasesApi } from "./services/leasesApi";
 
 const statusConfig = {
     DRAFT: { label: 'Borrador', color: 'bg-gray-100 text-gray-700', icon: FileText },
