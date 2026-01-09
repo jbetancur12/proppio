@@ -205,4 +205,12 @@ export class PropertiesService {
             openMaintenanceTickets: openTickets
         };
     }
+
+    async delete(id: string): Promise<void> {
+        const property = await this.repo.findOne(id);
+        if (!property) {
+            throw new Error('Property not found');
+        }
+        await this.em.removeAndFlush(property);
+    }
 }
