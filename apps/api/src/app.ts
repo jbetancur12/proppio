@@ -73,7 +73,7 @@ export const startExpressServer = async () => {
 
     // Store server instance in DI
     DI.server = httpServer.listen(port, () => {
-        console.log(`Server running on http://localhost:${port}`);
+        logger.info({ port }, 'Server running');
     });
 
     // 9. Graceful Shutdown
