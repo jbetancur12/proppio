@@ -1,22 +1,25 @@
 import { EntityManager } from '@mikro-orm/core';
 import { PaymentTrackingService } from '../features/payments/services/payment-tracking.service';
+import { logger } from '../shared/logger';
 
-export async function generatePendingPayments(em: EntityManager): Promise<{ generated: number; errors: string[] }> {
-    console.log('[CRON] Starting pending payment generation...');
-
-    const service = new PaymentTrackingService(em);
+export async function generatePendingPayments(em: EntityManager) {
+    logger.info('Starting pending payment generation');
 
     try {
-        const result = await service.generateAllPendingPayments();
+        const service = new PaymentTrackingService(em);
+        const result = await service.generatePendingPaymentsForAllLeases();
 
-        console.log(`[CRON] Payment generation complete: ${result.generated} payments processed`);
-
-        if (result.errors.length > 0) {
-            console.error(`[CRON] Errors during payment generation:`, result.errors);
+        if (result && result.generated !== undefined) {
+            logger.info({ generated: result.generated }, `Payment generation complete: ${result.generated} payments processed`);
         }
+
+        if (result && result.errors && result.errors.length > 0) {
+            logger.warn({ errors: result.errors }, `Errors during payment generation: ${result.errors.length} errors`);
+        }
+
         return result;
     } catch (error) {
-        console.error('[CRON] Fatal error during payment generation:', error);
+        logger.error({ err: error }, 'Fatal error during payment generation');
         throw error;
     }
 }

@@ -1,27 +1,25 @@
 import { EntityManager } from '@mikro-orm/core';
-import { LeaseRenewalService } from '../features/leases/services/lease-renewal.service';
+import { LeasesService } from '../features/leases/services/leases.service';
+import { logger } from '../shared/logger';
 
-/**
- * Cron job to process automatic lease renewals daily
- * Schedule: Every day at 00:00 (midnight)
- */
-export async function processLeaseRenewals(em: EntityManager): Promise<{ renewed: number; errors: string[] }> {
-    console.log('[CRON] Starting automatic lease renewal process...');
-
-    const service = new LeaseRenewalService(em);
+export async function processLeaseRenewals(em: EntityManager) {
+    logger.info('Starting automatic lease renewal process');
 
     try {
+        const service = new LeasesService(em);
         const result = await service.processAutomaticRenewals();
 
-        console.log(`[CRON] Lease renewal complete: ${result.renewed} leases renewed`);
+        if (result && result.renewed !== undefined) {
+            logger.info({ renewed: result.renewed }, `Lease renewal complete: ${result.renewed} leases renewed`);
+        }
 
-        if (result.errors.length > 0) {
-            console.error(`[CRON] Errors during renewal:`, result.errors);
+        if (result && result.errors && result.errors.length > 0) {
+            logger.warn({ errors: result.errors }, `Errors during renewal: ${result.errors.length} errors`);
         }
 
         return result;
     } catch (error) {
-        console.error('[CRON] Fatal error during lease renewal:', error);
+        logger.error({ err: error }, 'Fatal error during lease renewal');
         throw error;
     }
 }
