@@ -6,6 +6,10 @@ import { Plus, Search, User } from "lucide-react";
 import { useRenters, useCreateRenter } from "./hooks/useRenters";
 import { RenterCard } from "./components/RenterCard";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createRenterSchema, CreateRenterDto } from "@proppio/shared";
+import { FormField } from "@/components/forms/FormField";
 
 /**
  * Container component - manages state and orchestrates data flow
@@ -15,31 +19,22 @@ export function RentersPage() {
     const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
 
-    // Form state
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [email, setEmail] = useState("");
-    const [phone, setPhone] = useState("");
-    const [identification, setIdentification] = useState("");
-
     // Custom hooks extract logic from component (guideline 3.2)
     const { data: renters, isLoading } = useRenters();
     const createMutation = useCreateRenter();
 
-    const handleCreate = () => {
-        createMutation.mutate(
-            { firstName, lastName, email: email || undefined, phone, identification },
-            {
-                onSuccess: () => {
-                    setFirstName("");
-                    setLastName("");
-                    setEmail("");
-                    setPhone("");
-                    setIdentification("");
-                    setIsCreating(false);
-                }
+    // Form with validation
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<CreateRenterDto>({
+        resolver: zodResolver(createRenterSchema)
+    });
+
+    const onSubmit = (data: CreateRenterDto) => {
+        createMutation.mutate(data, {
+            onSuccess: () => {
+                reset();
+                setIsCreating(false);
             }
-        );
+        });
     };
 
     return (
@@ -60,40 +55,55 @@ export function RentersPage() {
             {/* Create Form */}
             {isCreating && (
                 <Card className="animate-in fade-in slide-in-from-top-4 border-indigo-100 bg-indigo-50/50">
-                    <CardHeader>
-                        <CardTitle className="text-indigo-900">Nuevo Inquilino</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Nombre</label>
-                            <Input placeholder="Juan" value={firstName} onChange={e => setFirstName(e.target.value)} className="bg-white" />
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <CardHeader>
+                            <CardTitle className="text-indigo-900">Nuevo Inquilino</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField label="Nombre" error={errors.firstName?.message} required>
+                                <Input
+                                    placeholder="Juan"
+                                    {...register('firstName')}
+                                    className={`bg-white ${errors.firstName ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                            <FormField label="Apellido" error={errors.lastName?.message} required>
+                                <Input
+                                    placeholder="Pérez"
+                                    {...register('lastName')}
+                                    className={`bg-white ${errors.lastName ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                            <FormField label="Email" error={errors.email?.message}>
+                                <Input
+                                    type="email"
+                                    placeholder="juan@ejemplo.com"
+                                    {...register('email')}
+                                    className={`bg-white ${errors.email ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                            <FormField label="Teléfono" error={errors.phone?.message} required>
+                                <Input
+                                    placeholder="+57 300 123 4567"
+                                    {...register('phone')}
+                                    className={`bg-white ${errors.phone ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                            <FormField label="Identificación (CC/DNI)" error={errors.identification?.message} required className="md:col-span-2">
+                                <Input
+                                    placeholder="1234567890"
+                                    {...register('identification')}
+                                    className={`bg-white ${errors.identification ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                        </CardContent>
+                        <div className="px-6 pb-6 flex justify-end gap-2">
+                            <Button type="button" variant="ghost" onClick={() => { reset(); setIsCreating(false); }}>Cancelar</Button>
+                            <Button type="submit" disabled={createMutation.isPending}>
+                                {createMutation.isPending ? 'Guardando...' : 'Crear Inquilino'}
+                            </Button>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Apellido</label>
-                            <Input placeholder="Pérez" value={lastName} onChange={e => setLastName(e.target.value)} className="bg-white" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Email (Opcional)</label>
-                            <Input type="email" placeholder="juan@ejemplo.com" value={email} onChange={e => setEmail(e.target.value)} className="bg-white" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Teléfono</label>
-                            <Input placeholder="+57 300 123 4567" value={phone} onChange={e => setPhone(e.target.value)} className="bg-white" />
-                        </div>
-                        <div className="space-y-2 md:col-span-2">
-                            <label className="text-sm font-medium">Identificación (CC/DNI)</label>
-                            <Input placeholder="1234567890" value={identification} onChange={e => setIdentification(e.target.value)} className="bg-white" />
-                        </div>
-                    </CardContent>
-                    <div className="px-6 pb-6 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setIsCreating(false)}>Cancelar</Button>
-                        <Button
-                            onClick={handleCreate}
-                            disabled={!firstName || !lastName || !phone || !identification || createMutation.isPending}
-                        >
-                            {createMutation.isPending ? 'Guardando...' : 'Crear Inquilino'}
-                        </Button>
-                    </div>
+                    </form>
                 </Card>
             )}
 

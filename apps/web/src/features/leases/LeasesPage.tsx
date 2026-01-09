@@ -7,8 +7,11 @@ import { useLeases, useCreateLease, useActivateLease, useTerminateLease } from "
 import { useRenters } from "../renters/hooks/useRenters";
 import { useProperties } from "../properties/hooks/useProperties";
 import { LeaseCard } from "./components/LeaseCard";
-
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createLeaseSchema, CreateLeaseDto } from "@proppio/shared";
+import { FormField } from "@/components/forms/FormField";
 
 /**
  * LeasesPage - Container component
@@ -18,16 +21,7 @@ export function LeasesPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [isCreating, setIsCreating] = useState(false);
-
-    // Form state
-    // Form state
-    const [selectedUnit, setSelectedUnit] = useState("");
-    const [selectedRenter, setSelectedRenter] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [duration, setDuration] = useState("12"); // Default 12 months
-    const [endDate, setEndDate] = useState("");
-    const [monthlyRent, setMonthlyRent] = useState("");
-    const [deposit, setDeposit] = useState("");
+    const [duration, setDuration] = useState("12"); // For date calculation
 
     const { data: leases, isLoading } = useLeases();
     const { data: renters } = useRenters();
@@ -36,16 +30,27 @@ export function LeasesPage() {
     const activateMutation = useActivateLease();
     const terminateMutation = useTerminateLease();
 
+    // Form with validation
+    const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<CreateLeaseDto>({
+        resolver: zodResolver(createLeaseSchema),
+        defaultValues: {
+            monthlyRent: 0
+        }
+    });
+
+    const startDate = watch('startDate');
+    const unitId = watch('unitId');
+
     // Effect to handle URL params for creation
     useEffect(() => {
         if (searchParams.get('create') === 'true') {
             setIsCreating(true);
         }
-        const unitId = searchParams.get('unitId');
-        if (unitId) {
-            setSelectedUnit(unitId);
+        const paramUnitId = searchParams.get('unitId');
+        if (paramUnitId) {
+            setValue('unitId', paramUnitId);
         }
-    }, [searchParams]);
+    }, [searchParams, setValue]);
 
     // Auto-calculate End Date
     useEffect(() => {
@@ -54,44 +59,25 @@ export function LeasesPage() {
             if (!isNaN(start.getTime())) {
                 const end = new Date(start);
                 end.setMonth(end.getMonth() + parseInt(duration));
-                // Subtract 1 day to be precise? Usually rent contracts are X months e.g. Jan 1 to Dec 31 (which is 12 months)
-                // If I add 1 month to Jan 1, I get Feb 1. But 1 month contract is Jan 1 - Jan 31?
-                // Standard logic: End Date = StartDate + Months - 1 Day.
                 end.setDate(end.getDate() - 1);
-
-                setEndDate(end.toISOString().split('T')[0]);
+                setValue('endDate', end.toISOString().split('T')[0]);
             }
         }
-    }, [startDate, duration]);
+    }, [startDate, duration, setValue]);
 
     // Flatten units from all properties
     const allUnits = properties?.flatMap((p: any) =>
         (p.units || []).map((u: any) => ({ ...u, propertyName: p.name }))
     ) || [];
 
-    const handleCreate = () => {
-        createMutation.mutate(
-            {
-                unitId: selectedUnit,
-                renterId: selectedRenter,
-                startDate,
-                endDate,
-                monthlyRent: Number(monthlyRent),
-                securityDeposit: deposit ? Number(deposit) : undefined
-            },
-            {
-                onSuccess: () => {
-                    setSelectedUnit("");
-                    setSelectedRenter("");
-                    setStartDate("");
-                    setDuration("12");
-                    setEndDate("");
-                    setMonthlyRent("");
-                    setDeposit("");
-                    setIsCreating(false);
-                }
+    const onSubmit = (data: CreateLeaseDto) => {
+        createMutation.mutate(data, {
+            onSuccess: () => {
+                reset();
+                setDuration("12");
+                setIsCreating(false);
             }
-        );
+        });
     };
 
     return (
@@ -107,71 +93,88 @@ export function LeasesPage() {
                 </Button>
             </div>
 
+
             {/* Create Form */}
             {isCreating && (
                 <Card className="animate-in fade-in slide-in-from-top-4 border-indigo-100 bg-indigo-50/50">
-                    <CardHeader>
-                        <CardTitle className="text-indigo-900">Nuevo Contrato de Arrendamiento</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Unidad</label>
-                            <select
-                                className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white"
-                                value={selectedUnit}
-                                onChange={e => setSelectedUnit(e.target.value)}
-                            >
-                                <option value="">Seleccionar unidad...</option>
-                                {allUnits.map((u: any) => (
-                                    <option key={u.id} value={u.id}>{u.propertyName} - {u.name}</option>
-                                ))}
-                            </select>
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <CardHeader>
+                            <CardTitle className="text-indigo-900">Nuevo Contrato de Arrendamiento</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField label="Unidad" error={errors.unitId?.message} required>
+                                <select
+                                    {...register('unitId')}
+                                    className={`w-full h-10 px-3 rounded-md border ${errors.unitId ? 'border-destructive' : 'border-gray-200'} bg-white`}
+                                >
+                                    <option value="">Seleccionar unidad...</option>
+                                    {allUnits.map((u: any) => (
+                                        <option key={u.id} value={u.id}>{u.propertyName} - {u.name}</option>
+                                    ))}
+                                </select>
+                            </FormField>
+                            <FormField label="Inquilino" error={errors.renterId?.message} required>
+                                <select
+                                    {...register('renterId')}
+                                    className={`w-full h-10 px-3 rounded-md border ${errors.renterId ? 'border-destructive' : 'border-gray-200'} bg-white`}
+                                >
+                                    <option value="">Seleccionar inquilino...</option>
+                                    {renters?.map((r: any) => (
+                                        <option key={r.id} value={r.id}>{r.firstName} {r.lastName}</option>
+                                    ))}
+                                </select>
+                            </FormField>
+                            <FormField label="Fecha Inicio" error={errors.startDate?.message} required>
+                                <Input
+                                    type="date"
+                                    {...register('startDate')}
+                                    className={`bg-white ${errors.startDate ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Duración (Meses)</label>
+                                <Input
+                                    type="number"
+                                    value={duration}
+                                    onChange={e => setDuration(e.target.value)}
+                                    className="bg-white"
+                                />
+                            </div>
+                            <FormField label="Fecha Fin" error={errors.endDate?.message} required>
+                                <Input
+                                    type="date"
+                                    {...register('endDate')}
+                                    className={`bg-white ${errors.endDate ? 'border-destructive' : ''}`}
+                                    readOnly
+                                />
+                            </FormField>
+                            <FormField label="Canon Mensual ($)" error={errors.monthlyRent?.message} required>
+                                <Input
+                                    type="number"
+                                    placeholder="1500000"
+                                    {...register('monthlyRent', { valueAsNumber: true })}
+                                    className={`bg-white ${errors.monthlyRent ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                            <FormField label="Depósito (Opcional)" error={errors.securityDeposit?.message}>
+                                <Input
+                                    type="number"
+                                    placeholder="3000000"
+                                    {...register('securityDeposit', { valueAsNumber: true })}
+                                    className={`bg-white ${errors.securityDeposit ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                        </CardContent>
+                        <div className="px-6 pb-6 flex justify-end gap-2">
+                            <Button type="button" variant="ghost" onClick={() => { reset(); setIsCreating(false); }}>Cancelar</Button>
+                            <Button type="submit" disabled={createMutation.isPending}>
+                                {createMutation.isPending ? 'Guardando...' : 'Crear Contrato'}
+                            </Button>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Inquilino</label>
-                            <select
-                                className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white"
-                                value={selectedRenter}
-                                onChange={e => setSelectedRenter(e.target.value)}
-                            >
-                                <option value="">Seleccionar inquilino...</option>
-                                {renters?.map((r: any) => (
-                                    <option key={r.id} value={r.id}>{r.firstName} {r.lastName}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Fecha Inicio</label>
-                            <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-white" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Duración (Meses)</label>
-                            <Input type="number" value={duration} onChange={e => setDuration(e.target.value)} className="bg-white" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Fecha Fin</label>
-                            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-white" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Canon Mensual ($)</label>
-                            <Input type="number" placeholder="1500000" value={monthlyRent} onChange={e => setMonthlyRent(e.target.value)} className="bg-white" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Depósito (Opcional)</label>
-                            <Input type="number" placeholder="3000000" value={deposit} onChange={e => setDeposit(e.target.value)} className="bg-white" />
-                        </div>
-                    </CardContent>
-                    <div className="px-6 pb-6 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setIsCreating(false)}>Cancelar</Button>
-                        <Button
-                            onClick={handleCreate}
-                            disabled={!selectedUnit || !selectedRenter || !startDate || !endDate || !monthlyRent || createMutation.isPending}
-                        >
-                            {createMutation.isPending ? 'Guardando...' : 'Crear Contrato'}
-                        </Button>
-                    </div>
+                    </form>
                 </Card>
             )}
+
 
             {/* Leases List */}
             <div className="space-y-4">
