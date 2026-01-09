@@ -46,6 +46,8 @@ services:
     environment:
       DOZZLE_LEVEL: info
       DOZZLE_TAILSIZE: 300
+      DOZZLE_USERNAME: ${DOZZLE_USER:-admin}
+      DOZZLE_PASSWORD: ${DOZZLE_PASSWORD:-securepassword}
     networks:
       - app_network
 
