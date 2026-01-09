@@ -21,7 +21,10 @@ export function PaymentsPage() {
     // Form state
     const [selectedLease, setSelectedLease] = useState("");
     const [amount, setAmount] = useState("");
-    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+    const [paymentDate, setPaymentDate] = useState(() => {
+        const today = new Date();
+        return new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    });
     const [periodStart, setPeriodStart] = useState("");
     const [periodEnd, setPeriodEnd] = useState("");
     const [method, setMethod] = useState("TRANSFER");
@@ -99,7 +102,9 @@ export function PaymentsPage() {
         setEditingPaymentId(payment.id);
         setSelectedLease(payment.lease.id);
         setAmount(String(payment.amount));
-        setPaymentDate(new Date().toISOString().split('T')[0]); // Default to today for payment date
+        const today = new Date();
+        const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        setPaymentDate(localDate); // Default to today local time
         setPeriodStart(payment.periodStart.split('T')[0]);
         setPeriodEnd(payment.periodEnd.split('T')[0]);
         setMethod(payment.method || "TRANSFER");

@@ -249,7 +249,7 @@ export function TreasuryPage() {
                                 <TableRow key={tx.id}>
                                     <TableCell className="whitespace-nowrap">
                                         {/* Append T12:00:00 to ensure date stays on the same day regardless of timezone */
-                                            format(new Date(`${new Date(tx.date).toISOString().split('T')[0]}T12:00:00`), "d MMM, HH:mm", { locale: es })}
+                                            format(new Date(`${new Date(tx.date).toISOString().split('T')[0]}T12:00:00`), "d 'de' MMM", { locale: es })}
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={

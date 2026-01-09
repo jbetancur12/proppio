@@ -79,6 +79,7 @@ export class PaymentsService {
         if (data.status) payment.status = data.status as PaymentStatus;
         if (data.reference !== undefined) payment.reference = data.reference;
         if (data.notes !== undefined) payment.notes = data.notes;
+        if (data.paymentDate) payment.paymentDate = new Date(data.paymentDate);
 
         await this.em.flush();
         return payment;

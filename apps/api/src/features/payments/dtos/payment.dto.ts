@@ -15,6 +15,7 @@ export const updatePaymentSchema = z.object({
     status: z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']).optional(),
     reference: z.string().optional(),
     notes: z.string().optional(),
+    paymentDate: z.string().or(z.date()).optional(), // Allow updating the payment date
 });
 
 export type CreatePaymentDto = z.infer<typeof createPaymentSchema>;
