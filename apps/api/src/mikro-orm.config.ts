@@ -1,58 +1,58 @@
-import { defineConfig } from '@mikro-orm/core';
-import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { Tenant } from './features/tenants/entities/Tenant';
-import { BaseEntity } from './shared/entities/BaseEntity';
+import { defineConfig } from '@mikro-orm/postgresql';
+import { Migrator } from '@mikro-orm/migrations';
+import { SeedManager } from '@mikro-orm/seeder';
+import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import dotenv from 'dotenv';
 import path from 'path';
-
-import { TenantSubscriber } from './shared/subscribers/TenantSubscriber';
-
-import { PropertyEntity } from './features/properties/entities/Property';
-import { UnitEntity } from './features/properties/entities/Unit';
-import { Renter } from './features/renters/entities/Renter';
-import { Lease } from './features/leases/entities/Lease';
-import { Payment } from './features/payments/entities/Payment';
-import { Expense } from './features/expenses/entities/Expense';
-import { MaintenanceTicket } from './features/maintenance/entities/MaintenanceTicket';
-import { BaseTenantEntity } from './shared/entities/BaseTenantEntity';
-import { RentIncrease } from './features/leases/entities/RentIncrease';
-import { User } from './features/auth/entities/User';
-import { TenantUser } from './features/auth/entities/TenantUser';
-import { AuditLog } from './features/admin/entities/AuditLog';
-import { ExitNotice } from './features/leases/entities/ExitNotice';
-import { TreasuryTransaction } from './features/treasury/entities/TreasuryTransaction';
-
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 export default defineConfig({
-    driver: PostgreSqlDriver,
+    // Adapting paths to your project structure (features + shared)
+    entities: [
+        './dist/features/**/entities/*.js',
+        './dist/shared/entities/*.js'
+    ],
+    entitiesTs: [
+        './src/features/**/entities/*.ts',
+        './src/shared/entities/*.ts'
+    ],
+
     dbName: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
-    entities: [
-        Tenant,
-        PropertyEntity,
-        UnitEntity,
-        Renter,
-        Lease,
-        Payment,
-        Expense,
-        MaintenanceTicket,
-        RentIncrease,
-        User,
-        TenantUser,
-        AuditLog,
-        ExitNotice,
-        TreasuryTransaction
-    ],
-    subscribers: [new TenantSubscriber()],
-    debug: process.env.NODE_ENV !== 'production',
-    allowGlobalContext: true, // Allow global context for now, will implement AsyncLocalStorage later
+
+    metadataProvider: TsMorphMetadataProvider,
+    extensions: [Migrator, SeedManager],
+
+    // Disable strict validation to avoid issues with abstract entities during discovery
+    validate: false,
+
+    pool: {
+        min: 0,
+        max: 40,
+    },
+
     migrations: {
         path: './dist/migrations',
         pathTs: './src/migrations',
+        glob: '!(*.d).{js,ts}',
+        transactional: true,
+        disableForeignKeys: false,
+        allOrNothing: true,
+        emit: 'ts',
     },
+
+    seeder: {
+        path: './dist/seeders',
+        pathTs: './src/seeders',
+        defaultSeeder: 'DatabaseSeeder',
+        glob: '!(*.d).{js,ts}',
+        emit: 'ts',
+    },
+
+    debug: process.env.NODE_ENV !== 'production',
+    allowGlobalContext: true,
 });
