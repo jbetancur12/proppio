@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { treasuryApi } from '../services/treasuryApi';
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
+import { Controller } from 'react-hook-form';
 
 const transactionSchema = z.object({
     date: z.string().min(1, "Fecha requerida"),
@@ -55,7 +57,7 @@ const CATEGORIES = {
 
 export function TransactionModal({ isOpen, onClose, onSuccess }: TransactionModalProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const { register, handleSubmit, watch, setValue, formState: { errors }, reset } = useForm<TransactionForm>({
+    const { register, handleSubmit, watch, setValue, formState: { errors }, reset, control } = useForm<TransactionForm>({
         // @ts-ignore
         resolver: zodResolver(transactionSchema),
         defaultValues: {
@@ -134,11 +136,16 @@ export function TransactionModal({ isOpen, onClose, onSuccess }: TransactionModa
 
                     <div className="space-y-2">
                         <Label>Monto</Label>
-                        <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            {...register('amount')}
+                        <Controller
+                            name="amount"
+                            control={control}
+                            render={({ field: { onChange, value } }) => (
+                                <CurrencyInput
+                                    value={value}
+                                    onChange={onChange}
+                                    placeholder="0"
+                                />
+                            )}
                         />
                         {errors.amount && <p className="text-sm text-red-500">{errors.amount.message}</p>}
                     </div>

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { useState, useEffect } from "react";
 import { Plus, Search, DollarSign, TrendingUp } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -20,7 +21,7 @@ export function PaymentsPage() {
 
     // Form state
     const [selectedLease, setSelectedLease] = useState("");
-    const [amount, setAmount] = useState("");
+    const [amount, setAmount] = useState<number | string>("");
     const [paymentDate, setPaymentDate] = useState(() => {
         const today = new Date();
         return new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
@@ -101,7 +102,7 @@ export function PaymentsPage() {
     const handleRegister = (payment: any) => {
         setEditingPaymentId(payment.id);
         setSelectedLease(payment.lease.id);
-        setAmount(String(payment.amount));
+        setAmount(payment.amount);
         const today = new Date();
         const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         setPaymentDate(localDate); // Default to today local time
@@ -182,7 +183,7 @@ export function PaymentsPage() {
                                 onChange={e => {
                                     setSelectedLease(e.target.value);
                                     const lease = activeLeases.find((l: any) => l.id === e.target.value);
-                                    if (lease) setAmount(String(lease.monthlyRent));
+                                    if (lease) setAmount(lease.monthlyRent);
                                 }}
                                 disabled={!!editingPaymentId}
                             >
@@ -196,7 +197,12 @@ export function PaymentsPage() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Monto ($)</label>
-                            <Input type="number" placeholder="1500000" value={amount} onChange={e => setAmount(e.target.value)} className="bg-white" />
+                            <CurrencyInput
+                                value={typeof amount === 'number' ? amount : undefined}
+                                onChange={(val) => setAmount(val)}
+                                placeholder="1.500.000"
+                                className="bg-white"
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Fecha de Pago</label>

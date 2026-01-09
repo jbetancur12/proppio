@@ -8,10 +8,11 @@ import { useRenters } from "../renters/hooks/useRenters";
 import { useProperties } from "../properties/hooks/useProperties";
 import { LeaseCard } from "./components/LeaseCard";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createLeaseSchema, CreateLeaseDto } from "@proppio/shared";
 import { FormField } from "@/components/forms/FormField";
+import { CurrencyInput } from "@/components/ui/CurrencyInput";
 
 /**
  * LeasesPage - Container component
@@ -31,7 +32,7 @@ export function LeasesPage() {
     const terminateMutation = useTerminateLease();
 
     // Form with validation
-    const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<CreateLeaseDto>({
+    const { register, handleSubmit, formState: { errors }, reset, setValue, watch, control } = useForm<CreateLeaseDto>({
         resolver: zodResolver(createLeaseSchema),
         defaultValues: {
             monthlyRent: 0
@@ -181,19 +182,31 @@ export function LeasesPage() {
                                 />
                             </FormField>
                             <FormField label="Canon Mensual ($)" error={errors.monthlyRent?.message} required>
-                                <Input
-                                    type="number"
-                                    placeholder="1500000"
-                                    {...register('monthlyRent', { valueAsNumber: true })}
-                                    className={`bg-white ${errors.monthlyRent ? 'border-destructive' : ''}`}
+                                <Controller
+                                    name="monthlyRent"
+                                    control={control}
+                                    render={({ field: { onChange, value } }) => (
+                                        <CurrencyInput
+                                            value={value}
+                                            onChange={onChange}
+                                            placeholder="1.500.000"
+                                            className={`bg-white ${errors.monthlyRent ? 'border-destructive' : ''}`}
+                                        />
+                                    )}
                                 />
                             </FormField>
                             <FormField label="Depósito (Opcional)" error={errors.securityDeposit?.message}>
-                                <Input
-                                    type="number"
-                                    placeholder="3000000"
-                                    {...register('securityDeposit', { valueAsNumber: true })}
-                                    className={`bg-white ${errors.securityDeposit ? 'border-destructive' : ''}`}
+                                <Controller
+                                    name="securityDeposit"
+                                    control={control}
+                                    render={({ field: { onChange, value } }) => (
+                                        <CurrencyInput
+                                            value={value}
+                                            onChange={onChange}
+                                            placeholder="3.000.000"
+                                            className={`bg-white ${errors.securityDeposit ? 'border-destructive' : ''}`}
+                                        />
+                                    )}
                                 />
                             </FormField>
                         </CardContent>
