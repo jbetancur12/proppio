@@ -111,7 +111,7 @@ export class PropertiesService {
         const property = new PropertyEntity();
         property.name = dto.name;
         property.address = dto.address;
-        property.tenantId = tenantId; // Assign tenant reference
+        // tenantId will be auto-assigned by TenantSubscriber
 
         await this.em.persistAndFlush(property);
 

@@ -33,6 +33,9 @@ export default defineConfig({
     metadataProvider: TsMorphMetadataProvider,
     extensions: [Migrator, SeedManager],
 
+    // Register subscribers
+    subscribers: [new (require('./shared/subscribers/TenantSubscriber').TenantSubscriber)()],
+
     // Disable strict validation to avoid issues with abstract entities during discovery
     validate: false,
 
