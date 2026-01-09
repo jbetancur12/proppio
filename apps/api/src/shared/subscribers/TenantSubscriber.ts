@@ -43,12 +43,18 @@ export class TenantSubscriber implements EventSubscriber {
 
                     if (entity instanceof BaseTenantEntity && !entity.tenantId) {
                         entity.tenantId = context.tenantId;
-                        console.log(`[TenantSubscriber] Assigned tenantId ${context.tenantId} to ${entity.constructor.name} during flush`);
+                        // CRITICAL: Modify the changeset payload directly
+                        changeSet.payload.tenantId = context.tenantId;
+                        console.log(`[TenantSubscriber] ✅ Assigned tenantId ${context.tenantId} to ${entity.constructor.name} during flush (payload modified)`);
+                    } else if (entity instanceof BaseTenantEntity && entity.tenantId && !changeSet.payload.tenantId) {
+                        // If entity has tenantId but payload doesn't, sync them
+                        changeSet.payload.tenantId = entity.tenantId;
+                        console.log(`[TenantSubscriber] ✅ Synced tenantId ${entity.tenantId} to payload for ${entity.constructor.name}`);
                     }
                 }
             }
         } catch (e) {
-            console.error('[TenantSubscriber] Error during flush:', e);
+            console.error('[TenantSubscriber] ❌ Error during flush:', e);
         }
     }
 }
