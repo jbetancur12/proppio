@@ -62,4 +62,14 @@ export class PropertiesController {
             res.status(500).json({ message: 'Error fetching property stats', error });
         }
     }
+
+    async delete(req: Request, res: Response) {
+        try {
+            const service = this.getService();
+            await service.delete(req.params.id);
+            res.status(204).send();
+        } catch (error) {
+            res.status(500).json({ message: 'Error deleting property', error });
+        }
+    }
 }
