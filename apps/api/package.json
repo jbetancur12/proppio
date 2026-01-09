@@ -17,6 +17,7 @@
         "test-renewals": "tsx test-renewals.ts"
     },
     "dependencies": {
+        "@proppio/shared": "file:../shared",
         "@aws-sdk/client-s3": "^3.964.0",
         "@aws-sdk/s3-request-presigner": "^3.964.0",
         "@mikro-orm/core": "^6.0.0",

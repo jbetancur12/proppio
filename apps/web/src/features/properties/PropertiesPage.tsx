@@ -6,29 +6,30 @@ import { useProperties, useCreateProperty } from "./hooks/useProperties";
 import { PropertyCard } from "./components/PropertyCard";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createPropertySchema, CreatePropertyDto } from "@proppio/shared";
+import { FormField } from "@/components/forms/FormField";
 
 export function PropertiesPage() {
     const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
 
-    // Form state
-    const [name, setName] = useState("");
-    const [address, setAddress] = useState("");
-
     const { data: properties, isLoading } = useProperties();
     const createMutation = useCreateProperty();
 
-    const handleCreate = () => {
-        createMutation.mutate(
-            { name, address },
-            {
-                onSuccess: () => {
-                    setName("");
-                    setAddress("");
-                    setIsCreating(false);
-                }
+    // Form with validation
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<CreatePropertyDto>({
+        resolver: zodResolver(createPropertySchema)
+    });
+
+    const onSubmit = (data: CreatePropertyDto) => {
+        createMutation.mutate(data, {
+            onSuccess: () => {
+                reset();
+                setIsCreating(false);
             }
-        );
+        });
     };
 
     return (
@@ -48,28 +49,33 @@ export function PropertiesPage() {
             {/* Create Form */}
             {isCreating && (
                 <Card className="animate-in fade-in slide-in-from-top-4 border-indigo-100 bg-indigo-50/50">
-                    <CardHeader>
-                        <CardTitle className="text-indigo-900">Nueva Propiedad</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Nombre</label>
-                            <Input placeholder="Edificio Centro" value={name} onChange={e => setName(e.target.value)} className="bg-white" />
+                    <form onSubmit={handleSubmit(onSubmit)}>
+                        <CardHeader>
+                            <CardTitle className="text-indigo-900">Nueva Propiedad</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField label="Nombre" error={errors.name?.message} required>
+                                <Input
+                                    placeholder="Edificio Centro"
+                                    {...register('name')}
+                                    className={`bg-white ${errors.name ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                            <FormField label="Dirección" error={errors.address?.message} required>
+                                <Input
+                                    placeholder="Calle 123 # 45-67"
+                                    {...register('address')}
+                                    className={`bg-white ${errors.address ? 'border-destructive' : ''}`}
+                                />
+                            </FormField>
+                        </CardContent>
+                        <div className="px-6 pb-6 flex justify-end gap-2">
+                            <Button type="button" variant="ghost" onClick={() => { reset(); setIsCreating(false); }}>Cancelar</Button>
+                            <Button type="submit" disabled={createMutation.isPending}>
+                                {createMutation.isPending ? 'Guardando...' : 'Crear Propiedad'}
+                            </Button>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Dirección</label>
-                            <Input placeholder="Calle 123 # 45-67" value={address} onChange={e => setAddress(e.target.value)} className="bg-white" />
-                        </div>
-                    </CardContent>
-                    <div className="px-6 pb-6 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => setIsCreating(false)}>Cancelar</Button>
-                        <Button
-                            onClick={handleCreate}
-                            disabled={!name || !address || createMutation.isPending}
-                        >
-                            {createMutation.isPending ? 'Guardando...' : 'Crear Propiedad'}
-                        </Button>
-                    </div>
+                    </form>
                 </Card>
             )}
 
