@@ -13,13 +13,14 @@ console.log('🔹 CWD:', process.cwd());
 console.log('🔹 Entities Path (Dist):', path.join(process.cwd(), 'dist/features/**/entities/*.js'));
 
 export default defineConfig({
-    // Adapting paths to your project structure (features + shared) with absolute paths for safety
+    // Use glob patterns to scan only entity directories
     entities: [
-        path.join(process.cwd(), 'dist')
+        'dist/features/**/entities/*.js',
+        'dist/shared/entities/*.js'
     ],
     entitiesTs: [
-        path.join(process.cwd(), 'src/features/**/entities/*.ts'),
-        path.join(process.cwd(), 'src/shared/entities/*.ts')
+        'src/features/**/entities/*.ts',
+        'src/shared/entities/*.ts'
     ],
 
     dbName: process.env.DB_NAME,
