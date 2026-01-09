@@ -31,3 +31,19 @@ export function useRenterHistory(id: string) {
         enabled: !!id
     });
 }
+
+export function useUpdateRenter() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: any }) => rentersApi.update(id, data),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['renters'] });
+            queryClient.invalidateQueries({ queryKey: ['renter', data.id, 'history'] });
+            toast.success("Inquilino actualizado!");
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error?.message || "Error al actualizar inquilino");
+        }
+    });
+}
