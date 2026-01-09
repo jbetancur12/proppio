@@ -197,7 +197,6 @@ export function RenterDetailPage() {
         </div>
     );
 }
-const updateMutation = useUpdateRenter();
 const { register, handleSubmit, formState: { errors }, reset } = useForm<CreateRenterDto>({
     resolver: zodResolver(createRenterSchema)
 });
