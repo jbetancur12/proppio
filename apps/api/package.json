@@ -24,6 +24,7 @@
         "@mikro-orm/postgresql": "^6.0.0",
         "@mikro-orm/reflection": "^6.0.0",
         "@mikro-orm/migrations": "^6.0.0",
+        "@mikro-orm/seeder": "^6.0.0",
         "@types/multer": "^2.0.0",
         "@types/node-cron": "^3.0.11",
         "bcrypt": "^5.1.0",
@@ -43,7 +44,6 @@
     },
     "devDependencies": {
         "@mikro-orm/cli": "^6.6.3",
-        "@mikro-orm/seeder": "^6.6.3",
         "@types/bcrypt": "^5.0.0",
         "@types/compression": "^1.7.0",
         "@types/cors": "^2.8.19",
