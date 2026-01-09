@@ -43,7 +43,10 @@ export function PropertyDetailPage() {
     });
 
     const onSubmitUnit = (data: CreateUnitDto) => {
-        createUnitMutation.mutate(data, {
+        createUnitMutation.mutate({
+            ...data,
+            type: data.type || "Apartamento" // Ensure type always has a value
+        }, {
             onSuccess: () => {
                 resetUnit({ propertyId: id || "" });
             }
