@@ -70,8 +70,7 @@ export class PropertiesController {
             await service.delete(req.params.id);
             res.status(204).send();
         } catch (error: any) {
-            console.error('❌ Error deleting property:', error.message);
-            console.error('Stack:', error.stack);
+            logger.error({ err: error, propertyId: req.params.id }, 'Failed to delete property');
 
             // Check if it's a business logic error (active leases)
             if (error.message?.includes('contrato')) {

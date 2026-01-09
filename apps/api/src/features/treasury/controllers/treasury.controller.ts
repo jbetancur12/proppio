@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { RequestContext } from '@mikro-orm/core';
 import { TreasuryService } from '../services/treasury.service';
+import { logger } from '../../../shared/logger';
 
 export class TreasuryController {
     async getGlobalBalance(req: Request, res: Response) {
@@ -16,7 +17,7 @@ export class TreasuryController {
                 data: balance
             });
         } catch (error) {
-            console.error('Error fetching global balance:', error);
+            logger.error({ err: error }, 'Error fetching global balance');
             res.status(500).json({ success: false, message: 'Internal server error' });
         }
     }
@@ -46,7 +47,7 @@ export class TreasuryController {
                 }
             });
         } catch (error) {
-            console.error('Error fetching transactions:', error);
+            logger.error({ err: error, query: req.query }, 'Error fetching transactions');
             res.status(500).json({ success: false, message: 'Internal server error' });
         }
     }
@@ -67,7 +68,7 @@ export class TreasuryController {
                 data: tx
             });
         } catch (error) {
-            console.error('Error creating transaction:', error);
+            logger.error({ err: error, body: req.body }, 'Error creating transaction');
             res.status(500).json({ success: false, message: 'Internal server error' });
         }
     }
