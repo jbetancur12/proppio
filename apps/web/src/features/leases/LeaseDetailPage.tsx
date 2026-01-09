@@ -279,7 +279,7 @@ export function LeaseDetailPage() {
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900">Contrato de Arrendamiento</p>
-                                            <p className="text-xs text-gray-500">PDF Firmado</p>
+                                            <p className="text-xs text-gray-500">PDF Firmado (Máx. 5MB)</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -344,6 +344,7 @@ export function LeaseDetailPage() {
                                                 size="sm"
                                                 onClick={() => document.getElementById('upload-contract')?.click()}
                                                 disabled={uploadContractMutation.isPending}
+                                                title="El archivo debe pesar menos de 5MB"
                                             >
                                                 {uploadContractMutation.isPending ? 'Subiendo...' : 'Subir PDF'}
                                             </Button>
