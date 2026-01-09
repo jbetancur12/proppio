@@ -305,7 +305,6 @@ export function LeaseDetailPage() {
                                                     size="sm"
                                                     onClick={async () => {
                                                         try {
-                                                            const { leasesApi } = await import("./services/leasesApi");
                                                             const url = await leasesApi.getContractUrl(id!);
                                                             window.open(url, '_blank');
                                                         } catch (error) {

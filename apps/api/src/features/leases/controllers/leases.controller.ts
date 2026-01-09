@@ -156,6 +156,17 @@ export class LeasesController {
         }
     }
 
+    async deleteContract(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const service = this.getService(req);
+            await service.deleteContractPdf(id);
+            ApiResponse.success(res, null, 'Contrato eliminado exitosamente');
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // Rent Increase Methods
     async previewIncreases(req: Request, res: Response, next: NextFunction) {
         try {

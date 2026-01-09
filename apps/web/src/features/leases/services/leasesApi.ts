@@ -77,5 +77,10 @@ export const leasesApi = {
     getContractUrl: async (id: string): Promise<string> => {
         const res = await api.get(`/api/leases/${id}/contract`);
         return res.data.data.url;
+    },
+
+    deleteContract: async (id: string) => {
+        const res = await api.delete(`/api/leases/${id}/documents`);
+        return res.data.data;
     }
 };

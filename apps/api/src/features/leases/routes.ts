@@ -35,6 +35,7 @@ router.post('/:id/terminate', (req, res, next) => controller.terminate(req, res,
 const upload = multer({ storage: multer.memoryStorage() });
 router.post('/:id/documents', upload.single('file'), (req, res, next) => controller.uploadContract(req, res, next));
 router.get('/:id/contract', (req, res, next) => controller.getContractUrl(req, res, next));
+router.delete('/:id/documents', (req, res, next) => controller.deleteContract(req, res, next));
 router.post('/:id/activate', (req, res, next) => controller.activate(req, res, next));
 
 // Generic ID routes (MUST BE LAST to avoid shadowing specific sub-routes)

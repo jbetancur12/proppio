@@ -193,8 +193,49 @@ export class LeasesService {
 
     async updateContractPdf(id: string, filePath: string): Promise<Lease> {
         const lease = await this.findOne(id);
+
+        // If there's an existing file, delete it first to keep storage clean
+        if (lease.contractPdfPath) {
+            const bucketName = process.env.STORAGE_BUCKET || 'rent-manager-documents';
+            const { storageService } = await import('../../../shared/services/storage.service');
+            await storageService.deleteFile(bucketName, lease.contractPdfPath);
+        }
+
         lease.contractPdfPath = filePath;
         await this.em.flush();
+        return lease;
+    }
+
+    async deleteContractPdf(id: string): Promise<Lease> {
+        const lease = await this.findOne(id);
+
+        if (!lease.contractPdfPath) {
+            throw new ValidationError('El contrato no tiene un archivo PDF adjunto');
+        }
+
+        // Delete from S3
+        const bucketName = process.env.STORAGE_BUCKET || 'rent-manager-documents';
+        const { storageService } = await import('../../../shared/services/storage.service');
+        await storageService.deleteFile(bucketName, lease.contractPdfPath);
+
+        // Update DB
+        lease.contractPdfPath = undefined;
+        await this.em.flush();
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'DELETE_LEASE_CONTRACT',
+                resourceType: 'Lease',
+                resourceId: lease.id,
+                oldValues: { contractPdfPath: 'DELETED' },
+                newValues: { contractPdfPath: null }
+            });
+        } catch (error) {
+            console.error('Audit log failed for delete contract pdf:', error);
+        }
+
         return lease;
     }
 }
