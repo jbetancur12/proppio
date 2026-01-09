@@ -5,6 +5,7 @@ import { requestContext } from '../utils/RequestContext';
 export class TenantSubscriber implements EventSubscriber {
     // Before persisting a new entity, assign the tenantId from context
     async beforeCreate(args: EventArgs<BaseTenantEntity>): Promise<void> {
+        console.log('[TenantSubscriber] beforeCreate triggered for:', args.entity.constructor.name);
         const entity = args.entity;
 
         // Only process entities that extend BaseTenantEntity and don't have tenantId yet
@@ -15,14 +16,16 @@ export class TenantSubscriber implements EventSubscriber {
 
                 if (context?.tenantId) {
                     entity.tenantId = context.tenantId;
-                    console.log(`[TenantSubscriber] Assigned tenantId ${context.tenantId} to ${entity.constructor.name}`);
+                    console.log(`[TenantSubscriber] ✅ Assigned tenantId ${context.tenantId} to ${entity.constructor.name} in beforeCreate`);
                 } else {
-                    console.warn(`[TenantSubscriber] No tenantId in context for ${entity.constructor.name}`);
+                    console.warn(`[TenantSubscriber] ⚠️ No tenantId in context for ${entity.constructor.name}`);
                 }
             } catch (e) {
-                console.error('[TenantSubscriber] Error getting context:', e);
+                console.error('[TenantSubscriber] ❌ Error getting context:', e);
                 // No context available (e.g., running migrations or scripts)
             }
+        } else if (entity.tenantId) {
+            console.log(`[TenantSubscriber] tenantId already set for ${entity.constructor.name}: ${entity.tenantId}`);
         }
     }
 
