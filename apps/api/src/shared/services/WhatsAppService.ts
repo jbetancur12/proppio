@@ -6,12 +6,16 @@ export class WhatsAppService {
     private readonly accessToken: string;
     private readonly apiVersion: string;
     private readonly publicApiUrl: string;
+    private readonly isTestMode: boolean;
+    private readonly testNumber: string; // e.g., +573138124282
 
     constructor() {
         this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
         this.accessToken = process.env.WHATSAPP_ACCESS_TOKEN || '';
         this.apiVersion = process.env.WHATSAPP_API_VERSION || 'v18.0';
         this.publicApiUrl = process.env.PUBLIC_API_URL || 'https://api.tusass.com';
+        this.isTestMode = process.env.WHATSAPP_IS_TEST === 'true';
+        this.testNumber = process.env.WHATSAPP_TEST_NUMBER || '+573138124282';
     }
 
     async sendPaymentReceipt(payment: Payment) {
@@ -45,6 +49,13 @@ export class WhatsAppService {
             phoneNumber = `+57${phoneNumber}`; // Default to Colombia
         }
 
+        // Use test number if in test mode (for WhatsApp test accounts)
+        const recipientNumber = this.isTestMode ? this.testNumber : phoneNumber;
+
+        if (this.isTestMode) {
+            logger.info({ original: phoneNumber, testNumber: this.testNumber }, 'WhatsApp test mode: routing to test number');
+        }
+
         const message = `✅ *Pago Recibido*
 
 Hola *${payment.lease.renter.firstName}*,
@@ -71,7 +82,7 @@ _- Proppio_`;
                     },
                     body: JSON.stringify({
                         messaging_product: 'whatsapp',
-                        to: phoneNumber,
+                        to: recipientNumber,
                         type: 'text',
                         text: {
                             body: message
@@ -85,7 +96,7 @@ _- Proppio_`;
                 logger.error({
                     err: errorData,
                     paymentId: payment.id,
-                    recipientPhone: phoneNumber
+                    recipientPhone: recipientNumber
                 }, 'WhatsApp API error');
                 return;
             }
@@ -93,7 +104,7 @@ _- Proppio_`;
             const data = await response.json();
             logger.info({
                 paymentId: payment.id,
-                recipientPhone: phoneNumber,
+                recipientPhone: recipientNumber,
                 messageId: data.messages?.[0]?.id
             }, 'WhatsApp notification sent successfully');
         } catch (err) {
