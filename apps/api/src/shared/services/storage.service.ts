@@ -13,6 +13,7 @@ interface UploadFileOptions {
 
 export class StorageService {
     private s3Client: S3Client;
+    private publicS3Client: S3Client | undefined;
     private readonly region = 'us-east-1';
 
     constructor() {
@@ -25,6 +26,18 @@ export class StorageService {
                 secretAccessKey: process.env.STORAGE_SECRET_KEY || 'minioadmin'
             }
         });
+
+        if (process.env.STORAGE_PUBLIC_ENDPOINT) {
+            this.publicS3Client = new S3Client({
+                region: this.region,
+                endpoint: process.env.STORAGE_PUBLIC_ENDPOINT,
+                forcePathStyle: true,
+                credentials: {
+                    accessKeyId: process.env.STORAGE_ACCESS_KEY || 'minioadmin',
+                    secretAccessKey: process.env.STORAGE_SECRET_KEY || 'minioadmin'
+                }
+            });
+        }
     }
 
     async ensureBucket(bucketName: string): Promise<void> {
@@ -84,33 +97,27 @@ export class StorageService {
                 Bucket: bucketName,
                 Key: key
             });
-            const url = await getSignedUrl(this.s3Client, command, { expiresIn });
+        });
 
-            // If a public endpoint is configured, replace the internal one
-            const publicEndpoint = process.env.STORAGE_PUBLIC_ENDPOINT;
-            if (publicEndpoint) {
-                const internalEndpoint = process.env.STORAGE_ENDPOINT || 'http://localhost:9002';
-                return url.replace(internalEndpoint, publicEndpoint);
-            }
-
-            return url;
-        } catch (error) {
-            logger.error({ err: error, bucketName, key }, 'S3 presigned URL generation error');
-            throw new AppError('Error al generar URL de descarga', 500);
-        }
+        const clientToUse = this.publicS3Client || this.s3Client;
+        return await getSignedUrl(clientToUse, command, { expiresIn });
+    } catch(error) {
+        logger.error({ err: error, bucketName, key }, 'S3 presigned URL generation error');
+        throw new AppError('Error al generar URL de descarga', 500);
     }
+}
 
-    async deleteFile(bucketName: string, key: string): Promise<void> {
-        try {
-            const command = new DeleteObjectCommand({
-                Bucket: bucketName,
-                Key: key
-            });
-            await this.s3Client.send(command);
-        } catch (error) {
-            logger.error({ err: error, bucketName, key }, 'S3 file deletion error');
-        }
+    async deleteFile(bucketName: string, key: string): Promise < void> {
+    try {
+        const command = new DeleteObjectCommand({
+            Bucket: bucketName,
+            Key: key
+        });
+        await this.s3Client.send(command);
+    } catch(error) {
+        logger.error({ err: error, bucketName, key }, 'S3 file deletion error');
     }
+}
 }
 
 export const storageService = new StorageService();
