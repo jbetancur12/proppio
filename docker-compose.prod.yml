@@ -37,7 +37,9 @@ services:
 
   # --- APPLICATIONS ---
   api:
-    build: ./apps/api
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
     container_name: proppio_api
     restart: always
     depends_on:
