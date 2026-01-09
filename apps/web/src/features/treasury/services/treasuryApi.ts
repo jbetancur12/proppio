@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import { api } from '../../../api/client';
 
 export interface TreasuryTransaction {
     id: string;
@@ -31,39 +29,24 @@ export interface GlobalBalance {
 
 export const treasuryApi = {
     getBalance: async () => {
-        const response = await axios.get<{ success: boolean; data: GlobalBalance }>(
-            `${API_URL}/treasury/balance`,
-            {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            }
+        const response = await api.get<{ success: boolean; data: GlobalBalance }>(
+            '/api/treasury/balance'
         );
         return response.data.data;
     },
 
     getTransactions: async (params?: { startDate?: string; endDate?: string; page?: number; limit?: number }) => {
-        const response = await axios.get<{ success: boolean; data: UnifiedTransaction[]; meta: { total: number; page: number; limit: number } }>(
-            `${API_URL}/treasury/transactions`,
-            {
-                params,
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            }
+        const response = await api.get<{ success: boolean; data: UnifiedTransaction[]; meta: { total: number; page: number; limit: number } }>(
+            '/api/treasury/transactions',
+            { params }
         );
         return response.data;
     },
 
     createTransaction: async (data: Partial<TreasuryTransaction>) => {
-        const response = await axios.post<{ success: boolean; data: TreasuryTransaction }>(
-            `${API_URL}/treasury/transactions`,
-            data,
-            {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            }
+        const response = await api.post<{ success: boolean; data: TreasuryTransaction }>(
+            '/api/treasury/transactions',
+            data
         );
         return response.data.data;
     }
