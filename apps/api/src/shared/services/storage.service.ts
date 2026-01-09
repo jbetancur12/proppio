@@ -97,27 +97,27 @@ export class StorageService {
                 Bucket: bucketName,
                 Key: key
             });
-        });
 
-        const clientToUse = this.publicS3Client || this.s3Client;
-        return await getSignedUrl(clientToUse, command, { expiresIn });
-    } catch(error) {
-        logger.error({ err: error, bucketName, key }, 'S3 presigned URL generation error');
-        throw new AppError('Error al generar URL de descarga', 500);
-    }
-}
 
-    async deleteFile(bucketName: string, key: string): Promise < void> {
-    try {
-        const command = new DeleteObjectCommand({
-            Bucket: bucketName,
-            Key: key
-        });
-        await this.s3Client.send(command);
-    } catch(error) {
-        logger.error({ err: error, bucketName, key }, 'S3 file deletion error');
+            const clientToUse = this.publicS3Client || this.s3Client;
+            return await getSignedUrl(clientToUse, command, { expiresIn });
+        } catch (error) {
+            logger.error({ err: error, bucketName, key }, 'S3 presigned URL generation error');
+            throw new AppError('Error al generar URL de descarga', 500);
+        }
     }
-}
+
+    async deleteFile(bucketName: string, key: string): Promise<void> {
+        try {
+            const command = new DeleteObjectCommand({
+                Bucket: bucketName,
+                Key: key
+            });
+            await this.s3Client.send(command);
+        } catch (error) {
+            logger.error({ err: error, bucketName, key }, 'S3 file deletion error');
+        }
+    }
 }
 
 export const storageService = new StorageService();
