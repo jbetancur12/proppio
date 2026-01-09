@@ -156,7 +156,7 @@ function App() {
 
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
-          <Toaster />
+          <Toaster position="top-center" />
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
