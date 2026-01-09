@@ -6,6 +6,7 @@ import { initDI, DI } from './di';
 import { authMiddleware } from './shared/middlewares/authMiddleware';
 import { errorMiddleware } from './shared/middlewares/errorMiddleware';
 import { CronScheduler } from './shared/services/cron-scheduler';
+import { logger } from './shared/logger';
 
 // Routes
 import authRoutes from './features/auth/routes';
@@ -29,6 +30,10 @@ export const startExpressServer = async () => {
     // 2. Global Middlewares
     app.use(cors());
     app.use(express.json());
+
+    // Request logging
+    const { requestLogger } = await import('./shared/middleware/requestLogger');
+    app.use(requestLogger);
 
     // 3. MikroORM Context Middleware
     app.use((req, res, next) => RequestContext.create(DI.orm.em, next));
@@ -73,17 +78,17 @@ export const startExpressServer = async () => {
 
     // 9. Graceful Shutdown
     const gracefulShutdown = async (signal: string) => {
-        console.log(`${signal} received, starting graceful shutdown...`);
+        logger.info({ signal }, 'Starting graceful shutdown');
         try {
             if (DI.server) {
                 DI.server.close();
-                console.log('HTTP server closed');
+                logger.info('HTTP server closed');
             }
             await DI.orm.close();
-            console.log('Database connection closed');
+            logger.info('Database connection closed');
             process.exit(0);
-        } catch (e) {
-            console.error('Error during shutdown:', e);
+        } catch (err) {
+            logger.error({ err }, 'Error during shutdown');
             process.exit(1);
         }
     };

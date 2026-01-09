@@ -1,6 +1,7 @@
 import { startExpressServer } from './app';
+import { logger } from './shared/logger';
 
-startExpressServer().catch(err => {
-  console.error('Failed to start server:', err);
+startExpressServer().catch((err) => {
+  logger.error({ err }, 'Failed to start server');
   process.exit(1);
 });

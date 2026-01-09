@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { RequestContext } from '@mikro-orm/core';
 import { PropertiesService } from '../services/properties.service';
 import { createPropertySchema, updatePropertySchema } from '../dtos/property.dto';
+import { logger } from '../../../shared/logger';
 
 export class PropertiesController {
 
