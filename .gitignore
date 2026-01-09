@@ -7,3 +7,4 @@ coverage
 .idea
 *.log
 apps/api/node_modules
+.turbo
