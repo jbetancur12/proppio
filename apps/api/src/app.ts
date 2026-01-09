@@ -1,12 +1,15 @@
 import express from 'express';
 import cors from 'cors';
-import { MikroORM, RequestContext } from '@mikro-orm/core';
-import config from './mikro-orm.config';
+import { RequestContext } from '@mikro-orm/core';
+import http from 'http';
+import { initDI, DI } from './di';
 import { authMiddleware } from './shared/middlewares/authMiddleware';
-import propertyRoutes from './features/properties/routes';
-import authRoutes from './features/auth/routes';
 import { errorMiddleware } from './shared/middlewares/errorMiddleware';
+import { CronScheduler } from './shared/services/cron-scheduler';
 
+// Routes
+import authRoutes from './features/auth/routes';
+import propertyRoutes from './features/properties/routes';
 import renterRoutes from './features/renters/routes';
 import leaseRoutes from './features/leases/routes';
 import paymentRoutes from './features/payments/routes';
@@ -15,40 +18,29 @@ import expenseRoutes from './features/expenses/routes';
 import maintenanceRoutes from './features/maintenance/routes';
 import adminRoutes from './features/admin/routes';
 import treasuryRoutes from './features/treasury/routes';
-import { CronScheduler } from './shared/services/cron-scheduler';
 
-export const createApp = async () => {
-    // 1. Initialize ORM
-    const orm = await MikroORM.init(config);
+export const startExpressServer = async () => {
+    // 1. Initialize DI (ORM & Repositories)
+    await initDI();
 
     const app = express();
+    const port = process.env.PORT || 3000;
 
     // 2. Global Middlewares
     app.use(cors());
     app.use(express.json());
 
-    // 3. MikroORM Context Middleware (forks EM per request)
-    // Important: This must be before routes/auth
-    // 3. MikroORM Context Middleware (forks EM per request)
-    // Important: This must be before routes/auth
-    app.use((req, res, next) => {
-        RequestContext.create(orm.em, () => {
-            // Attach EM to request for manual retrieval if context is lost (e.g. by Multer)
-            (req as any).em = RequestContext.getEntityManager();
-            next();
-        });
-    });
+    // 3. MikroORM Context Middleware
+    app.use((req, res, next) => RequestContext.create(DI.orm.em, next));
 
-    // 4. Public Routes (e.g. Health Check, Login)
+    // 4. Public Routes
     app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
     app.use('/auth', authRoutes);
 
-    // 5. Protected Routes Middleware
-    // For now, we apply it to everything under /api
+    // 5. Protected Routes
     const apiRouter = express.Router();
     apiRouter.use(authMiddleware);
 
-    // Feature Routes
     apiRouter.use('/properties', propertyRoutes);
     apiRouter.use('/renters', renterRoutes);
     apiRouter.use('/leases', leaseRoutes);
@@ -56,28 +48,46 @@ export const createApp = async () => {
     apiRouter.use('/stats', statsRoutes);
     apiRouter.use('/expenses', expenseRoutes);
     apiRouter.use('/maintenance', maintenanceRoutes);
-
-    // Admin Routes (Super Admin only)
     apiRouter.use('/admin', adminRoutes);
-
-    // Treasury Routes
     apiRouter.use('/treasury', treasuryRoutes);
 
-    // Example protected route to verify context
     apiRouter.get('/me', (req, res) => {
-        // We can safely import getContext() here
-        const { getContext } = require('./shared/utils/RequestContext');
-        const ctx = getContext();
-        res.json({ message: 'You are authenticated', user: ctx });
+        res.json({ message: 'You are authenticated', user: (req as any).user });
     });
 
     app.use('/api', apiRouter);
 
-    // 7. Error Handler (must be last)
+    // 6. Error Handler
     app.use(errorMiddleware);
 
-    // 8. Start Cron Jobs
-    await CronScheduler.start(orm);
+    // 7. Start Cron Jobs
+    await CronScheduler.start(DI.orm);
 
-    return { app, orm };
+    // 8. Start Server
+    const httpServer = http.createServer(app);
+
+    // Store server instance in DI
+    DI.server = httpServer.listen(port, () => {
+        console.log(`Server running on http://localhost:${port}`);
+    });
+
+    // 9. Graceful Shutdown
+    const gracefulShutdown = async (signal: string) => {
+        console.log(`${signal} received, starting graceful shutdown...`);
+        try {
+            if (DI.server) {
+                DI.server.close();
+                console.log('HTTP server closed');
+            }
+            await DI.orm.close();
+            console.log('Database connection closed');
+            process.exit(0);
+        } catch (e) {
+            console.error('Error during shutdown:', e);
+            process.exit(1);
+        }
+    };
+
+    process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.once('SIGINT', () => gracefulShutdown('SIGINT'));
 };
