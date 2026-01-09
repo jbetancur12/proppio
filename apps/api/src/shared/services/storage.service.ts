@@ -84,7 +84,16 @@ export class StorageService {
                 Bucket: bucketName,
                 Key: key
             });
-            return await getSignedUrl(this.s3Client, command, { expiresIn });
+            const url = await getSignedUrl(this.s3Client, command, { expiresIn });
+
+            // If a public endpoint is configured, replace the internal one
+            const publicEndpoint = process.env.STORAGE_PUBLIC_ENDPOINT;
+            if (publicEndpoint) {
+                const internalEndpoint = process.env.STORAGE_ENDPOINT || 'http://localhost:9002';
+                return url.replace(internalEndpoint, publicEndpoint);
+            }
+
+            return url;
         } catch (error) {
             logger.error({ err: error, bucketName, key }, 'S3 presigned URL generation error');
             throw new AppError('Error al generar URL de descarga', 500);
