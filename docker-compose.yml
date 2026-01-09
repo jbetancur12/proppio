@@ -3,20 +3,20 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: rent_manager_db
+    container_name: proppio_db
     ports:
       - "5435:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: rent_manager_db
+      POSTGRES_DB: proppio_db
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:alpine
-    container_name: rent_manager_redis
+    container_name: proppio_redis
     ports:
       - "6379:6379"
     volumes:
@@ -24,7 +24,7 @@ services:
 
   minio:
     image: minio/minio
-    container_name: rent_manager_minio
+    container_name: proppio_minio
     ports:
       - "9002:9000"
       - "9003:9001"
