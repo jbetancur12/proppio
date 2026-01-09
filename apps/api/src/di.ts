@@ -1,3 +1,4 @@
+import 'reflect-metadata'; // Required for ReflectMetadataProvider in production
 import { EntityManager, EntityRepository, MikroORM } from '@mikro-orm/core'; // Changed to @mikro-orm/core as it's the main package
 import { PostgreSqlDriver } from '@mikro-orm/postgresql'; // Use driver specific types if needed, or core
 import config from './mikro-orm.config';
