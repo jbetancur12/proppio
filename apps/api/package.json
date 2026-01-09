@@ -23,6 +23,7 @@
         "@mikro-orm/core": "^6.0.0",
         "@mikro-orm/postgresql": "^6.0.0",
         "@mikro-orm/reflection": "^6.0.0",
+        "@mikro-orm/migrations": "^6.0.0",
         "@types/multer": "^2.0.0",
         "@types/node-cron": "^3.0.11",
         "bcrypt": "^5.1.0",
