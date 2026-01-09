@@ -32,6 +32,7 @@ services:
     command: [ "server", "/data", "--console-address", ":9001" ]
     volumes:
       - minio_data:/data
+    networks:
       - app_network
 
   dozzle:
