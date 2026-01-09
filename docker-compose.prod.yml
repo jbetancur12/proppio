@@ -69,7 +69,10 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-password}
       - DB_NAME=${DB_NAME:-proppio_db}
       - REDIS_HOST=redis
-      - MINIO_ENDPOINT=minio
+      - REDIS_HOST=redis
+      - STORAGE_ENDPOINT=http://minio:9000
+      - STORAGE_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - STORAGE_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
       - CORS_ORIGIN=http://localhost,https://app.tusass.com
       - JWT_SECRET=${JWT_SECRET:-supersecret}
       - RESEND_API_KEY=${RESEND_API_KEY}
