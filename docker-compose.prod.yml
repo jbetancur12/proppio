@@ -57,6 +57,7 @@ services:
       - CORS_ORIGIN=http://localhost,https://app.tusass.com
       - JWT_SECRET=${JWT_SECRET:-supersecret}
       - RESEND_API_KEY=${RESEND_API_KEY}
+      - MIKRO_ORM_USE_TS_NODE=false # Force use of JS migrations in prod
     networks:
       - app_network
 
