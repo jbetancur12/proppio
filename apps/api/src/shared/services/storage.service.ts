@@ -2,6 +2,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, Head
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import fs from 'fs';
 import { AppError } from "../errors/AppError";
+import { logger } from "../logger";
 
 interface UploadFileOptions {
     bucketName: string;
@@ -34,12 +35,12 @@ export class StorageService {
             if (error.$metadata?.httpStatusCode === 404 || error.name === 'NotFound') {
                 try {
                     await this.s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
-                    console.log(`Bucket ${bucketName} created.`);
+                    logger.info({ bucketName }, 'S3 bucket created');
                 } catch (createError) {
-                    console.error('Error creating bucket:', createError);
+                    logger.error({ err: createError, bucketName }, 'Error creating S3 bucket');
                 }
             } else {
-                console.error('Error checking bucket:', error);
+                logger.error({ err: error, bucketName }, 'Error checking S3 bucket');
             }
         }
     }
@@ -56,7 +57,7 @@ export class StorageService {
             });
             await this.s3Client.send(command);
         } catch (error) {
-            console.error('Upload error:', error);
+            logger.error({ err: error, bucketName, key, filePath }, 'S3 file upload error');
             throw new AppError('Error al subir archivo al almacenamiento', 500);
         }
     }
@@ -72,7 +73,7 @@ export class StorageService {
             });
             await this.s3Client.send(command);
         } catch (error) {
-            console.error('Buffer upload error:', error);
+            logger.error({ err: error, bucketName, key, bufferSize: buffer.length }, 'S3 buffer upload error');
             throw new AppError('Error al subir archivo', 500);
         }
     }
@@ -85,7 +86,7 @@ export class StorageService {
             });
             return await getSignedUrl(this.s3Client, command, { expiresIn });
         } catch (error) {
-            console.error('Presign error:', error);
+            logger.error({ err: error, bucketName, key }, 'S3 presigned URL generation error');
             throw new AppError('Error al generar URL de descarga', 500);
         }
     }
@@ -98,7 +99,7 @@ export class StorageService {
             });
             await this.s3Client.send(command);
         } catch (error) {
-            console.error('Delete error:', error);
+            logger.error({ err: error, bucketName, key }, 'S3 file deletion error');
         }
     }
 }

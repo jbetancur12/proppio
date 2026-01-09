@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { Payment } from '../../features/payments/entities/Payment';
+import { logger } from '../logger';
 
 export class EmailService {
     private resend: Resend;
@@ -12,7 +13,7 @@ export class EmailService {
 
     async sendPaymentReceipt(payment: Payment) {
         if (!payment.lease?.renter?.email) {
-            console.warn(`[EmailService] Renter email not found for payment ${payment.id}`);
+            logger.warn({ paymentId: payment.id }, 'Renter email not found for payment');
             return;
         }
 
@@ -60,13 +61,14 @@ export class EmailService {
             });
 
             if (error) {
-                console.error('[EmailService] Resend Error:', error);
+                logger.error({ err: error, paymentId: payment.id, recipientEmail: payment.lease.renter.email }, 'Resend API error');
                 return;
             }
 
-            console.log(`[EmailService] Payment receipt sent to ${payment.lease.renter.email}, ID: ${data?.id}`);
+            logger.info({ paymentId: payment.id, recipientEmail: payment.lease.renter.email, emailId: data?.id }, 'Payment receipt email sent successfully');
         } catch (err) {
-            console.error('[EmailService] Unexpected error sending email:', err);
+            logger.error({ err, paymentId: payment.id }, 'Unexpected error sending email');
+            throw err;
         }
     }
 }
