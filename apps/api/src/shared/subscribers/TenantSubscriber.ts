@@ -9,10 +9,15 @@ export class TenantSubscriber implements EventSubscriber {
 
         // Only process entities that extend BaseTenantEntity and don't have tenantId yet
         if (entity instanceof BaseTenantEntity && !entity.tenantId) {
-            const context = getContext();
+            try {
+                const context = getContext();
 
-            if (context?.user?.tenantId) {
-                entity.tenantId = context.user.tenantId;
+                if (context?.tenantId) {
+                    entity.tenantId = context.tenantId;
+                }
+            } catch (e) {
+                // No context available (e.g., running migrations or scripts)
+                // This is expected in some scenarios
             }
         }
     }
@@ -20,14 +25,19 @@ export class TenantSubscriber implements EventSubscriber {
     // Also assign tenantId during flush if still missing
     async onFlush(args: FlushEventArgs): Promise<void> {
         const changeSets = args.uow.getChangeSets();
-        const context = getContext();
 
-        for (const changeSet of changeSets) {
-            const entity = changeSet.entity;
+        try {
+            const context = getContext();
 
-            if (entity instanceof BaseTenantEntity && !entity.tenantId && context?.user?.tenantId) {
-                entity.tenantId = context.user.tenantId;
+            for (const changeSet of changeSets) {
+                const entity = changeSet.entity;
+
+                if (entity instanceof BaseTenantEntity && !entity.tenantId && context?.tenantId) {
+                    entity.tenantId = context.tenantId;
+                }
             }
+        } catch (e) {
+            // No context available
         }
     }
 }
