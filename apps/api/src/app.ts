@@ -36,7 +36,11 @@ export const startExpressServer = async () => {
     app.use(requestLogger);
 
     // 3. MikroORM Context Middleware
-    app.use((req, res, next) => RequestContext.create(DI.orm.em, next));
+    app.use((req, res, next) => {
+        RequestContext.create(DI.orm.em, next);
+        // Fallback: Attach EM to req for middlewares that break AsyncLocalStorage (e.g. Multer)
+        (req as any).em = DI.orm.em;
+    });
 
     // 4. Public Routes
     app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
