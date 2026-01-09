@@ -30,7 +30,7 @@ export default defineConfig({
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
 
-    metadataProvider: process.env.NODE_ENV !== 'production' ? TsMorphMetadataProvider : undefined,
+    metadataProvider: TsMorphMetadataProvider,
     extensions: [Migrator, SeedManager],
 
     // Disable strict validation to avoid issues with abstract entities during discovery
