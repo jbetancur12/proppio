@@ -115,9 +115,9 @@ export function LeaseDetailPage() {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     {lease.status === 'DRAFT' && (
-                        <Button className="bg-green-600 hover:bg-green-700" onClick={handleActivate} disabled={activateMutation.isPending}>
+                        <Button className="bg-green-600 hover:bg-green-700 w-full sm:w-auto" onClick={handleActivate} disabled={activateMutation.isPending}>
                             {activateMutation.isPending ? 'Activando...' : 'Activar Contrato'}
                         </Button>
                     )}
@@ -133,7 +133,7 @@ export function LeaseDetailPage() {
                             />
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="destructive">
+                                    <Button variant="destructive" className="w-full sm:w-auto">
                                         <AlertOctagon size={16} className="mr-2" /> Terminar Contrato
                                     </Button>
                                 </AlertDialogTrigger>
@@ -272,7 +272,7 @@ export function LeaseDetailPage() {
                         <CardContent>
                             <div className="space-y-4">
                                 {/* Contract File */}
-                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-white rounded border border-gray-200">
                                             <FileText size={24} className="text-red-500" />
@@ -282,7 +282,7 @@ export function LeaseDetailPage() {
                                             <p className="text-xs text-gray-500">PDF Firmado (Máx. 5MB)</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <input
                                             type="file"
                                             id="upload-contract"
@@ -300,7 +300,7 @@ export function LeaseDetailPage() {
                                             }}
                                         />
                                         {lease.contractPdfPath ? (
-                                            <div className="flex gap-2 items-center">
+                                            <div className="flex flex-wrap gap-2 items-center">
                                                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                                                     Subido
                                                 </Badge>
@@ -342,6 +342,7 @@ export function LeaseDetailPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
+                                                className="w-full sm:w-auto"
                                                 onClick={() => document.getElementById('upload-contract')?.click()}
                                                 disabled={uploadContractMutation.isPending}
                                                 title="El archivo debe pesar menos de 5MB"
