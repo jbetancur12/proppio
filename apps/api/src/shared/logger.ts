@@ -12,6 +12,11 @@ export const logger = pino({
             }
         }
         : undefined, // JSON format in production
+    formatters: {
+        level: (label) => {
+            return { level: label };
+        },
+    },
 });
 
 // Helper to create child loggers with context
