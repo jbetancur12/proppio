@@ -1,6 +1,6 @@
 import { EventArgs, EventSubscriber, FlushEventArgs } from '@mikro-orm/core';
 import { BaseTenantEntity } from '../entities/BaseTenantEntity';
-import { getContext } from '../utils/RequestContext';
+import { requestContext } from '../utils/RequestContext';
 
 export class TenantSubscriber implements EventSubscriber {
     // Before persisting a new entity, assign the tenantId from context
@@ -10,14 +10,18 @@ export class TenantSubscriber implements EventSubscriber {
         // Only process entities that extend BaseTenantEntity and don't have tenantId yet
         if (entity instanceof BaseTenantEntity && !entity.tenantId) {
             try {
-                const context = getContext();
+                // Get context directly from AsyncLocalStorage
+                const context = requestContext.getStore();
 
                 if (context?.tenantId) {
                     entity.tenantId = context.tenantId;
+                    console.log(`[TenantSubscriber] Assigned tenantId ${context.tenantId} to ${entity.constructor.name}`);
+                } else {
+                    console.warn(`[TenantSubscriber] No tenantId in context for ${entity.constructor.name}`);
                 }
             } catch (e) {
+                console.error('[TenantSubscriber] Error getting context:', e);
                 // No context available (e.g., running migrations or scripts)
-                // This is expected in some scenarios
             }
         }
     }
@@ -27,17 +31,21 @@ export class TenantSubscriber implements EventSubscriber {
         const changeSets = args.uow.getChangeSets();
 
         try {
-            const context = getContext();
+            // Get context directly from AsyncLocalStorage
+            const context = requestContext.getStore();
 
-            for (const changeSet of changeSets) {
-                const entity = changeSet.entity;
+            if (context?.tenantId) {
+                for (const changeSet of changeSets) {
+                    const entity = changeSet.entity;
 
-                if (entity instanceof BaseTenantEntity && !entity.tenantId && context?.tenantId) {
-                    entity.tenantId = context.tenantId;
+                    if (entity instanceof BaseTenantEntity && !entity.tenantId) {
+                        entity.tenantId = context.tenantId;
+                        console.log(`[TenantSubscriber] Assigned tenantId ${context.tenantId} to ${entity.constructor.name} during flush`);
+                    }
                 }
             }
         } catch (e) {
-            // No context available
+            console.error('[TenantSubscriber] Error during flush:', e);
         }
     }
 }
