@@ -5,6 +5,7 @@ import { SeedManager } from '@mikro-orm/seeder';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import dotenv from 'dotenv';
 import path from 'path';
+import { TenantSubscriber } from './shared/subscribers/TenantSubscriber';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
@@ -34,7 +35,7 @@ export default defineConfig({
     extensions: [Migrator, SeedManager],
 
     // Register subscribers
-    subscribers: [new (require('./shared/subscribers/TenantSubscriber').TenantSubscriber)()],
+    subscribers: [new TenantSubscriber()],
 
     // Disable strict validation to avoid issues with abstract entities during discovery
     validate: false,
