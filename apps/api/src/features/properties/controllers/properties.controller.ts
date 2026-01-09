@@ -29,8 +29,14 @@ export class PropertiesController {
                 return;
             }
 
+            const user = (req as any).user;
+            if (!user || !user.tenantId) {
+                res.status(403).json({ message: 'Tenant context required' });
+                return;
+            }
+
             const service = this.getService();
-            const property = await service.create(validation.data);
+            const property = await service.create(validation.data, user.tenantId);
             res.status(201).json(property);
         } catch (error) {
             res.status(500).json({ message: 'Error creating property', error });

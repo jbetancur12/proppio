@@ -107,10 +107,11 @@ export class PropertiesService {
         };
     }
 
-    async create(dto: CreatePropertyDto) {
+    async create(dto: CreatePropertyDto, tenantId: string) {
         const property = new PropertyEntity();
         property.name = dto.name;
         property.address = dto.address;
+        property.tenant = tenantId as any; // Assign tenant reference
 
         await this.em.persistAndFlush(property);
 
