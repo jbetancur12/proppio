@@ -1,19 +1,18 @@
 import { EntityManager } from '@mikro-orm/core';
-import { LeasesService } from '../features/leases/services/leases.service';
+import { LeaseRenewalService } from '../features/leases/services/lease-renewal.service';
 import { logger } from '../shared/logger';
 
-export async function processLeaseRenewals(em: EntityManager) {
+export async function processLeaseRenewals(em: EntityManager): Promise<{ renewed: number; errors: string[] }> {
     logger.info('Starting automatic lease renewal process');
 
+    const service = new LeaseRenewalService(em);
+
     try {
-        const service = new LeasesService(em);
         const result = await service.processAutomaticRenewals();
 
-        if (result && result.renewed !== undefined) {
-            logger.info({ renewed: result.renewed }, `Lease renewal complete: ${result.renewed} leases renewed`);
-        }
+        logger.info({ renewed: result.renewed }, `Lease renewal complete: ${result.renewed} leases renewed`);
 
-        if (result && result.errors && result.errors.length > 0) {
+        if (result.errors.length > 0) {
             logger.warn({ errors: result.errors }, `Errors during renewal: ${result.errors.length} errors`);
         }
 
