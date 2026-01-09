@@ -52,10 +52,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
                 // Set tenantId for impersonation
                 decoded.tenantId = impersonateTenant;
 
-                // Set RLS variable
-                await em.getConnection().execute(
-                    `SET LOCAL app.current_tenant = '${impersonateTenant}'`
-                );
+                // RLS implementation removed as it requires transaction context
+                // and we handle tenant isolation via TenantSubscriber and filters
             }
 
             // Continue without tenant context if not impersonating
@@ -100,11 +98,9 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        // Crits: Set PostgreSQL RLS variable for Row Level Security
-        // This enables the third layer of multi-tenancy defense
-        await em.getConnection().execute(
-            `SET LOCAL app.current_tenant = '${decoded.tenantId}'`
-        );
+        // Crits: RLS variable setup removed
+        // We handle multi-tenancy via TenantSubscriber and MikroORM filters
+        // The SET LOCAL command caused warnings because it wasn't in a transaction block
 
         (req as any).user = decoded; // Attach to req for legacy middleware
 
