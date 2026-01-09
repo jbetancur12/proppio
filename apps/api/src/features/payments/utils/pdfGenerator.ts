@@ -9,13 +9,23 @@ interface ReceiptData {
     companyName?: string;
 }
 
+// Proppio Brand Colors
+const COLORS = {
+    primary: '#4F46E5',   // Indigo-600
+    dark: '#312E81',      // Indigo-900
+    light: '#EEF2FF',     // Indigo-50 (Backgrounds)
+    success: '#16A34A',   // Green-600
+    text: '#374151',      // Gray-700
+    textLight: '#6B7280', // Gray-500
+    white: '#FFFFFF'
+};
+
 /**
- * Generate a PDF receipt for a payment
- * Returns a buffer containing the PDF
+ * Generate a Modern PDF receipt for a payment
  */
 export function generatePaymentReceipt(data: ReceiptData): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-        const doc = new PDFDocument({ size: 'A4', margin: 50 });
+        const doc = new PDFDocument({ size: 'A4', margin: 40 });
         const buffers: Buffer[] = [];
 
         doc.on('data', (buffer) => buffers.push(buffer));
@@ -32,56 +42,75 @@ export function generatePaymentReceipt(data: ReceiptData): Promise<Buffer> {
         const formatMonth = (date: Date) =>
             new Date(date).toLocaleDateString('es-CO', { year: 'numeric', month: 'long' });
 
-        // Header
-        doc.fontSize(24).font('Helvetica-Bold').text('RECIBO DE PAGO', { align: 'center' });
-        doc.moveDown(0.5);
-        doc.fontSize(12).font('Helvetica').fillColor('#666').text(companyName || 'Rent Manager', { align: 'center' });
-        doc.moveDown(2);
+        // --- BACKGROUND DECORATION ---
+        // Top colored bar
+        doc.rect(0, 0, 600, 15).fill(COLORS.primary);
 
-        // Receipt Info Box
-        doc.fillColor('#000').fontSize(10);
-        doc.rect(50, doc.y, 495, 80).stroke();
-        const boxY = doc.y + 15;
+        // --- HEADER ---
+        const startY = 50;
 
-        doc.text(`Recibo No: ${payment.id.slice(0, 8).toUpperCase()}`, 60, boxY);
-        doc.text(`Fecha de Emisión: ${formatDate(new Date())}`, 300, boxY);
-        doc.text(`Fecha de Pago: ${formatDate(payment.paymentDate)}`, 60, boxY + 20);
-        doc.text(`Método: ${getMethodLabel(payment.method)}`, 300, boxY + 20);
+        // Logo / Brand Name (Left)
+        doc.fontSize(28).font('Helvetica-Bold').fillColor(COLORS.primary).text('Proppio', 40, startY);
+        doc.fontSize(10).font('Helvetica').fillColor(COLORS.textLight).text('Gestión Inteligente', 40, startY + 30);
+
+        // Receipt Details (Right)
+        doc.fontSize(10).font('Helvetica-Bold').fillColor(COLORS.textLight).text('RECIBO DE PAGO', 400, startY, { align: 'right', width: 150 });
+        doc.fontSize(14).font('Helvetica').fillColor(COLORS.dark).text(`#${payment.id.slice(0, 8).toUpperCase()}`, 400, startY + 15, { align: 'right', width: 150 });
+        doc.fontSize(9).font('Helvetica').fillColor(COLORS.textLight).text(formatDate(new Date()), 400, startY + 35, { align: 'right', width: 150 });
+
+        // Divider
+        doc.moveTo(40, startY + 60).lineTo(555, startY + 60).strokeColor('#E5E7EB').stroke();
+
+        // --- SUCCESS BANNER (AMOUNT) ---
+        const bannerY = startY + 80;
+        doc.roundedRect(40, bannerY, 515, 80, 5).fill(COLORS.light);
+
+        // Icon Circle (Abstract)
+        doc.circle(80, bannerY + 40, 20).fill(COLORS.success);
+        doc.lineWidth(3).strokeColor(COLORS.white).moveTo(72, bannerY + 40).lineTo(78, bannerY + 46).lineTo(88, bannerY + 34).stroke();
+
+        // Text
+        doc.fontSize(12).font('Helvetica-Bold').fillColor(COLORS.success).text('PAGO EXITOSO', 115, bannerY + 25);
+        doc.fontSize(24).font('Helvetica-Bold').fillColor(COLORS.dark).text(formatCurrency(payment.amount), 115, bannerY + 42);
+
+        // --- DETAILS GRID ---
+        const gridY = bannerY + 110;
+        const col1Ex = 40;
+        const col2Ex = 300;
+        let currentY = gridY;
+
+        const drawLabelValue = (label: string, value: string, x: number, y: number) => {
+            doc.fontSize(9).font('Helvetica-Bold').fillColor(COLORS.textLight).text(label.toUpperCase(), x, y);
+            doc.fontSize(11).font('Helvetica').fillColor(COLORS.text).text(value, x, y + 15, { width: 220 });
+        };
+
+        // Row 1
+        drawLabelValue('Arrendatario', tenantName, col1Ex, currentY);
+        drawLabelValue('Propiedad / Unidad', payment.lease.unit?.name || 'Unidad General', col2Ex, currentY);
+        currentY += 50;
+
+        // Row 2
+        drawLabelValue('Concepto', 'Canon de Arrendamiento', col1Ex, currentY);
+        drawLabelValue('Período Facturado', `${formatMonth(payment.periodStart)} - ${formatMonth(payment.periodEnd)}`, col2Ex, currentY);
+        currentY += 50;
+
+        // Row 3
+        drawLabelValue('Método de Pago', getMethodLabel(payment.method), col1Ex, currentY);
+        drawLabelValue('Fecha de Pago', formatDate(payment.paymentDate), col2Ex, currentY);
+
         if (payment.reference) {
-            doc.text(`Referencia: ${payment.reference}`, 60, boxY + 40);
+            currentY += 50;
+            drawLabelValue('Referencia / Notas', payment.reference, col1Ex, currentY);
         }
 
-        doc.y = boxY + 70;
-        doc.moveDown(2);
+        // --- FOOTER ---
+        const footerY = 700;
+        doc.moveTo(40, footerY).lineTo(555, footerY).strokeColor('#E5E7EB').stroke();
 
-        // Tenant Info
-        doc.fontSize(12).font('Helvetica-Bold').text('RECIBIDO DE:');
-        doc.moveDown(0.5);
-        doc.fontSize(11).font('Helvetica').text(tenantName);
-        doc.moveDown(1.5);
-
-        // Property & Unit Info
-        doc.fontSize(12).font('Helvetica-Bold').text('POR CONCEPTO DE:');
-        doc.moveDown(0.5);
-        doc.fontSize(11).font('Helvetica');
-        doc.text(`Arrendamiento: ${payment.lease.unit?.name || 'Unidad'}`);
-        doc.text(`Período: ${formatMonth(payment.periodStart)} - ${formatMonth(payment.periodEnd)}`);
-        doc.moveDown(2);
-
-        // Amount Box
-        doc.rect(50, doc.y, 495, 60).fillAndStroke('#f0f9ff', '#0284c7');
-        const amountY = doc.y + 15;
-        doc.fillColor('#0284c7').fontSize(14).font('Helvetica-Bold');
-        doc.text('VALOR PAGADO:', 60, amountY);
-        doc.fontSize(24).text(formatCurrency(payment.amount), 60, amountY + 20);
-
-        doc.y = amountY + 55;
-        doc.moveDown(3);
-
-        // Footer
-        doc.fillColor('#666').fontSize(9).font('Helvetica');
-        doc.text('Este recibo es válido como comprobante de pago.', 50, 700, { align: 'center' });
-        doc.text(`Generado el ${formatDate(new Date())} por Rent Manager`, { align: 'center' });
+        doc.fontSize(9).font('Helvetica').fillColor(COLORS.textLight);
+        doc.text('Gracias por su pago.', 0, footerY + 15, { align: 'center' });
+        doc.text(`Generado automáticamente por Proppio - ${companyName || 'Rent Manager'}`, 0, footerY + 30, { align: 'center' });
+        doc.text('proppio.co', 0, footerY + 45, { align: 'center', link: 'https://proppio.co' });
 
         doc.end();
     });
