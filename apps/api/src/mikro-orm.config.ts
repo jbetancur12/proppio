@@ -7,12 +7,13 @@ import path from 'path';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-export default defineConfig({
-    // Debugging paths
-    console.log('🔹 MikroORM Config Loaded');
-    console.log('🔹 CWD:', process.cwd());
-    console.log('🔹 Entities Path (Dist):', path.join(process.cwd(), 'dist/features/**/entities/*.js'));
+// Debugging paths
+console.log('🔹 MikroORM Config Loaded');
+console.log('🔹 CWD:', process.cwd());
+console.log('🔹 Entities Path (Dist):', path.join(process.cwd(), 'dist/features/**/entities/*.js'));
 
+export default defineConfig({
+    // Adapting paths to your project structure (features + shared) with absolute paths for safety
     entities: [
         path.join(process.cwd(), 'dist/features/**/entities/*.js'),
         path.join(process.cwd(), 'dist/shared/entities/*.js')
