@@ -26,6 +26,9 @@ export class LeasesService {
         // Validate unit exists
         const unit = await this.em.findOne(UnitEntity, { id: data.unitId });
         if (!unit) throw new ValidationError('Unidad no encontrada');
+        if (unit.status !== UnitStatus.VACANT) {
+            throw new ValidationError('La unidad no está disponible (Ocupada o en Mantenimiento)');
+        }
 
         // Validate renter exists
         const renter = await this.em.findOne(Renter, { id: data.renterId });

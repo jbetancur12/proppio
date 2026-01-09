@@ -64,9 +64,11 @@ export function LeasesPage() {
         }
     }, [startDate, duration, setValue]);
 
-    // Flatten units from all properties
+    // Flatten units from all properties and filter only VACANT ones
     const allUnits = properties?.flatMap((p: any) =>
-        (p.units || []).map((u: any) => ({ ...u, propertyName: p.name }))
+        (p.units || [])
+            .filter((u: any) => u.status === 'VACANT')
+            .map((u: any) => ({ ...u, propertyName: p.name }))
     ) || [];
 
     const onSubmit = (data: CreateLeaseDto) => {
