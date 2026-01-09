@@ -115,14 +115,14 @@ export function LeaseDetailPage() {
                         </p>
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
                     {lease.status === 'DRAFT' && (
                         <Button className="bg-green-600 hover:bg-green-700 w-full sm:w-auto" onClick={handleActivate} disabled={activateMutation.isPending}>
                             {activateMutation.isPending ? 'Activando...' : 'Activar Contrato'}
                         </Button>
                     )}
                     {lease.status === 'ACTIVE' && (
-                        <>
+                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                             <LeaseRenewalSection
                                 leaseId={id!}
                                 monthlyRent={lease.monthlyRent}
@@ -153,7 +153,7 @@ export function LeaseDetailPage() {
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
-                        </>
+                        </div>
                     )}
                 </div>
             </div>
@@ -282,7 +282,7 @@ export function LeaseDetailPage() {
                                             <p className="text-xs text-gray-500">PDF Firmado (Máx. 5MB)</p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                         <input
                                             type="file"
                                             id="upload-contract"
@@ -300,43 +300,46 @@ export function LeaseDetailPage() {
                                             }}
                                         />
                                         {lease.contractPdfPath ? (
-                                            <div className="flex flex-wrap gap-2 items-center">
-                                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:items-center">
+                                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 justify-center sm:justify-start w-full sm:w-auto">
                                                     Subido
                                                 </Badge>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={async () => {
-                                                        try {
-                                                            const url = await leasesApi.getContractUrl(id!);
-                                                            window.open(url, '_blank');
-                                                        } catch (error) {
-                                                            toast.error("Error al descargar el contrato");
-                                                        }
-                                                    }}
-                                                >
-                                                    <FileText size={14} className="mr-1" /> Ver/Descargar
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                    onClick={async () => {
-                                                        if (confirm('¿Está seguro de eliminar el documento del contrato? Esta acción eliminará el archivo permanentemente.')) {
+                                                <div className="flex gap-2 w-full sm:w-auto">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="flex-1 sm:flex-none"
+                                                        onClick={async () => {
                                                             try {
-                                                                await leasesApi.deleteContract(id!);
-                                                                toast.success("Contrato eliminado exitosamente");
-                                                                window.location.reload();
+                                                                const url = await leasesApi.getContractUrl(id!);
+                                                                window.open(url, '_blank');
                                                             } catch (error) {
-                                                                toast.error("Error al eliminar el contrato");
+                                                                toast.error("Error al descargar el contrato");
                                                             }
-                                                        }
-                                                    }}
-                                                    title="Eliminar Contrato"
-                                                >
-                                                    <Trash2 size={14} className="mr-1" /> Eliminar
-                                                </Button>
+                                                        }}
+                                                    >
+                                                        <FileText size={14} className="mr-1" /> Ver
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
+                                                        onClick={async () => {
+                                                            if (confirm('¿Está seguro de eliminar el documento del contrato? Esta acción eliminará el archivo permanentemente.')) {
+                                                                try {
+                                                                    await leasesApi.deleteContract(id!);
+                                                                    toast.success("Contrato eliminado exitosamente");
+                                                                    window.location.reload();
+                                                                } catch (error) {
+                                                                    toast.error("Error al eliminar el contrato");
+                                                                }
+                                                            }
+                                                        }}
+                                                        title="Eliminar Contrato"
+                                                    >
+                                                        <Trash2 size={14} className="mr-1" /> Eliminar
+                                                    </Button>
+                                                </div>
                                             </div>
                                         ) : (
                                             <Button
