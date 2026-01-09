@@ -32,7 +32,10 @@ router.get('/:id/pending-payments', (req, res, next) => controller.getPendingPay
 
 router.post('/:id/terminate', (req, res, next) => controller.terminate(req, res, next));
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
 router.post('/:id/documents', upload.single('file'), (req, res, next) => controller.uploadContract(req, res, next));
 router.get('/:id/contract', (req, res, next) => controller.getContractUrl(req, res, next));
 router.delete('/:id/documents', (req, res, next) => controller.deleteContract(req, res, next));

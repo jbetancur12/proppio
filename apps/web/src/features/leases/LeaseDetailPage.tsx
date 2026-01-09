@@ -291,6 +291,10 @@ export function LeaseDetailPage() {
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0];
                                                 if (file) {
+                                                    if (file.size > 5 * 1024 * 1024) {
+                                                        toast.error("El archivo no debe superar los 5MB");
+                                                        return;
+                                                    }
                                                     uploadContractMutation.mutate({ id: id!, file });
                                                 }
                                             }}
