@@ -322,7 +322,6 @@ export function LeaseDetailPage() {
                                                     onClick={async () => {
                                                         if (confirm('¿Está seguro de eliminar el documento del contrato? Esta acción eliminará el archivo permanentemente.')) {
                                                             try {
-                                                                const { leasesApi } = await import("./services/leasesApi");
                                                                 await leasesApi.deleteContract(id!);
                                                                 toast.success("Contrato eliminado exitosamente");
                                                                 window.location.reload();
