@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { RequestContext } from '@mikro-orm/core';
 import { LeasesService } from '../services/leases.service';
 import { createLeaseSchema, updateLeaseSchema } from '../dtos/lease.dto';
+import { logControllerError } from '../../../shared/utils/loggerHelpers';
 import { ApiResponse } from '../../../shared/utils/ApiResponse';
 import { ValidationError } from '../../../shared/errors/AppError';
 
