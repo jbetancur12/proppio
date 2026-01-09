@@ -67,11 +67,27 @@ services:
         - VITE_API_URL=${VITE_API_URL}
     container_name: proppio_web
     restart: always
-    ports:
-      - "80:80"
-      - "443:443"
+    expose:
+      - "80" # Exposed only to Docker network, not to host
     depends_on:
       - api
+    networks:
+      - app_network
+
+  # --- NGINX PROXY MANAGER ---
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: proppio_nginx_proxy
+    restart: always
+    ports:
+      - '80:80' # HTTP
+      - '443:443' # HTTPS
+      - '81:81' # Admin UI
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
     networks:
       - app_network
 
@@ -79,6 +95,8 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+  npm_data:
+  npm_letsencrypt:
 
 
 networks:
