@@ -7,6 +7,11 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+
+# Build shared package first (required dependency)
+RUN cd ../shared && npm install && npm run build
+
+# Build API
 RUN npm run build
 
 # Production Stage
