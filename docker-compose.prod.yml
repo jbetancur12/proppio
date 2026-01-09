@@ -64,7 +64,8 @@ services:
 
   web:
     build:
-      context: ./apps/web
+      context: .
+      dockerfile: ./apps/web/Dockerfile
       args:
         - VITE_API_URL=${VITE_API_URL}
     container_name: proppio_web
