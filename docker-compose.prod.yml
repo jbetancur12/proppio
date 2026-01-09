@@ -41,10 +41,13 @@ services:
       - "8888:8080" # Exposed to internet (Secured by users.yml)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./files/dozzle/users.yml:/data/users.yml:ro # Auth config
+      - dozzle_data:/data
     environment:
       DOZZLE_LEVEL: info
       DOZZLE_AUTH_PROVIDER: simple
+    secrets:
+      - source: dozzle_users
+        target: /data/users.yml
     networks:
       - app_network
 
@@ -117,7 +120,12 @@ volumes:
   minio_data:
   npm_data:
   npm_letsencrypt:
+  dozzle_data:
 
+
+secrets:
+  dozzle_users:
+    file: ./files/dozzle/users.yml
 
 networks:
   app_network:
