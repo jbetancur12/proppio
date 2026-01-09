@@ -39,7 +39,6 @@ export function LeasesPage() {
     });
 
     const startDate = watch('startDate');
-    const unitId = watch('unitId');
 
     // Effect to handle URL params for creation
     useEffect(() => {
