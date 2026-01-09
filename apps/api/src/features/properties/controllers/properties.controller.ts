@@ -68,8 +68,18 @@ export class PropertiesController {
             const service = this.getService();
             await service.delete(req.params.id);
             res.status(204).send();
-        } catch (error) {
-            res.status(500).json({ message: 'Error deleting property', error });
+        } catch (error: any) {
+            console.error('❌ Error deleting property:', error.message);
+            console.error('Stack:', error.stack);
+
+            // Check if it's a business logic error (active leases)
+            if (error.message?.includes('contrato')) {
+                res.status(400).json({ message: error.message });
+            } else if (error.message === 'Property not found') {
+                res.status(404).json({ message: error.message });
+            } else {
+                res.status(500).json({ message: 'Error deleting property', error: error.message });
+            }
         }
     }
 }
