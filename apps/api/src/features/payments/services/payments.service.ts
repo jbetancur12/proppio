@@ -54,20 +54,24 @@ export class PaymentsService {
 
         // Send Email Receipt
         try {
-            // Re-fetch with populated renter to ensure email availability
-            // Or rely on the fact that payment.lease is loaded (but is renter loaded?)
-            // 'lease' was loaded via findOne at line 35. Need to ensure populated.
-            // Actually line 35 is: const lease = await this.em.findOne(Lease, { id: data.leaseId });
-            // It does NOT populate renter. We need to populate it.
             const fullPayment = await this.em.findOne(Payment, { id: payment.id }, { populate: ['lease', 'lease.renter', 'lease.unit'] });
-            if (fullPayment && fullPayment.lease?.renter?.email) {
-                const { EmailService } = await import('../../../shared/services/EmailService');
-                const emailService = new EmailService();
-                // Fire and forget (don't await confirmation or block response)
-                emailService.sendPaymentReceipt(fullPayment).catch(console.error);
+            if (fullPayment && fullPayment.lease?.renter) {
+                // Send email if available
+                if (fullPayment.lease.renter.email) {
+                    const { EmailService } = await import('../../../shared/services/EmailService');
+                    const emailService = new EmailService();
+                    emailService.sendPaymentReceipt(fullPayment).catch(console.error);
+                }
+
+                // Send WhatsApp if available
+                if (fullPayment.lease.renter.phone) {
+                    const { WhatsAppService } = await import('../../../shared/services/WhatsAppService');
+                    const whatsappService = new WhatsAppService();
+                    whatsappService.sendPaymentReceipt(fullPayment).catch(console.error);
+                }
             }
         } catch (error) {
-            console.error('Error sending receipt email:', error);
+            console.error('Error sending receipt notifications:', error);
         }
 
         return payment;

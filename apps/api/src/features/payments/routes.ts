@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { PaymentsController } from './controllers/payments.controller';
+import { ReceiptsController } from './controllers/receipts.controller';
 
 const router = Router();
 const controller = new PaymentsController();
+const receiptsController = new ReceiptsController();
 
 router.get('/', (req, res, next) => controller.list(req, res, next));
 router.get('/summary/:leaseId', (req, res, next) => controller.getSummary(req, res, next));
@@ -11,5 +13,9 @@ router.get('/:id/receipt', (req, res, next) => controller.downloadReceipt(req, r
 router.post('/', (req, res, next) => controller.create(req, res, next));
 router.put('/:id', (req, res, next) => controller.update(req, res, next));
 router.delete('/:id', (req, res, next) => controller.delete(req, res, next));
+
+// Public route for receipt downloads (no auth required)
+export const receiptsPublicRouter = Router();
+receiptsPublicRouter.get('/:paymentId/download', (req, res, next) => receiptsController.downloadReceipt(req, res, next));
 
 export default router;
