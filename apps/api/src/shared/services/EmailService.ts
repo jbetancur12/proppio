@@ -4,7 +4,7 @@ import { logger } from '../logger';
 
 export class EmailService {
     private resend: Resend;
-    private readonly FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Rent Manager <onboarding@resend.dev>';
+    private readonly FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Proppio <no-reply@smaf.com.co>';
 
     constructor() {
         // Fallback to empty string if not set, handled by Resend error if call is made
