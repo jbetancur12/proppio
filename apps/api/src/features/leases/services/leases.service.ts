@@ -51,7 +51,8 @@ export class LeasesService {
             monthlyRent: data.monthlyRent,
             securityDeposit: data.securityDeposit,
             notes: data.notes,
-            status: LeaseStatus.DRAFT
+            status: LeaseStatus.DRAFT,
+            firstPaymentDate: data.firstPaymentDate ? new Date(data.firstPaymentDate) : undefined
         });
 
         await this.em.persistAndFlush(lease);

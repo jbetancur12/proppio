@@ -123,7 +123,38 @@ export function LeasesPage() {
                                     ))}
                                 </select>
                             </FormField>
-                            <FormField label="Fecha Inicio" error={errors.startDate?.message} required>
+
+                            <div className="md:col-span-2 bg-indigo-50 p-4 rounded-lg border border-indigo-100 space-y-4">
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        id="isExisting"
+                                        {...register('isExisting')}
+                                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                    />
+                                    <label htmlFor="isExisting" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        ¿Es un contrato existente (migración)?
+                                    </label>
+                                </div>
+                                <p className="text-xs text-gray-500 ml-6">
+                                    Marca esta opción si el contrato ya está en curso. Esto evitará generar cobros retroactivos.
+                                </p>
+
+                                {watch('isExisting') && (
+                                    <FormField label="Fecha de Primer Cobro en Proppio" error={errors.firstPaymentDate?.message} required>
+                                        <Input
+                                            type="date"
+                                            {...register('firstPaymentDate')}
+                                            className={`bg-white ${errors.firstPaymentDate ? 'border-destructive' : ''}`}
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            A partir de esta fecha se generarán los recibos automáticos. Meses anteriores no tendrán cobro.
+                                        </p>
+                                    </FormField>
+                                )}
+                            </div>
+
+                            <FormField label={watch('isExisting') ? "Fecha Original de Inicio" : "Fecha Inicio"} error={errors.startDate?.message} required>
                                 <Input
                                     type="date"
                                     {...register('startDate')}
@@ -172,7 +203,8 @@ export function LeasesPage() {
                         </div>
                     </form>
                 </Card>
-            )}
+            )
+            }
 
 
             {/* Leases List */}
@@ -212,6 +244,6 @@ export function LeasesPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

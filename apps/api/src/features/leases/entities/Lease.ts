@@ -56,6 +56,9 @@ export class Lease extends BaseTenantEntity {
     @Property({ type: 'date', nullable: true })
     lastIncreaseDate?: Date;
 
+    @Property({ type: 'date', nullable: true })
+    firstPaymentDate?: Date;
+
     @OneToMany(() => Payment, payment => payment.lease)
     payments = new Collection<Payment>(this);
 

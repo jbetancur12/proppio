@@ -37,7 +37,8 @@ export class PaymentTrackingService {
         const existingPeriods = new Set(existingPayments.map(p => p.periodStart.toISOString().split('T')[0]));
 
         // Normalize dates to start of day for comparison
-        const leaseStart = new Date(lease.startDate);
+        // Use firstPaymentDate if present (for migrated leases), otherwise startDate
+        const leaseStart = lease.firstPaymentDate ? new Date(lease.firstPaymentDate) : new Date(lease.startDate);
         const cursorDate = new Date(leaseStart.getFullYear(), leaseStart.getMonth(), 1); // Start iteration from the lease start MONTH
 
         // Loop until we pass "today"
