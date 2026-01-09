@@ -9,9 +9,8 @@ router.get('/', controller.list.bind(controller));
 router.post('/', controller.create.bind(controller));
 router.get('/:id/stats', controller.getStats.bind(controller));
 router.get('/:id', controller.get.bind(controller));
+router.delete('/:id', controller.delete.bind(controller));
 
-// router.put('/:id', controller.update.bind(controller)); 
-// router.delete('/:id', controller.delete.bind(controller));
 
 // Units
 import { UnitsController } from './controllers/units.controller';
