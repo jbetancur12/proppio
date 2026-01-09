@@ -24,7 +24,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <aside className="w-64 bg-gray-900 text-white">
                 <div className="p-6">
                     <h1 className="text-2xl font-bold">Super Admin</h1>
-                    <p className="text-sm text-gray-400 mt-1">Rent Manager</p>
+                    <p className="text-sm text-gray-400 mt-1">Proppio</p>
                 </div>
 
                 <nav className="mt-6">

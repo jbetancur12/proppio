@@ -71,7 +71,7 @@ export function LoginPage() {
                     <div className="text-center lg:text-left">
                         <div className="inline-flex items-center justify-center lg:justify-start gap-2 text-indigo-600 mb-6">
                             <div className="p-2 bg-indigo-100 rounded-lg"><Building2 size={32} /></div>
-                            <span className="text-2xl font-bold tracking-tight">Rent Manager</span>
+                            <span className="text-2xl font-bold tracking-tight">Proppio</span>
                         </div>
                         <h2 className="text-3xl font-bold tracking-tight text-gray-900">Bienvenido de nuevo</h2>
                         <p className="mt-2 text-sm text-gray-500">

@@ -25,7 +25,7 @@ export function SubscriptionSuspendedPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-gray-600 text-center">
-                        Tu suscripción ha sido suspendida. Para continuar usando Rent Manager,
+                        Tu suscripción ha sido suspendida. Para continuar usando Proppio,
                         por favor contacta a nuestro equipo de soporte.
                     </p>
 
@@ -36,8 +36,8 @@ export function SubscriptionSuspendedPage() {
                         <div className="space-y-2 text-sm">
                             <div className="flex items-center gap-2 text-blue-700">
                                 <Mail size={16} />
-                                <a href="mailto:soporte@rentmanager.com" className="hover:underline">
-                                    soporte@rentmanager.com
+                                <a href="mailto:soporte@proppio.co" className="hover:underline">
+                                    soporte@proppio.co
                                 </a>
                             </div>
                             <div className="flex items-center gap-2 text-blue-700">
@@ -61,7 +61,7 @@ export function SubscriptionSuspendedPage() {
                 <CardFooter className="flex flex-col gap-2">
                     <Button
                         className="w-full bg-indigo-600 hover:bg-indigo-700"
-                        onClick={() => window.location.href = 'mailto:soporte@rentmanager.com'}
+                        onClick={() => window.location.href = 'mailto:soporte@proppio.co'}
                     >
                         <Mail className="mr-2" size={18} />
                         Contactar Soporte

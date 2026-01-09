@@ -42,9 +42,8 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
     const SidebarContent = ({ onClose }: { onClose?: () => void }) => (
         <div className="flex flex-col h-full bg-white">
             <div className="p-6 border-b border-gray-100 mb-4">
-                <div className="flex items-center gap-2 font-bold text-xl text-indigo-600">
-                    <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center">R</div>
-                    Rent Manager
+                <div className="flex items-center justify-center gap-2">
+                    <img src="/logo.png" alt="Proppio" className="h-12 w-auto" />
                 </div>
             </div>
 
@@ -98,9 +97,8 @@ export function DashboardLayout({ children }: { children?: ReactNode }) {
             <div className={`flex-1 flex flex-col overflow-hidden ${isImpersonating ? 'pt-14' : ''}`}>
                 {/* Mobile Header */}
                 <header className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-bold text-lg text-indigo-600">
-                        <div className="w-7 h-7 bg-indigo-600 text-white rounded-lg flex items-center justify-center text-sm">R</div>
-                        Rent Manager
+                    <div className="flex items-center gap-2">
+                        <img src="/logo.png" alt="Proppio" className="h-8 w-auto" />
                     </div>
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
