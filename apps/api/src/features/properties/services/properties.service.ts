@@ -9,7 +9,7 @@ export class PropertiesService {
         this.repo = em.getRepository(PropertyEntity);
     }
 
-    async findAll() {
+    async findAll(): Promise<any[]> {
         // Populate deeply to check for alerts
         // Note: In a high-scale system, this should be optimized with a custom query or view
         const properties = await this.repo.findAll({
@@ -59,7 +59,7 @@ export class PropertiesService {
         });
     }
 
-    async findOne(id: string) {
+    async findOne(id: string): Promise<any> {
         const property = await this.repo.findOneOrFail({ id }, {
             populate: ['units', 'units.leases', 'units.leases.payments'] as any
         });
@@ -130,7 +130,7 @@ export class PropertiesService {
         return property;
     }
 
-    async update(id: string, dto: UpdatePropertyDto) {
+    async update(id: string, dto: UpdatePropertyDto): Promise<any> {
         const property = await this.findOne(id);
 
         const oldValues = {
