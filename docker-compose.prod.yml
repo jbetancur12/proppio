@@ -71,7 +71,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_HOST=redis
       - STORAGE_ENDPOINT=http://minio:9000
-      - STORAGE_PUBLIC_ENDPOINT=https://storage.betancur.work
+      - STORAGE_PUBLIC_ENDPOINT=https://s3.betancur.work
       - STORAGE_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
       - STORAGE_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
       - CORS_ORIGIN=http://localhost,https://app.tusass.com
