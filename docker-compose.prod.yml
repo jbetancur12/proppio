@@ -37,14 +37,14 @@ services:
 
   dozzle:
     image: amir20/dozzle:latest
-    container_name: proppio_logs
-    restart: unless-stopped
     ports:
-      - "127.0.0.1:8888:8080" # Bind to localhost for security (Auth env vars are deprecated in v9+)
+      - "8888:8080" # Exposed to internet (Secured by users.yml)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./files/dozzle/users.yml:/data/users.yml:ro # Auth config
     environment:
       DOZZLE_LEVEL: info
+      DOZZLE_AUTH_PROVIDER: simple
     networks:
       - app_network
 

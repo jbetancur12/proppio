@@ -1,0 +1,5 @@
+users:
+  - username: admin
+    password: $2b$10$yXk.1rL8kLOZUGDMgv8zN.I9rn1Wv9Tk5APBKKQikOYU/bRrzlTEhq
+    name: "Admin Proppio"
+    email: admin@proppio.co
