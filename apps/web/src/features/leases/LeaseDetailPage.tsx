@@ -314,6 +314,26 @@ export function LeaseDetailPage() {
                                                 >
                                                     <FileText size={14} className="mr-1" /> Ver/Descargar
                                                 </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    onClick={async () => {
+                                                        if (confirm('¿Está seguro de eliminar el documento del contrato? Esta acción eliminará el archivo permanentemente.')) {
+                                                            try {
+                                                                const { leasesApi } = await import("./services/leasesApi");
+                                                                await leasesApi.deleteContract(id!);
+                                                                toast.success("Contrato eliminado exitosamente");
+                                                                window.location.reload();
+                                                            } catch (error) {
+                                                                toast.error("Error al eliminar el contrato");
+                                                            }
+                                                        }
+                                                    }}
+                                                    title="Eliminar Contrato"
+                                                >
+                                                    <Trash2 size={14} className="mr-1" /> Eliminar
+                                                </Button>
                                             </div>
                                         ) : (
                                             <Button
