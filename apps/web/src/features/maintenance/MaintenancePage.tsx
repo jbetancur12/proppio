@@ -4,12 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useMaintenanceTickets, useCreateTicket } from "./hooks/useMaintenance";
 import { TicketCard } from "./components/TicketCard";
 import { useProperties } from "../properties/hooks/useProperties";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createTicketSchema, CreateTicketDto } from "@proppio/shared";
+import { FormField } from "@/components/forms/FormField";
 
 export function MaintenancePage() {
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -20,22 +23,22 @@ export function MaintenancePage() {
     const { data: properties } = useProperties();
     const createMutation = useCreateTicket();
 
-    // Form State
-    const [newTicket, setNewTicket] = useState({
-        title: '',
-        description: '',
-        unitId: '',
-        priority: 'MEDIUM',
+    // Form with validation
+    const { control, register, handleSubmit, formState: { errors }, reset } = useForm<CreateTicketDto>({
+        resolver: zodResolver(createTicketSchema),
+        defaultValues: {
+            priority: 'MEDIUM'
+        }
     });
 
     // Flatten units for selection
     const allUnits = properties?.flatMap((p: any) => p.units.map((u: any) => ({ ...u, propertyName: p.name }))) || [];
 
-    const handleCreate = () => {
-        createMutation.mutate(newTicket, {
+    const onSubmit = (data: CreateTicketDto) => {
+        createMutation.mutate(data, {
             onSuccess: () => {
                 setIsCreateOpen(false);
-                setNewTicket({ title: '', description: '', unitId: '', priority: 'MEDIUM' });
+                reset();
             }
         });
     };
@@ -55,7 +58,10 @@ export function MaintenancePage() {
                     <p className="text-gray-500">Gestiona reparaciones e incidencias de tus propiedades</p>
                 </div>
 
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                <Dialog open={isCreateOpen} onOpenChange={(open) => {
+                    setIsCreateOpen(open);
+                    if (!open) reset();
+                }}>
                     <DialogTrigger asChild>
                         <Button className="bg-indigo-600 hover:bg-indigo-700">
                             <Plus size={16} className="mr-2" /> Nuevo Reporte
@@ -68,62 +74,69 @@ export function MaintenancePage() {
                                 Reporta un daño o solicitud de reparación para una unidad.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="title">Título</Label>
-                                <Input
-                                    id="title"
-                                    placeholder="Ej: Gotera en baño principal"
-                                    value={newTicket.title}
-                                    onChange={e => setNewTicket({ ...newTicket, title: e.target.value })}
-                                />
+                        <form onSubmit={handleSubmit(onSubmit)}>
+                            <div className="grid gap-4 py-4">
+                                <FormField label="Título" error={errors.title?.message} required>
+                                    <Input
+                                        placeholder="Ej: Gotera en baño principal"
+                                        {...register('title')}
+                                        className={errors.title ? 'border-destructive' : ''}
+                                    />
+                                </FormField>
+                                <FormField label="Unidad Afectada" error={errors.unitId?.message} required>
+                                    <Controller
+                                        name="unitId"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <SelectTrigger className={errors.unitId ? 'border-destructive' : ''}>
+                                                    <SelectValue placeholder="Seleccionar Unidad" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {allUnits.map((u: any) => (
+                                                        <SelectItem key={u.id} value={u.id}>
+                                                            {u.propertyName} - {u.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                </FormField>
+                                <FormField label="Prioridad" error={errors.priority?.message}>
+                                    <Controller
+                                        name="priority"
+                                        control={control}
+                                        render={({ field }) => (
+                                            <Select onValueChange={field.onChange} value={field.value || 'MEDIUM'}>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Seleccionar Prioridad" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="LOW">Baja (Puede esperar)</SelectItem>
+                                                    <SelectItem value="MEDIUM">Media (Estándar)</SelectItem>
+                                                    <SelectItem value="HIGH">Alta (Importante)</SelectItem>
+                                                    <SelectItem value="URGENT">Urgente (Inmediata)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                </FormField>
+                                <FormField label="Descripción Detallada" error={errors.description?.message} required>
+                                    <Textarea
+                                        placeholder="Describe el problema con detalle..."
+                                        className={`h-24 ${errors.description ? 'border-destructive' : ''}`}
+                                        {...register('description')}
+                                    />
+                                </FormField>
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="unit">Unidad Afectada</Label>
-                                <Select onValueChange={val => setNewTicket({ ...newTicket, unitId: val })}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Seleccionar Unidad" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {allUnits.map((u: any) => (
-                                            <SelectItem key={u.id} value={u.id}>
-                                                {u.propertyName} - {u.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="priority">Prioridad</Label>
-                                <Select defaultValue="MEDIUM" onValueChange={val => setNewTicket({ ...newTicket, priority: val })}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Seleccionar Prioridad" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="LOW">Baja (Puede esperar)</SelectItem>
-                                        <SelectItem value="MEDIUM">Media (Estándar)</SelectItem>
-                                        <SelectItem value="HIGH">Alta (Importante)</SelectItem>
-                                        <SelectItem value="URGENT">Urgente (Inmediata)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="desc">Descripción Detallada</Label>
-                                <Textarea
-                                    id="desc"
-                                    placeholder="Describe el problema con detalle..."
-                                    className="h-24"
-                                    value={newTicket.description}
-                                    onChange={e => setNewTicket({ ...newTicket, description: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
-                            <Button onClick={handleCreate} disabled={createMutation.isPending}>
-                                {createMutation.isPending ? 'Creando...' : 'Crear Ticket'}
-                            </Button>
-                        </DialogFooter>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
+                                <Button type="submit" disabled={createMutation.isPending}>
+                                    {createMutation.isPending ? 'Creando...' : 'Crear Ticket'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
                     </DialogContent>
                 </Dialog>
             </div>

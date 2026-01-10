@@ -1,5 +1,5 @@
 import { EntityManager, FilterQuery } from "@mikro-orm/core";
-import { MaintenanceTicket, TicketStatus } from "../entities/MaintenanceTicket";
+import { MaintenanceTicket, TicketStatus, TicketPriority } from "../entities/MaintenanceTicket";
 import { CreateTicketDto, UpdateTicketDto } from "../dtos/maintenance.dto";
 import { NotFoundError, ValidationError } from "../../../shared/errors/AppError";
 import { UnitEntity } from "../../properties/entities/Unit";
@@ -36,7 +36,7 @@ export class MaintenanceService {
             description: data.description,
             unit,
             reportedBy: reporter,
-            priority: data.priority,
+            priority: data.priority as TicketPriority,
             status: TicketStatus.OPEN
         });
 
@@ -49,10 +49,10 @@ export class MaintenanceService {
 
         if (data.title) ticket.title = data.title;
         if (data.description) ticket.description = data.description;
-        if (data.priority) ticket.priority = data.priority;
+        if (data.priority) ticket.priority = data.priority as TicketPriority;
 
         if (data.status) {
-            ticket.status = data.status;
+            ticket.status = data.status as TicketStatus;
             if (data.status === TicketStatus.RESOLVED && !ticket.resolvedAt) {
                 ticket.resolvedAt = new Date();
             }

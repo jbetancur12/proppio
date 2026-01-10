@@ -1,4 +1,6 @@
 import { api } from "../../../api/client";
+import { CreateTicketDto } from "@proppio/shared";
+
 
 export enum TicketStatus {
     OPEN = 'OPEN',
@@ -29,18 +31,16 @@ export interface MaintenanceTicket {
 
 export const maintenanceApi = {
     getAll: async (params?: { status?: string; unitId?: string }): Promise<MaintenanceTicket[]> => {
-        const query = new URLSearchParams(params as any).toString();
+        const cleanParams = Object.fromEntries(
+            Object.entries(params || {}).filter(([_, v]) => v != null)
+        );
+        const query = new URLSearchParams(cleanParams as any).toString();
         const res = await api.get(`/api/maintenance?${query}`);
         return res.data.data;
     },
 
-    create: async (data: {
-        title: string;
-        description: string;
-        unitId: string;
-        priority: string;
-        reportedById?: string;
-    }) => {
+
+    create: async (data: CreateTicketDto) => {
         const res = await api.post('/api/maintenance', data);
         return res.data.data;
     },

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { RequestContext } from '@mikro-orm/core';
 import { PaymentsService } from '../services/payments.service';
-import { ApiResponse } from '../../../shared/utils/ApiResponse';
+import { NotFoundError } from '../../../shared/errors/AppError';
 import { generatePaymentReceipt } from '../utils/pdfGenerator';
 import { logger } from '../../../shared/logger';
 
@@ -26,7 +26,7 @@ export class ReceiptsController {
             const payment = await service.findOne(paymentId);
 
             if (!payment.lease?.renter) {
-                return ApiResponse.error(res, 'Payment data incomplete', 404);
+                throw new NotFoundError('Payment data incomplete: Missing renter info');
             }
 
             // Generate PDF
