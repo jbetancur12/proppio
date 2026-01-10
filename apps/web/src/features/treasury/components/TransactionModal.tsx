@@ -62,7 +62,8 @@ export function TransactionModal({ isOpen, onClose, onSuccess }: TransactionModa
         resolver: zodResolver(transactionSchema),
         defaultValues: {
             type: 'EXPENSE',
-            date: new Date().toISOString().split('T')[0]
+            // Use local date (offsetting timezone) to ensure "today" is correct even in late hours
+            date: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]
         }
     });
 

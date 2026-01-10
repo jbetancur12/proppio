@@ -60,24 +60,16 @@ export class TreasuryService {
         const whereTreasury: any = {};
 
         if (startDate) {
-            // Broaden range by 1 day to handle timezone mismatches safely
-            const start = new Date(startDate);
-            start.setDate(start.getDate() - 1);
-            const startStr = start.toISOString().split('T')[0];
-
-            wherePayment.paymentDate = { $gte: startStr };
-            whereExpense.date = { $gte: startStr };
-            whereTreasury.date = { $gte: startStr };
+            wherePayment.paymentDate = { $gte: new Date(startDate) };
+            whereExpense.date = { $gte: new Date(startDate) };
+            whereTreasury.date = { $gte: new Date(startDate) };
         }
 
         if (endDate) {
             const end = new Date(endDate);
-            end.setDate(end.getDate() + 1);
-            const endStr = end.toISOString().split('T')[0];
-
-            wherePayment.paymentDate = { ...wherePayment.paymentDate, $lte: endStr };
-            whereExpense.date = { ...whereExpense.date, $lte: endStr };
-            whereTreasury.date = { ...whereTreasury.date, $lte: endStr };
+            wherePayment.paymentDate = { ...wherePayment.paymentDate, $lte: end };
+            whereExpense.date = { ...whereExpense.date, $lte: end };
+            whereTreasury.date = { ...whereTreasury.date, $lte: end };
         }
 
         // Fetch filtered sources

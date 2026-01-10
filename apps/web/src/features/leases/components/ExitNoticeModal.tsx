@@ -91,7 +91,7 @@ export function ExitNoticeModal({
                             type="date"
                             value={plannedExitDate}
                             onChange={(e) => setPlannedExitDate(e.target.value)}
-                            min={new Date().toISOString().split('T')[0]}
+                            min={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]}
                         />
                         {plannedExitDate && !isValidNotice && (
                             <div className="flex items-start gap-2 text-sm text-amber-600 bg-amber-50 p-2 rounded">
