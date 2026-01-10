@@ -23,6 +23,23 @@ import {
 
 type ViewMode = 'DAILY' | 'MONTHLY';
 
+const CONCEPT_LABELS: Record<string, string> = {
+    'RENT': 'Arriendo',
+    'MAINTENANCE': 'Mantenimiento',
+    'TAXES': 'Impuestos',
+    'FEES': 'Cuotas',
+    'INSURANCE': 'Seguros',
+    'UTILITIES': 'Servicios',
+    'MORTGAGE': 'Hipoteca',
+    'SALARY': 'Nómina',
+    'MARKETING': 'Marketing',
+    'LEGAL': 'Legal',
+    'OFFICE': 'Oficina',
+    'OTHER': 'Otro',
+    'DEPOSIT': 'Depósito',
+    'LATE_FEE': 'Mora'
+};
+
 export function TreasuryPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -262,7 +279,9 @@ export function TreasuryPage() {
                                                     'Tesorería'}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="font-medium">{tx.category}</TableCell>
+                                    <TableCell className="font-medium">
+                                        {CONCEPT_LABELS[tx.category] || tx.category}
+                                    </TableCell>
                                     <TableCell className="max-w-[300px] truncate" title={tx.description}>
                                         {tx.description}
                                     </TableCell>
