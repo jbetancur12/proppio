@@ -14,6 +14,7 @@
         "migration:down": "mikro-orm migration:down",
         "migration:pending": "mikro-orm migration:pending",
         "migration:fresh": "mikro-orm migration:fresh",
+        "create-superadmin": "dotenvx run -f ../../.env -f ../../.env.production -- node dist/scripts/create-super-admin.js",
         "test-renewals": "tsx test-renewals.ts"
     },
     "dependencies": {
