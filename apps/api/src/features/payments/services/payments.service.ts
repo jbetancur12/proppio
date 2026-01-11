@@ -53,6 +53,32 @@ export class PaymentsService {
         await this.em.persistAndFlush(payment);
 
         // Send Email Receipt
+        await this.sendReceiptNotification(payment);
+
+        return payment;
+    }
+
+    async update(id: string, data: UpdatePaymentDto): Promise<Payment> {
+        const payment = await this.findOne(id);
+        const previousStatus = payment.status;
+
+        if (data.status) payment.status = data.status as PaymentStatus;
+        if (data.reference !== undefined) payment.reference = data.reference;
+        if (data.notes !== undefined) payment.notes = data.notes;
+        if (data.paymentDate) payment.paymentDate = new Date(data.paymentDate);
+        if (data.method) payment.method = data.method as PaymentMethod;
+
+        await this.em.flush();
+
+        // Send receipt if status changed to COMPLETED
+        if (previousStatus !== PaymentStatus.COMPLETED && payment.status === PaymentStatus.COMPLETED) {
+            await this.sendReceiptNotification(payment);
+        }
+
+        return payment;
+    }
+
+    private async sendReceiptNotification(payment: Payment) {
         try {
             const fullPayment = await this.em.findOne(Payment, { id: payment.id }, { populate: ['lease', 'lease.renter', 'lease.unit'] });
             if (fullPayment && fullPayment.lease?.renter) {
@@ -73,20 +99,6 @@ export class PaymentsService {
         } catch (error) {
             console.error('Error sending receipt notifications:', error);
         }
-
-        return payment;
-    }
-
-    async update(id: string, data: UpdatePaymentDto): Promise<Payment> {
-        const payment = await this.findOne(id);
-
-        if (data.status) payment.status = data.status as PaymentStatus;
-        if (data.reference !== undefined) payment.reference = data.reference;
-        if (data.notes !== undefined) payment.notes = data.notes;
-        if (data.paymentDate) payment.paymentDate = new Date(data.paymentDate);
-
-        await this.em.flush();
-        return payment;
     }
 
     async getPaymentSummary(leaseId: string): Promise<{ total: number; count: number }> {
