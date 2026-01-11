@@ -66,6 +66,7 @@ services:
     volumes:
       - ./.env:/.env
       - ./.env.production:/.env.production
+      - ./.env.keys:/.env.keys
     environment:
       - PORT=3000
       - DB_HOST=postgres
