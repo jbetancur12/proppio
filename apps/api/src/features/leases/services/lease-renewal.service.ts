@@ -8,14 +8,23 @@ export class LeaseRenewalService {
     /**
      * Find active leases that are past their end date and eligible for automatic renewal
      */
-    async findExpiredLeasesForRenewal(): Promise<Lease[]> {
+    /**
+     * Find active leases that are past their end date and eligible for automatic renewal
+     */
+    async findExpiredLeasesForRenewal(tenantId?: string): Promise<Lease[]> {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        return this.em.find(Lease, {
+        const query: any = {
             status: LeaseStatus.ACTIVE,
             endDate: { $lt: today }
-        });
+        };
+
+        if (tenantId) {
+            query.tenantId = tenantId;
+        }
+
+        return this.em.find(Lease, query);
     }
 
     /**
@@ -58,8 +67,8 @@ export class LeaseRenewalService {
     /**
      * Process all eligible leases for automatic renewal (called by cron job)
      */
-    async processAutomaticRenewals(): Promise<{ renewed: number; errors: string[] }> {
-        const expiredLeases = await this.findExpiredLeasesForRenewal();
+    async processAutomaticRenewals(tenantId?: string): Promise<{ renewed: number; errors: string[] }> {
+        const expiredLeases = await this.findExpiredLeasesForRenewal(tenantId);
         const errors: string[] = [];
         let renewed = 0;
 

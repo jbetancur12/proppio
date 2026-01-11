@@ -22,7 +22,7 @@ export class PaymentTrackingService {
      */
     async generatePendingPaymentForLease(lease: Lease): Promise<void> {
         const today = new Date();
-        const startDay = new Date(lease.startDate).getDate();
+        const startDay = new Date(lease.startDate).getUTCDate();
 
         // Optimize: Fetch all existing payments for this lease to prevent duplicates without N+1 queries
         // We only check periodStart to match
@@ -39,25 +39,29 @@ export class PaymentTrackingService {
         // Normalize dates to start of day for comparison
         // Use firstPaymentDate if present (for migrated leases), otherwise startDate
         const leaseStart = lease.firstPaymentDate ? new Date(lease.firstPaymentDate) : new Date(lease.startDate);
-        const cursorDate = new Date(leaseStart.getFullYear(), leaseStart.getMonth(), 1); // Start iteration from the lease start MONTH
+
+        // FIX: Create cursorDate using UTC components to avoid timezone shifts
+        // When reading from DB, dates like "2023-10-02" might come as 00:00 UTC.
+        // If we do new Date(year, month, 1) in a local timezone behind UTC (e.g. -5), 
+        // it might shift if we are not careful. 
+        // SAFEST APPROACH: Build the 'cursor' as a UTC midnight date for the 1st of the month.
+        const cursorDate = new Date(Date.UTC(leaseStart.getUTCFullYear(), leaseStart.getUTCMonth(), 1));
 
         // Loop until we pass "today"
-        // We iterate by month.
+        // We iterate by month using UTC methods
         while (true) {
             // Calculate the expected "Due Date" / "Period Start" for this month cursor
-            const year = cursorDate.getFullYear();
-            const month = cursorDate.getMonth();
+            const year = cursorDate.getUTCFullYear();
+            const month = cursorDate.getUTCMonth();
 
             // Handle end-of-month logic (e.g. started on 31st, now Feb)
-            const lastDayOfCurrentMonth = new Date(year, month + 1, 0).getDate();
+            // Get last day of month in UTC
+            const lastDayOfCurrentMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
             const targetDay = Math.min(startDay, lastDayOfCurrentMonth);
 
-            const periodStart = new Date(year, month, targetDay);
+            const periodStart = new Date(Date.UTC(year, month, targetDay));
 
-            // If the calculated period start is in the future relative to "today" (plus maybe a small buffer?), stop.
-            // Using strict > today might prevent generating a bill due Today? 
-            // Better: if periodStart > today, stop.
-            // Actually, if periodStart IS today, we should generate it.
+            // If the calculated period start is in the future relative to "today", stop.
             if (periodStart > today) {
                 break;
             }
@@ -80,7 +84,7 @@ export class PaymentTrackingService {
             }
 
             // Increment cursor month
-            cursorDate.setMonth(cursorDate.getMonth() + 1);
+            cursorDate.setUTCMonth(cursorDate.getUTCMonth() + 1);
         }
     }
 
@@ -108,10 +112,17 @@ export class PaymentTrackingService {
     /**
      * Process all active leases
      */
-    async generateAllPendingPayments(): Promise<{ generated: number; errors: string[] }> {
-        const leases = await this.em.find(Lease, {
-            status: LeaseStatus.ACTIVE
-        });
+    /**
+     * Process all active leases
+     * @param tenantId Optional tenant ID to scope the generation
+     */
+    async generateAllPendingPayments(tenantId?: string): Promise<{ generated: number; errors: string[] }> {
+        const query: any = { status: LeaseStatus.ACTIVE };
+        if (tenantId) {
+            query.tenantId = tenantId;
+        }
+
+        const leases = await this.em.find(Lease, query);
 
         let generated = 0; // Note: with persists inside sub-method, this count might be inaccurate unless we return count from generatePendingPaymentForLease.
         // For now, simpler to just run logic.

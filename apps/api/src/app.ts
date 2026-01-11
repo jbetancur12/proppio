@@ -20,6 +20,7 @@ import maintenanceRoutes from './features/maintenance/routes';
 import adminRoutes from './features/admin/routes';
 import tenantRoutes from './features/tenants/routes';
 import treasuryRoutes from './features/treasury/routes';
+import systemRoutes from './features/system/routes';
 
 export const startExpressServer = async () => {
     // 1. Initialize DI (ORM & Repositories)
@@ -62,6 +63,7 @@ export const startExpressServer = async () => {
     apiRouter.use('/admin', adminRoutes);
     apiRouter.use('/treasury', treasuryRoutes);
     apiRouter.use('/tenants', tenantRoutes);
+    apiRouter.use('/system', systemRoutes);
 
     apiRouter.get('/me', (req, res) => {
         res.json({ message: 'You are authenticated', user: (req as any).user });

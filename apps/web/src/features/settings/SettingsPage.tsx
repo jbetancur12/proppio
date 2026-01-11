@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSettingsTab } from "./components/ProfileSettingsTab";
 import { SubscriptionSettingsTab } from "./components/SubscriptionSettingsTab";
+import { SystemSettingsTab } from "./components/SystemSettingsTab";
 
 export function SettingsPage() {
     return (
@@ -16,6 +17,7 @@ export function SettingsPage() {
                 <TabsList>
                     <TabsTrigger value="profile">Perfil y Seguridad</TabsTrigger>
                     <TabsTrigger value="subscription">Suscripción</TabsTrigger>
+                    <TabsTrigger value="system">Sistema</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile" className="space-y-4">
@@ -24,6 +26,10 @@ export function SettingsPage() {
 
                 <TabsContent value="subscription" className="space-y-4">
                     <SubscriptionSettingsTab />
+                </TabsContent>
+
+                <TabsContent value="system" className="space-y-4">
+                    <SystemSettingsTab />
                 </TabsContent>
             </Tabs>
         </div>
