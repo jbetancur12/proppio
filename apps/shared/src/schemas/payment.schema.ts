@@ -17,6 +17,7 @@ export const updatePaymentSchema = z.object({
     status: z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']).optional(),
     reference: z.string().optional(),
     notes: z.string().optional(),
+    method: z.enum(['CASH', 'TRANSFER', 'CHECK', 'CARD', 'OTHER']).optional(),
     paymentDate: z.string().or(z.date()).optional(),
 });
 
