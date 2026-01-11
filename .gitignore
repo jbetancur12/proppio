@@ -2,6 +2,7 @@ node_modules
 dist
 # .env            <-- REMOVED because we want to commit encrypted files
 .env.keys
+apps/api/.env
 !.env.vault       <-- Optional if using vault, but standard is keep .env committed
 
 .DS_Store
