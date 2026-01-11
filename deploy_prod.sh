@@ -12,13 +12,13 @@ git pull origin main
 # 2. Build images WITHOUT stopping containers (minimizes downtime)
 # This is the most important step: compile everything while the old app is still running.
 echo "🏗️  Building images (Background)..."
-docker compose -f docker-compose.prod.yml build
+docker compose --env-file .env.production -f docker-compose.prod.yml build
 
 # 3. Apply changes (Restart containers)
 # Only initiates restart after a successful build.
 # Downtime is reduced to just the container restart time (seconds).
 echo "🔄 Recreating containers..."
-docker compose -f docker-compose.prod.yml up -d
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 
 # 4. Optional: Run Migrations
 # Only run if you suspect schema changes, or uncomment to always run.
