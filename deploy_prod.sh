@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 
 # Zero/Minimal Downtime Deployment Script
 # Usage: ./deploy_prod.sh
