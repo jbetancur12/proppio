@@ -19,6 +19,7 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.964.0",
         "@aws-sdk/s3-request-presigner": "^3.964.0",
+        "@dotenvx/dotenvx": "^1.51.4",
         "@mikro-orm/cli": "^6.6.3",
         "@mikro-orm/core": "^6.0.0",
         "@mikro-orm/migrations": "^6.0.0",
@@ -46,7 +47,6 @@
         "zod": "^3.21.0"
     },
     "devDependencies": {
-        "@dotenvx/dotenvx": "^1.51.4",
         "@types/bcrypt": "^5.0.0",
         "@types/compression": "^1.7.0",
         "@types/cors": "^2.8.19",
