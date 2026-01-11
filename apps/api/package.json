@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "dotenvx run -f ../../.env -f .env -- tsx watch src/index.ts",
         "build": "tsc",
-        "start": "dotenvx run -f ../../.env -- node dist/index.js",
+        "start": "dotenvx run -f ../../.env -f ../../.env.production -- node dist/index.js",
         "token": "dotenvx run -f ../../.env -f .env -- tsx src/scripts/generate-token.ts",
         "typecheck": "tsc --noEmit",
         "migration:create": "mikro-orm migration:create",

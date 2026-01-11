@@ -65,6 +65,7 @@ services:
       - redis
     volumes:
       - ./.env:/app/.env
+      - ./.env.production:/app/.env.production
     environment:
       - PORT=3000
       - DB_HOST=postgres
