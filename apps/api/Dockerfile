@@ -33,4 +33,4 @@ COPY --from=builder /app/apps/api/tsconfig.json ./
 
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["npm", "run", "start"]

@@ -63,6 +63,9 @@ services:
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ./.env:/app/.env
+      - ./apps/api/.env.production:/app/apps/api/.env.production
     environment:
       - PORT=3000
       - DB_HOST=postgres
