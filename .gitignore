@@ -1,6 +1,9 @@
 node_modules
 dist
-.env
+# .env            <-- REMOVED because we want to commit encrypted files
+.env.keys
+!.env.vault       <-- Optional if using vault, but standard is keep .env committed
+
 .DS_Store
 coverage
 .vscode
