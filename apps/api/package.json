@@ -4,10 +4,10 @@
     "description": "Rent Manager API",
     "main": "dist/index.js",
     "scripts": {
-        "dev": "tsx watch src/index.ts",
+        "dev": "dotenvx run -f ../../.env -f .env -- tsx watch src/index.ts",
         "build": "tsc",
-        "start": "node dist/index.js",
-        "token": "tsx src/scripts/generate-token.ts",
+        "start": "dotenvx run -f ../../.env -f .env.production -- node dist/index.js",
+        "token": "dotenvx run -f ../../.env -f .env -- tsx src/scripts/generate-token.ts",
         "typecheck": "tsc --noEmit",
         "migration:create": "mikro-orm migration:create",
         "migration:up": "mikro-orm migration:up",
@@ -19,12 +19,12 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.964.0",
         "@aws-sdk/s3-request-presigner": "^3.964.0",
+        "@mikro-orm/cli": "^6.6.3",
         "@mikro-orm/core": "^6.0.0",
         "@mikro-orm/migrations": "^6.0.0",
         "@mikro-orm/postgresql": "^6.0.0",
         "@mikro-orm/reflection": "^6.0.0",
         "@mikro-orm/seeder": "^6.0.0",
-        "@mikro-orm/cli": "^6.6.3",
         "@proppio/shared": "file:../shared",
         "@types/multer": "^2.0.0",
         "@types/node-cron": "^3.0.11",
@@ -46,6 +46,7 @@
         "zod": "^3.21.0"
     },
     "devDependencies": {
+        "@dotenvx/dotenvx": "^1.51.4",
         "@types/bcrypt": "^5.0.0",
         "@types/compression": "^1.7.0",
         "@types/cors": "^2.8.19",
