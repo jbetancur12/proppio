@@ -13,6 +13,7 @@ import { usePendingPayments } from "../payments/hooks/usePaymentTracking";
 import { paymentTrackingApi } from "../payments/services/paymentTrackingApi";
 import { addDays, differenceInMonths } from "date-fns";
 import { leasesApi } from "./services/leasesApi";
+import { formatDateUTC } from "@/lib/dateUtils";
 
 const statusConfig = {
     DRAFT: { label: 'Borrador', color: 'bg-gray-100 text-gray-700', icon: FileText },
@@ -37,8 +38,6 @@ export function LeaseDetailPage() {
     const StatusIcon = statusConfig[lease.status as keyof typeof statusConfig]?.icon || FileText;
     const statusColor = statusConfig[lease.status as keyof typeof statusConfig]?.color || 'bg-gray-100 text-gray-600';
     const statusLabel = statusConfig[lease.status as keyof typeof statusConfig]?.label || lease.status;
-
-    const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
     const formatCurrency = (val: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
 
     const handleActivate = () => {
@@ -165,7 +164,7 @@ export function LeaseDetailPage() {
                     <div>
                         <h3 className="font-bold">Este contrato vence pronto</h3>
                         <p className="text-sm opacity-90">
-                            Quedan <strong>{daysUntilExpiry} días</strong> para finalizar (Fecha fin: {formatDate(lease.endDate)}).
+                            Quedan <strong>{daysUntilExpiry} días</strong> para finalizar (Fecha fin: {formatDateUTC(lease.endDate)}).
                             Considera contactar al inquilino para renovar o coordinar la entrega.
                         </p>
                     </div>
@@ -239,11 +238,11 @@ export function LeaseDetailPage() {
                         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
                                 <label className="text-xs font-medium text-gray-500 uppercase">Inicio</label>
-                                <p className="font-medium flex items-center gap-2"><Calendar size={16} className="text-gray-400" /> {formatDate(lease.startDate)}</p>
+                                <p className="font-medium flex items-center gap-2"><Calendar size={16} className="text-gray-400" /> {formatDateUTC(lease.startDate)}</p>
                             </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-medium text-gray-500 uppercase">Fin</label>
-                                <p className="font-medium flex items-center gap-2"><Clock size={16} className="text-gray-400" /> {formatDate(lease.endDate)}</p>
+                                <p className="font-medium flex items-center gap-2"><Clock size={16} className="text-gray-400" /> {formatDateUTC(lease.endDate)}</p>
                             </div>
                             <div className="space-y-1">
                                 <label className="text-xs font-medium text-gray-500 uppercase">Canon Mensual</label>

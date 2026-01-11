@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { LeaseData } from "../services/leasesApi";
+import { formatDateUTC } from "@/lib/dateUtils";
 
 interface LeaseCardProps {
     lease: LeaseData;
@@ -24,7 +25,7 @@ const statusConfig = {
  */
 export function LeaseCard({ lease, onActivate, onTerminate, onClick }: LeaseCardProps) {
     const status = statusConfig[lease.status];
-    const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('es-CO');
+    // Remove local formatter, use formatDateUTC directly
     const formatCurrency = (amount: number) =>
         new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
 
@@ -55,7 +56,7 @@ export function LeaseCard({ lease, onActivate, onTerminate, onClick }: LeaseCard
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2 text-gray-600">
                         <Calendar size={14} />
-                        <span>{formatDate(lease.startDate)} - {formatDate(lease.endDate)}</span>
+                        <span>{formatDateUTC(lease.startDate)} - {formatDateUTC(lease.endDate)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-900 font-semibold">
                         <DollarSign size={14} />

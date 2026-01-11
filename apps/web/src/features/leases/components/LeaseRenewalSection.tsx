@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ExitNoticeModal } from './ExitNoticeModal';
 import { useExitNotices } from '../hooks/useExitNotice';
+import { formatDateUTC } from "@/lib/dateUtils";
 
 interface LeaseRenewalSectionProps {
     leaseId: string;
@@ -25,9 +26,6 @@ export function LeaseRenewalSection({
 }: LeaseRenewalSectionProps) {
     const [exitNoticeModalOpen, setExitNoticeModalOpen] = useState(false);
     const { data: exitNotices = [] } = useExitNotices(leaseId);
-
-    const formatDate = (dateStr: string) =>
-        new Date(dateStr).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
 
     const formatCurrency = (amount: number) =>
         new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(amount);
@@ -87,7 +85,7 @@ export function LeaseRenewalSection({
                                             <div className="flex items-center gap-2">
                                                 <LogOut size={16} className="text-indigo-600" />
                                                 <span className="font-medium text-gray-900">
-                                                    Salida planeada: {formatDate(notice.plannedExitDate)}
+                                                    Salida planeada: {formatDateUTC(notice.plannedExitDate)}
                                                 </span>
                                             </div>
                                             <Badge className={`${config.color} border-0`}>
@@ -95,7 +93,7 @@ export function LeaseRenewalSection({
                                             </Badge>
                                         </div>
                                         <div className="space-y-1 text-sm text-gray-600">
-                                            <p>Aviso registrado: {formatDate(notice.noticeDate)}</p>
+                                            <p>Aviso registrado: {formatDateUTC(notice.noticeDate)}</p>
                                             {notice.reason && <p className="italic">Razón: {notice.reason}</p>}
                                             {notice.mutualAgreement && (
                                                 <p className="text-green-600 font-medium">✓ Mutuo acuerdo</p>

@@ -13,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createLeaseSchema, CreateLeaseDto } from "@proppio/shared";
 import { FormField } from "@/components/forms/FormField";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
+import { toUTC } from "@/lib/dateUtils";
 
 /**
  * LeasesPage - Container component
@@ -73,7 +74,16 @@ export function LeasesPage() {
     ) || [];
 
     const onSubmit = (data: CreateLeaseDto) => {
-        createMutation.mutate(data, {
+        // Transform dates to UTC based on tenant timezone
+        // Appending 'T00:00:00' ensures the date is parsed as local midnight, 
+        // which toUTC then correctly shifts to the target timezone's UTC equivalent.
+        const formattedData = {
+            ...data,
+            startDate: toUTC(new Date(`${data.startDate}T00:00:00`)),
+            endDate: toUTC(new Date(`${data.endDate}T00:00:00`))
+        };
+
+        createMutation.mutate(formattedData, {
             onSuccess: () => {
                 reset();
                 setDuration("12");

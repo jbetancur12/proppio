@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertCircle, DollarSign } from 'lucide-react';
 import { useCreateExitNotice } from '../hooks/useExitNotice';
+import { toUTC } from '@/lib/dateUtils';
 
 interface ExitNoticeModalProps {
     open: boolean;
@@ -55,7 +56,7 @@ export function ExitNoticeModal({
         createMutation.mutate({
             leaseId,
             data: {
-                plannedExitDate,
+                plannedExitDate: toUTC(new Date(`${plannedExitDate}T00:00:00`)),
                 reason: reason || undefined,
                 mutualAgreement
             }

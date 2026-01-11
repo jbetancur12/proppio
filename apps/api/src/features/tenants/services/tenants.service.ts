@@ -17,4 +17,18 @@ export class TenantsService {
             renewalDate: null // To be implemented when Subscription entity is added
         };
     }
+    async updateConfig(tenantId: string, config: any) {
+        const tenant = await this.em.findOne(Tenant, { id: tenantId });
+        if (!tenant) {
+            throw new NotFoundError('Tenant no encontrado');
+        }
+
+        tenant.config = {
+            ...tenant.config,
+            ...config
+        };
+
+        await this.em.flush();
+        return tenant.config;
+    }
 }

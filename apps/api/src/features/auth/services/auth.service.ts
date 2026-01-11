@@ -73,7 +73,8 @@ export class AuthService {
             tenantId: tenantUser.tenant.id,
             role: tenantUser.role,
             email: user.email,
-            features: tenantUser.tenant.config?.features || {}
+            features: tenantUser.tenant.config?.features || {},
+            timezone: tenantUser.tenant.config?.timezone || 'America/Bogota'
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '7d' });
@@ -96,7 +97,8 @@ export class AuthService {
                 tenantId: tenantUser.tenant.id,
                 tenantName: tenantUser.tenant.name,
                 role: tenantUser.role,
-                features: tenantUser.tenant.config?.features || {}
+                features: tenantUser.tenant.config?.features || {},
+                timezone: tenantUser.tenant.config?.timezone || 'America/Bogota'
             }
         };
     }

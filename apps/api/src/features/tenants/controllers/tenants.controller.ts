@@ -23,4 +23,19 @@ export class TenantsController {
             next(error);
         }
     }
+    async updateConfig(req: Request, res: Response, next: NextFunction) {
+        try {
+            const tenantId = (req as any).user?.tenantId;
+            if (!tenantId) {
+                res.status(400).json({ error: 'Usuario no pertenece a un tenant' });
+                return;
+            }
+
+            const config = req.body;
+            const result = await this.getService().updateConfig(tenantId, config);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

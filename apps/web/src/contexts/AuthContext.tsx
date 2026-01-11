@@ -13,7 +13,9 @@ interface User {
     features?: {
         treasury?: boolean;
     };
+    timezone?: string;
 }
+
 
 interface AuthContextType {
     user: User | null;
@@ -68,6 +70,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             sessionStorage.setItem('token', newToken);
             localStorage.removeItem('token');
         }
+
+        if (newUser.timezone) {
+            localStorage.setItem('app_timezone', newUser.timezone);
+        }
+
         setToken(newToken);
         setUser(newUser);
     };
