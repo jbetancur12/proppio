@@ -6,6 +6,7 @@ import { useAuditLogs } from './hooks/useAdmin';
 import { Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toUTC } from '@/lib/dateUtils';
 
 export function AuditLogsPage() {
     const [filters, setFilters] = useState({
@@ -16,7 +17,14 @@ export function AuditLogsPage() {
         offset: 0
     });
 
-    const { data, isLoading } = useAuditLogs(filters);
+    // Transform dates to UTC ranges respecting user timezone
+    const queryFilters = {
+        ...filters,
+        startDate: filters.startDate ? toUTC(new Date(`${filters.startDate}T00:00:00`)) : undefined,
+        endDate: filters.endDate ? toUTC(new Date(`${filters.endDate}T23:59:59.999`)) : undefined
+    };
+
+    const { data, isLoading } = useAuditLogs(queryFilters);
 
     const handleExport = () => {
         // TODO: Implement CSV export
