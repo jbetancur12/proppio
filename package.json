@@ -1,28 +1,28 @@
 {
-  "name": "rent-manager-saas",
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "dev": "turbo run dev",
-    "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "cron": "npx ts-node src/scripts/run-cron.ts",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "*.{js,ts,tsx,jsx,json,md}": "prettier --write",
-    "apps/web/**/*.{ts,tsx}": "eslint --config apps/web/eslint.config.js --fix",
-    "apps/api/**/*.{ts}": "eslint --config apps/api/eslint.config.js --fix"
-  },
-  "devDependencies": {
-    "eslint": "^9.39.2",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
-    "prettier": "^3.7.4",
-    "turbo": "^1.10.0"
-  }
+    "name": "rent-manager-saas",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "turbo run dev",
+        "build": "npm run build --workspaces --if-present",
+        "test": "npm run test --workspaces --if-present",
+        "cron": "npx ts-node src/scripts/run-cron.ts",
+        "prepare": "husky"
+    },
+    "lint-staged": {
+        "*.{js,ts,tsx,jsx,json,md}": "prettier --write",
+        "apps/web/**/*.{ts,tsx}": "eslint --config apps/web/eslint.config.js --fix",
+        "apps/api/**/*.{ts}": "eslint --config apps/api/eslint.config.js --fix"
+    },
+    "devDependencies": {
+        "eslint": "^9.39.2",
+        "husky": "^9.1.7",
+        "lint-staged": "^16.2.7",
+        "prettier": "^3.7.4",
+        "turbo": "^2.7.4"
+    }
 }
