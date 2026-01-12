@@ -73,213 +73,217 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     );
 }
 
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
+
 function App() {
     return (
-        <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-                <BrowserRouter>
-                    <Routes>
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/" element={<Navigate to="/dashboard" />} />
-                        <Route
-                            path="/dashboard"
-                            element={
-                                <ProtectedRoute>
-                                    <DashboardPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/properties"
-                            element={
-                                <ProtectedRoute>
-                                    <PropertiesPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/properties/:id"
-                            element={
-                                <ProtectedRoute>
-                                    <PropertyDetailPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/renters"
-                            element={
-                                <ProtectedRoute>
-                                    <RentersPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/renters/:id"
-                            element={
-                                <ProtectedRoute>
-                                    <RenterDetailPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/leases"
-                            element={
-                                <ProtectedRoute>
-                                    <LeasesPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/leases/:id"
-                            element={
-                                <ProtectedRoute>
-                                    <LeaseDetailPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/payments"
-                            element={
-                                <ProtectedRoute>
-                                    <PaymentsPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/expenses"
-                            element={
-                                <ProtectedRoute>
-                                    <ExpensesPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/maintenance"
-                            element={
-                                <ProtectedRoute>
-                                    <MaintenancePage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/rent-increases"
-                            element={
-                                <ProtectedRoute>
-                                    <RentIncreasePage />
-                                </ProtectedRoute>
-                            }
-                        />
+        <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                    <BrowserRouter>
+                        <Routes>
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/" element={<Navigate to="/dashboard" />} />
+                            <Route
+                                path="/dashboard"
+                                element={
+                                    <ProtectedRoute>
+                                        <DashboardPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/properties"
+                                element={
+                                    <ProtectedRoute>
+                                        <PropertiesPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/properties/:id"
+                                element={
+                                    <ProtectedRoute>
+                                        <PropertyDetailPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/renters"
+                                element={
+                                    <ProtectedRoute>
+                                        <RentersPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/renters/:id"
+                                element={
+                                    <ProtectedRoute>
+                                        <RenterDetailPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/leases"
+                                element={
+                                    <ProtectedRoute>
+                                        <LeasesPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/leases/:id"
+                                element={
+                                    <ProtectedRoute>
+                                        <LeaseDetailPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/payments"
+                                element={
+                                    <ProtectedRoute>
+                                        <PaymentsPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/expenses"
+                                element={
+                                    <ProtectedRoute>
+                                        <ExpensesPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/maintenance"
+                                element={
+                                    <ProtectedRoute>
+                                        <MaintenancePage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/rent-increases"
+                                element={
+                                    <ProtectedRoute>
+                                        <RentIncreasePage />
+                                    </ProtectedRoute>
+                                }
+                            />
 
-                        <Route
-                            path="/treasury"
-                            element={
-                                <ProtectedRoute>
-                                    <TreasuryPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route
-                            path="/settings"
-                            element={
-                                <ProtectedRoute>
-                                    <SettingsPage />
-                                </ProtectedRoute>
-                            }
-                        />
-                        <Route path="/subscription-suspended" element={<SubscriptionSuspendedPage />} />
+                            <Route
+                                path="/treasury"
+                                element={
+                                    <ProtectedRoute>
+                                        <TreasuryPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/settings"
+                                element={
+                                    <ProtectedRoute>
+                                        <SettingsPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route path="/subscription-suspended" element={<SubscriptionSuspendedPage />} />
 
-                        {/* Admin Routes */}
-                        <Route
-                            path="/admin"
-                            element={
-                                <RequireSuperAdmin>
-                                    <AdminLayout>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <AdminDashboardPage />
-                                        </Suspense>
-                                    </AdminLayout>
-                                </RequireSuperAdmin>
-                            }
-                        />
-                        <Route
-                            path="/admin/tenants"
-                            element={
-                                <RequireSuperAdmin>
-                                    <AdminLayout>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <TenantsPage />
-                                        </Suspense>
-                                    </AdminLayout>
-                                </RequireSuperAdmin>
-                            }
-                        />
-                        <Route
-                            path="/admin/tenants/create"
-                            element={
-                                <RequireSuperAdmin>
-                                    <AdminLayout>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <CreateTenantPage />
-                                        </Suspense>
-                                    </AdminLayout>
-                                </RequireSuperAdmin>
-                            }
-                        />
-                        <Route
-                            path="/admin/tenants/:id"
-                            element={
-                                <RequireSuperAdmin>
-                                    <AdminLayout>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <TenantDetailPage />
-                                        </Suspense>
-                                    </AdminLayout>
-                                </RequireSuperAdmin>
-                            }
-                        />
-                        <Route
-                            path="/admin/users"
-                            element={
-                                <RequireSuperAdmin>
-                                    <AdminLayout>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <UsersPage />
-                                        </Suspense>
-                                    </AdminLayout>
-                                </RequireSuperAdmin>
-                            }
-                        />
-                        <Route
-                            path="/admin/audit-logs"
-                            element={
-                                <RequireSuperAdmin>
-                                    <AdminLayout>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <AuditLogsPage />
-                                        </Suspense>
-                                    </AdminLayout>
-                                </RequireSuperAdmin>
-                            }
-                        />
-                        <Route
-                            path="/admin/financial-metrics"
-                            element={
-                                <RequireSuperAdmin>
-                                    <AdminLayout>
-                                        <Suspense fallback={<LoadingSpinner />}>
-                                            <FinancialMetricsPage />
-                                        </Suspense>
-                                    </AdminLayout>
-                                </RequireSuperAdmin>
-                            }
-                        />
+                            {/* Admin Routes */}
+                            <Route
+                                path="/admin"
+                                element={
+                                    <RequireSuperAdmin>
+                                        <AdminLayout>
+                                            <Suspense fallback={<LoadingSpinner />}>
+                                                <AdminDashboardPage />
+                                            </Suspense>
+                                        </AdminLayout>
+                                    </RequireSuperAdmin>
+                                }
+                            />
+                            <Route
+                                path="/admin/tenants"
+                                element={
+                                    <RequireSuperAdmin>
+                                        <AdminLayout>
+                                            <Suspense fallback={<LoadingSpinner />}>
+                                                <TenantsPage />
+                                            </Suspense>
+                                        </AdminLayout>
+                                    </RequireSuperAdmin>
+                                }
+                            />
+                            <Route
+                                path="/admin/tenants/create"
+                                element={
+                                    <RequireSuperAdmin>
+                                        <AdminLayout>
+                                            <Suspense fallback={<LoadingSpinner />}>
+                                                <CreateTenantPage />
+                                            </Suspense>
+                                        </AdminLayout>
+                                    </RequireSuperAdmin>
+                                }
+                            />
+                            <Route
+                                path="/admin/tenants/:id"
+                                element={
+                                    <RequireSuperAdmin>
+                                        <AdminLayout>
+                                            <Suspense fallback={<LoadingSpinner />}>
+                                                <TenantDetailPage />
+                                            </Suspense>
+                                        </AdminLayout>
+                                    </RequireSuperAdmin>
+                                }
+                            />
+                            <Route
+                                path="/admin/users"
+                                element={
+                                    <RequireSuperAdmin>
+                                        <AdminLayout>
+                                            <Suspense fallback={<LoadingSpinner />}>
+                                                <UsersPage />
+                                            </Suspense>
+                                        </AdminLayout>
+                                    </RequireSuperAdmin>
+                                }
+                            />
+                            <Route
+                                path="/admin/audit-logs"
+                                element={
+                                    <RequireSuperAdmin>
+                                        <AdminLayout>
+                                            <Suspense fallback={<LoadingSpinner />}>
+                                                <AuditLogsPage />
+                                            </Suspense>
+                                        </AdminLayout>
+                                    </RequireSuperAdmin>
+                                }
+                            />
+                            <Route
+                                path="/admin/financial-metrics"
+                                element={
+                                    <RequireSuperAdmin>
+                                        <AdminLayout>
+                                            <Suspense fallback={<LoadingSpinner />}>
+                                                <FinancialMetricsPage />
+                                            </Suspense>
+                                        </AdminLayout>
+                                    </RequireSuperAdmin>
+                                }
+                            />
 
-                        <Route path="*" element={<Navigate to="/dashboard" />} />
-                    </Routes>
-                    <Toaster position="top-center" />
-                </BrowserRouter>
-            </AuthProvider>
-        </QueryClientProvider>
+                            <Route path="*" element={<Navigate to="/dashboard" />} />
+                        </Routes>
+                        <Toaster position="top-center" />
+                    </BrowserRouter>
+                </AuthProvider>
+            </QueryClientProvider>
+        </ErrorBoundary>
     );
 }
 
