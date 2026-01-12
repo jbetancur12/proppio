@@ -15,6 +15,7 @@
         "migration:pending": "mikro-orm migration:pending",
         "migration:fresh": "mikro-orm migration:fresh",
         "create-superadmin": "dotenvx run -f ../../.env -f ../../.env.production -- node dist/scripts/create-super-admin.js",
+        "create-superadmin:dev": "dotenvx run -f ../../.env -f .env -- tsx src/scripts/create-super-admin.ts",
         "test-renewals": "tsx test-renewals.ts"
     },
     "dependencies": {
@@ -44,6 +45,7 @@
         "pg": "^8.16.3",
         "pino": "^10.1.0",
         "pino-pretty": "^13.1.3",
+        "puppeteer": "^24.34.0",
         "resend": "^6.7.0",
         "zod": "^3.21.0"
     },

@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSettingsTab } from "./components/ProfileSettingsTab";
 import { SubscriptionSettingsTab } from "./components/SubscriptionSettingsTab";
 import { SystemSettingsTab } from "./components/SystemSettingsTab";
+import { ContractTemplatesSettingsTab } from "./components/ContractTemplatesSettingsTab";
 
 export function SettingsPage() {
     return (
@@ -18,6 +19,7 @@ export function SettingsPage() {
                     <TabsTrigger value="profile">Perfil y Seguridad</TabsTrigger>
                     <TabsTrigger value="subscription">Suscripción</TabsTrigger>
                     <TabsTrigger value="system">Sistema</TabsTrigger>
+                    <TabsTrigger value="contracts">Plantillas de Contrato</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="profile" className="space-y-4">
@@ -30,6 +32,10 @@ export function SettingsPage() {
 
                 <TabsContent value="system" className="space-y-4">
                     <SystemSettingsTab />
+                </TabsContent>
+
+                <TabsContent value="contracts" className="space-y-4">
+                    <ContractTemplatesSettingsTab />
                 </TabsContent>
             </Tabs>
         </div>

@@ -4,6 +4,7 @@ import { CreateLeaseDto, UpdateLeaseDto } from "../dtos/lease.dto";
 import { NotFoundError, ValidationError } from "../../../shared/errors/AppError";
 import { UnitEntity, UnitStatus } from "../../properties/entities/Unit";
 import { Renter } from "../../renters/entities/Renter";
+import puppeteer from 'puppeteer';
 
 /**
  * LeaseService - Business logic for lease management
@@ -55,7 +56,8 @@ export class LeasesService {
             securityDeposit: data.securityDeposit,
             notes: data.notes,
             status: LeaseStatus.DRAFT,
-            firstPaymentDate: data.firstPaymentDate ? new Date(data.firstPaymentDate) : undefined
+            firstPaymentDate: data.firstPaymentDate ? new Date(data.firstPaymentDate) : undefined,
+            contractContent: data.contractContent
         });
 
         await this.em.persistAndFlush(lease);
@@ -73,6 +75,12 @@ export class LeasesService {
             console.error('Audit log failed for create lease:', error);
         }
 
+        if (data.contractContent) {
+            const pdfKey = await this.generateAndUploadPdf(lease.id, data.contractContent);
+            lease.contractPdfPath = pdfKey;
+            await this.em.flush();
+        }
+
         return lease;
     }
 
@@ -86,6 +94,7 @@ export class LeasesService {
         if (data.securityDeposit !== undefined) lease.securityDeposit = data.securityDeposit;
         if (data.status) lease.status = data.status as LeaseStatus;
         if (data.notes !== undefined) lease.notes = data.notes;
+        if (data.contractContent !== undefined) lease.contractContent = data.contractContent;
 
         await this.em.flush();
 
@@ -108,6 +117,12 @@ export class LeasesService {
             });
         } catch (error) {
             console.error('Audit log failed for update lease:', error);
+        }
+
+        if (data.contractContent) {
+            const pdfKey = await this.generateAndUploadPdf(lease.id, data.contractContent);
+            lease.contractPdfPath = pdfKey;
+            await this.em.flush();
         }
 
         return lease;
@@ -241,5 +256,29 @@ export class LeasesService {
         }
 
         return lease;
+    }
+
+    private async generateAndUploadPdf(leaseId: string, htmlContent: string): Promise<string> {
+        let browser;
+        try {
+            browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+            const page = await browser.newPage();
+            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+            const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+
+            const bucketName = process.env.STORAGE_BUCKET || 'rent-manager-documents';
+            const { storageService } = await import('../../../shared/services/storage.service');
+            await storageService.ensureBucket(bucketName);
+
+            const key = `leases/${leaseId}/contract.pdf`;
+            await storageService.uploadBuffer(bucketName, key, Buffer.from(pdfBuffer), 'application/pdf');
+
+            return key;
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            throw new Error('Error al generar el PDF del contrato');
+        } finally {
+            if (browser) await browser.close();
+        }
     }
 }

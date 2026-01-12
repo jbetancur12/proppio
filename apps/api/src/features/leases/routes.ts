@@ -1,13 +1,22 @@
 import { Router } from 'express';
 import { LeasesController } from './controllers/leases.controller';
+import { ContractTemplatesController } from './controllers/contract-templates.controller';
 import multer from 'multer';
 
 const router = Router();
 const controller = new LeasesController();
+const templatesController = new ContractTemplatesController();
 
 router.get('/', (req, res, next) => controller.list(req, res, next));
 router.post('/', (req, res, next) => controller.create(req, res, next));
 router.get('/expiring', (req, res, next) => controller.getExpiring(req, res, next));
+
+// Contract Templates Routes
+router.get('/templates', (req, res, next) => templatesController.list(req, res, next));
+router.post('/templates', (req, res, next) => templatesController.create(req, res, next));
+router.get('/templates/:id', (req, res, next) => templatesController.getOne(req, res, next));
+router.put('/templates/:id', (req, res, next) => templatesController.update(req, res, next));
+router.delete('/templates/:id', (req, res, next) => templatesController.delete(req, res, next));
 
 // Rent increase routes (before :id to avoid conflicts)
 router.get('/increases/preview', (req, res, next) => controller.previewIncreases(req, res, next));

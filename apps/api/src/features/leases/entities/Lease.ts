@@ -41,6 +41,9 @@ export class Lease extends BaseTenantEntity {
     @Property({ type: 'string', nullable: true })
     contractPdfPath?: string;
 
+    @Property({ type: 'text', nullable: true })
+    contractContent?: string;
+
     @Property({ type: 'date', nullable: true })
     originalEndDate?: Date;
 

@@ -10,6 +10,7 @@ export const createLeaseSchema = z.object({
     notes: z.string().optional(),
     isExisting: z.boolean().optional(),
     firstPaymentDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Fecha inválida").optional(),
+    contractContent: z.string().optional(),
 });
 
 export const updateLeaseSchema = z.object({
@@ -19,6 +20,7 @@ export const updateLeaseSchema = z.object({
     securityDeposit: z.number().nonnegative("El depósito no puede ser negativo").optional(),
     status: z.enum(['DRAFT', 'ACTIVE', 'EXPIRED', 'TERMINATED']).optional(),
     notes: z.string().optional(),
+    contractContent: z.string().optional(),
 });
 
 // DTOs inferred from Zod schemas
