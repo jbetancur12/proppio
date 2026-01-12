@@ -174,6 +174,71 @@ export function AuditLogsPage() {
                             </table>
                         </div>
                     )}
+
+                    {/* Pagination Controls */}
+                    {!isLoading && data && data.count > 0 && (
+                        <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6 mt-4">
+                            <div className="flex flex-1 justify-between sm:hidden">
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        setFilters((prev) => ({
+                                            ...prev,
+                                            offset: Math.max(0, prev.offset - prev.limit),
+                                        }))
+                                    }
+                                    disabled={filters.offset === 0}
+                                >
+                                    Anterior
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        setFilters((prev) => ({ ...prev, offset: prev.offset + prev.limit }))
+                                    }
+                                    disabled={filters.offset + filters.limit >= data.count}
+                                >
+                                    Siguiente
+                                </Button>
+                            </div>
+                            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-700">
+                                        Mostrando <span className="font-medium">{filters.offset + 1}</span> -{' '}
+                                        <span className="font-medium">
+                                            {Math.min(filters.offset + filters.limit, data.count)}
+                                        </span>{' '}
+                                        de <span className="font-medium">{data.count}</span> registros
+                                    </p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setFilters((prev) => ({
+                                                ...prev,
+                                                offset: Math.max(0, prev.offset - prev.limit),
+                                            }))
+                                        }
+                                        disabled={filters.offset === 0}
+                                    >
+                                        Anterior
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setFilters((prev) => ({ ...prev, offset: prev.offset + prev.limit }))
+                                        }
+                                        disabled={filters.offset + filters.limit >= data.count}
+                                    >
+                                        Siguiente
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
