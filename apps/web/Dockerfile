@@ -1,26 +1,27 @@
 # Build Stage
 FROM node:20-alpine AS builder
-
 WORKDIR /app
 
-# Build shared package first
-COPY apps/shared ./apps/shared
-RUN cd apps/shared && npm install && npm run build
+# Copy root configurations
+COPY package.json package-lock.json turbo.json ./
 
-# Build web app
-COPY apps/web/package*.json ./apps/web/
-WORKDIR /app/apps/web
+# Copy all workspaces
+COPY packages ./packages
+COPY apps ./apps
+
+# Install dependencies
 RUN npm install
 
+# Build Web (using Turbo)
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-COPY apps/web .
-RUN npm run build
+RUN npx turbo run build --filter=web...
 
 # Production Stage - Nginx
 FROM nginx:alpine
 
+# Copy built assets from the correct location
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 COPY --from=builder /app/apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 

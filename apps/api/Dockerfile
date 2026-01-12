@@ -1,19 +1,19 @@
 # Build Stage
 FROM node:20-alpine AS builder
-
 WORKDIR /app
 
-# Copy shared package
-COPY apps/shared ./apps/shared
-RUN cd apps/shared && npm install && npm run build
+# Copy root configurations
+COPY package.json package-lock.json turbo.json ./
 
-# Copy and build API
-COPY apps/api/package*.json ./apps/api/
-WORKDIR /app/apps/api
+# Copy all workspaces
+COPY packages ./packages
+COPY apps ./apps
+
+# Install dependencies (links workpaces)
 RUN npm install
 
-COPY apps/api .
-RUN npm run build
+# Build API (using Turbo to build dependencies like @proppio/types)
+RUN npx turbo run build --filter=api...
 
 # Production Stage
 FROM node:20-alpine
@@ -27,23 +27,23 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont
 
-# Tell Puppeteer to skip downloading Chrome. We'll be using the installed package.
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 
-# Copy package.json and install production dependencies
-COPY --from=builder /app/apps/api/package*.json ./
-# Copy shared package to parent directory (for file:../shared reference)
-COPY --from=builder /app/apps/shared ../shared
-RUN npm ci --only=production
+# Copy node_modules from builder (includes symlinked workspaces)
+COPY --from=builder /app/node_modules ./node_modules
+# Copy source files (need to keep structure for symlinks to work)
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps ./apps
+COPY --from=builder /app/package.json ./
 
-# Copy compiled code and source files
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/src ./src
-COPY --from=builder /app/apps/api/tsconfig.json ./
-
+# Expose port
 EXPOSE 3000
 
+# Set working directory to API to run scripts correctly
+WORKDIR /app/apps/api
+
+# Start the application
 CMD ["npm", "run", "start"]
