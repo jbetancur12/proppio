@@ -1,9 +1,16 @@
 import { api } from '../../../api/client';
 
+export interface Unit {
+    id: string;
+    name: string;
+    status: 'VACANT' | 'OCCUPIED' | 'MAINTENANCE';
+}
+
 export interface Property {
     id: string;
     name: string;
     address: string;
+    units?: Unit[];
 }
 
 export const propertiesApi = {

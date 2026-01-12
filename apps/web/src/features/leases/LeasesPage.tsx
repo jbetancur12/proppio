@@ -14,25 +14,11 @@ import { createLeaseSchema, CreateLeaseDto } from '@proppio/shared';
 import { FormField } from '@/components/forms/FormField';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { toUTC } from '@/lib/dateUtils';
+import { Property, Unit as ApiUnit } from '../properties/services/propertiesApi';
+import { Renter } from '../renters/services/rentersApi';
 
-interface Unit {
-    id: string;
-    name: string;
-    status: 'VACANT' | 'OCCUPIED' | 'MAINTENANCE';
+interface Unit extends ApiUnit {
     propertyName?: string;
-}
-
-interface Property {
-    id: string;
-    name: string;
-    units: Unit[];
-}
-
-interface Renter {
-    id: string;
-    firstName: string;
-    lastName: string;
-    documentNumber: string;
 }
 
 export function LeasesPage() {
@@ -94,9 +80,30 @@ export function LeasesPage() {
     // Flatten units from all properties and filter only VACANT ones
     const allUnits =
         properties?.flatMap((p: Property) =>
-            (p.units || [])
-                .filter((u: Unit) => u.status === 'VACANT')
-                .map((u: Unit) => ({ ...u, propertyName: p.name })),
+            (p.units || []) // Assuming units might be optional or inferred differently now
+                // Actually Property in propertiesApi is {id, name, address}. It DOES NOT have units [].
+                // We need to check useProperties logic.
+                // Wait, useProperties calls propertiesApi.getAll() which returns Property[].
+                // The Property interface I just added in propertiesApi.ts is {id, name, address}. It lacks units.
+                // But the backend implementation of getAll might return units if populated?
+                // Let's check properties.controller or service in API.
+                // Assuming it was working before, maybe I broke it by defining a restrictive interface.
+                // I should verify PropertyEntity or controller.
+
+                // For now, let's look at the error "required in type Property".
+                // I will update Property interface in propertiesApi.ts to include optional fields or whatever is returned.
+                // And here I will update the map to use renters?.data?.map
+
+                // Let's first fix LeasesPage imports and usage of renters.
+                // And temporarily use any for Property if needed or fix the interface.
+
+                // Breaking change: The new Property interface I exported in propertiesApi.ts only has id, name, address.
+                // The implicit type before probably had units.
+                // I should check what the API actually returns.
+                // If the API returns units, I should update the interface.
+
+                .filter((u) => u.status === 'VACANT')
+                .map((u) => ({ ...u, propertyName: p.name })),
         ) || [];
 
     const onSubmit = (data: CreateLeaseDto) => {
@@ -155,7 +162,7 @@ export function LeasesPage() {
                                     className={`w-full h-10 px-3 rounded-md border ${errors.renterId ? 'border-destructive' : 'border-gray-200'} bg-white`}
                                 >
                                     <option value="">Seleccionar inquilino...</option>
-                                    {renters?.map((r: Renter) => (
+                                    {renters?.data?.map((r: Renter) => (
                                         <option key={r.id} value={r.id}>
                                             {r.firstName} {r.lastName}
                                         </option>

@@ -1,10 +1,11 @@
-import { EntityManager } from "@mikro-orm/core";
-import { PropertyEntity } from "../../properties/entities/Property";
-import { UnitEntity, UnitStatus } from "../../properties/entities/Unit";
-import { Renter } from "../../renters/entities/Renter";
-import { Lease, LeaseStatus } from "../../leases/entities/Lease";
-import { Payment, PaymentStatus } from "../../payments/entities/Payment";
-import { Expense } from "../../expenses/entities/Expense";
+import { EntityManager } from '@mikro-orm/core';
+import { PropertyEntity } from '../../properties/entities/Property';
+import { UnitEntity, UnitStatus } from '../../properties/entities/Unit';
+import { Renter } from '../../renters/entities/Renter';
+import { Lease, LeaseStatus } from '../../leases/entities/Lease';
+import { Payment, PaymentStatus } from '../../payments/entities/Payment';
+import { Expense } from '../../expenses/entities/Expense';
+import { CacheService } from '../../../shared/services/cache.service';
 
 export interface DashboardStats {
     totalProperties: number;
@@ -26,9 +27,23 @@ export interface DashboardStats {
  * Following design_guidelines.md section 2.1 Services Pattern
  */
 export class StatsService {
-    constructor(private readonly em: EntityManager) { }
+    private cacheService: CacheService;
+
+    constructor(private readonly em: EntityManager) {
+        this.cacheService = CacheService.getInstance();
+    }
 
     async getDashboardStats(): Promise<DashboardStats> {
+        const cacheKey = 'stats:dashboard';
+        const cachedStats = this.cacheService.get<DashboardStats>(cacheKey);
+
+        if (cachedStats) {
+            console.log('Cache Hit: Dashboard Stats');
+            return cachedStats;
+        }
+
+        console.log('Cache Miss: Dashboard Stats. Calculating...');
+
         // Counts
         const totalProperties = await this.em.count(PropertyEntity, {});
         const totalUnits = await this.em.count(UnitEntity, {});
@@ -51,13 +66,13 @@ export class StatsService {
 
         const payments = await this.em.find(Payment, {
             status: PaymentStatus.COMPLETED,
-            paymentDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+            paymentDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
         });
         const monthlyReceivedIncome = payments.reduce((sum, p) => sum + p.amount, 0);
 
         // Monthly expenses
         const expenses = await this.em.find(Expense, {
-            date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+            date: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
         });
         const monthlyExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
@@ -65,11 +80,10 @@ export class StatsService {
         const netIncome = monthlyReceivedIncome - monthlyExpenses;
 
         // Collection rate
-        const collectionRate = monthlyExpectedIncome > 0
-            ? Math.round((monthlyReceivedIncome / monthlyExpectedIncome) * 100)
-            : 0;
+        const collectionRate =
+            monthlyExpectedIncome > 0 ? Math.round((monthlyReceivedIncome / monthlyExpectedIncome) * 100) : 0;
 
-        return {
+        const stats = {
             totalProperties,
             totalUnits,
             occupiedUnits,
@@ -81,11 +95,24 @@ export class StatsService {
             monthlyReceivedIncome,
             monthlyExpenses,
             netIncome,
-            collectionRate
+            collectionRate,
         };
+
+        this.cacheService.set(cacheKey, stats);
+        return stats;
     }
 
     async getFinancialHistory(months: number = 6) {
+        const cacheKey = `stats:history:${months}`;
+        const cachedHistory = this.cacheService.get<any[]>(cacheKey);
+
+        if (cachedHistory) {
+            console.log(`Cache Hit: Financial History (${months} months)`);
+            return cachedHistory;
+        }
+
+        console.log(`Cache Miss: Financial History (${months} months). Calculating...`);
+
         // Calculate date range
         const end = new Date();
         const start = new Date();
@@ -96,12 +123,12 @@ export class StatsService {
         // Fetch Payments
         const payments = await this.em.find(Payment, {
             status: PaymentStatus.COMPLETED,
-            paymentDate: { $gte: start }
+            paymentDate: { $gte: start },
         });
 
         // Fetch Expenses
         const expenses = await this.em.find(Expense, {
-            date: { $gte: start }
+            date: { $gte: start },
         });
 
         // Group by Month
@@ -116,7 +143,7 @@ export class StatsService {
         }
 
         // Aggregate Income
-        payments.forEach(p => {
+        payments.forEach((p) => {
             const d = new Date(p.paymentDate);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             if (historyMap.has(key)) {
@@ -126,7 +153,7 @@ export class StatsService {
         });
 
         // Aggregate Expenses
-        expenses.forEach(e => {
+        expenses.forEach((e) => {
             const d = new Date(e.date);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             if (historyMap.has(key)) {
@@ -136,9 +163,14 @@ export class StatsService {
         });
 
         // Convert to Array
-        return Array.from(historyMap.entries()).map(([month, data]) => ({
-            month, // Format: YYYY-MM
-            ...data
-        })).sort((a, b) => a.month.localeCompare(b.month));
+        const history = Array.from(historyMap.entries())
+            .map(([month, data]) => ({
+                month, // Format: YYYY-MM
+                ...data,
+            }))
+            .sort((a, b) => a.month.localeCompare(b.month));
+
+        this.cacheService.set(cacheKey, history);
+        return history;
     }
 }
