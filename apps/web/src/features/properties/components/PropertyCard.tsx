@@ -1,5 +1,6 @@
 import { Building, MapPin, Wallet, Clock } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { memo } from "react";
 
 interface PropertyCardProps {
     property: {
@@ -16,8 +17,9 @@ interface PropertyCardProps {
 /**
  * Presentational component - receives data via props
  * Following design_guidelines.md section 3.1
+ * Memoized to prevent unnecessary re-renders
  */
-export function PropertyCard({ property, onClick }: PropertyCardProps) {
+export const PropertyCard = memo(function PropertyCard({ property, onClick }: PropertyCardProps) {
     const hasPendingPayments = property.alerts?.includes('PENDING_PAYMENTS');
     const hasExpiringLease = property.alerts?.includes('EXPIRING_LEASE');
     const occupancy = property.occupancyRate ?? 0;
@@ -68,4 +70,4 @@ export function PropertyCard({ property, onClick }: PropertyCardProps) {
             </CardFooter>
         </Card>
     );
-}
+});

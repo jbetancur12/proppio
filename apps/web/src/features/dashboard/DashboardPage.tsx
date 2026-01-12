@@ -2,13 +2,15 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Plus, Search, Building, TrendingUp, Users, DollarSign, FileText, AlertTriangle, ArrowRight } from "lucide-react"
 import { useProperties, useCreateProperty } from "../properties/hooks/useProperties"
 import { PropertyCard } from "../properties/components/PropertyCard"
 import { useDashboardStats, useFinancialHistory } from "./hooks/useDashboardStats"
 import { useExpiringLeases } from "../leases/hooks/useLeases"
 import { FinancialChart } from "./components/FinancialChart"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
+import { useCurrency } from "@/hooks/useCurrency"
 
 /**
  * Dashboard - Container component
@@ -19,12 +21,16 @@ export function DashboardPage() {
     const [isCreating, setIsCreating] = useState(false)
     const [newName, setNewName] = useState("")
     const [newAddress, setNewAddress] = useState("")
+    const [searchTerm, setSearchTerm] = useState("")
 
     const { data: properties, isLoading } = useProperties()
     const { data: stats } = useDashboardStats()
     const { data: financialHistory } = useFinancialHistory()
     const { data: expiringLeases } = useExpiringLeases(60)
     const createMutation = useCreateProperty()
+
+    const formatCurrency = useCurrency()
+    const debouncedSearch = useDebouncedValue(searchTerm, 300)
 
     const handleCreate = () => {
         createMutation.mutate(
@@ -39,8 +45,17 @@ export function DashboardPage() {
         )
     }
 
-    const formatCurrency = (value: number) =>
-        new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
+    // Filter properties based on debounced search
+    const filteredProperties = useMemo(() => {
+        if (!properties) return [];
+        if (!debouncedSearch) return properties;
+
+        const searchLower = debouncedSearch.toLowerCase();
+        return properties.filter((p: { name?: string; address?: string }) =>
+            p.name?.toLowerCase().includes(searchLower) ||
+            p.address?.toLowerCase().includes(searchLower)
+        );
+    }, [properties, debouncedSearch]);
 
     return (
         <div className="space-y-8">
@@ -230,7 +245,12 @@ export function DashboardPage() {
                     <h2 className="text-xl font-bold text-gray-800">Tus Propiedades</h2>
                     <div className="relative w-full md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <Input placeholder="Buscar propiedades..." className="pl-9 bg-white w-full" />
+                        <Input
+                            placeholder="Buscar propiedades..."
+                            className="pl-9 bg-white w-full"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
                 </div>
 
@@ -240,14 +260,14 @@ export function DashboardPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {properties?.map((p: any) => (
+                        {filteredProperties?.map((p: any) => (
                             <PropertyCard
                                 key={p.id}
                                 property={p}
                                 onClick={() => navigate(`/properties/${p.id}`)}
                             />
                         ))}
-                        {properties?.length === 0 && (
+                        {filteredProperties?.length === 0 && (
                             <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
                                 <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
                                     <Building size={24} />
