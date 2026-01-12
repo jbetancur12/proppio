@@ -45,13 +45,16 @@ export class UnitsService {
     }
 
     async findAllByProperty(propertyId: string) {
-        // Use deep populate to get everything in one query (or few optimized queries)
-        const units = await this.unitRepo.find(
-            { property: { id: propertyId } },
-            {
-                populate: ['leases', 'leases.renter', 'leases.payments'] as any,
-            },
-        );
+        // Optimize: Use QueryBuilder to only fetch ACTIVE leases
+        // This avoids loading historical leases and reduces memory/CPU usage
+        const units = await this.em
+            .createQueryBuilder(UnitEntity, 'u')
+            .select('*')
+            .leftJoinAndSelect('u.leases', 'l', { 'l.status': LeaseStatus.ACTIVE })
+            .leftJoinAndSelect('l.renter', 'r')
+            .leftJoinAndSelect('l.payments', 'p')
+            .where({ 'u.property': propertyId })
+            .getResultList();
 
         if (units.length === 0) return [];
 
@@ -60,35 +63,25 @@ export class UnitsService {
         warningDate.setDate(today.getDate() + 60);
 
         return units.map((unit) => {
-            // Find active lease from populated collection
-            const leases = unit.leases.getItems();
-            let activeLease: Lease | undefined;
+            // Since we filtered in the query, the collection only contains active leases (max 1)
+            const activeLease = unit.leases.getItems()[0];
 
             const alerts: string[] = [];
-            let hasPendingPayments = false;
-            let hasExpiringLeases = false;
 
-            for (const lease of leases) {
-                if (lease.status === LeaseStatus.ACTIVE) {
-                    activeLease = lease;
+            if (activeLease) {
+                // Check Expiry
+                const endDate = new Date(activeLease.endDate);
+                if (endDate <= warningDate && endDate >= today) {
+                    alerts.push('EXPIRING_LEASE');
+                }
 
-                    // Check Expiry
-                    const endDate = new Date(lease.endDate);
-                    if (endDate <= warningDate && endDate >= today) {
-                        hasExpiringLeases = true;
-                    }
-
-                    // Check Pending Payments
-                    const payments = lease.payments.getItems();
-                    const pending = payments.some((p) => p.status === 'PENDING');
-                    if (pending) {
-                        hasPendingPayments = true;
-                    }
+                // Check Pending Payments
+                // We loaded payments for the active lease, so we can check them
+                const hasPendingPayments = activeLease.payments.getItems().some((p) => p.status === 'PENDING');
+                if (hasPendingPayments) {
+                    alerts.push('PENDING_PAYMENTS');
                 }
             }
-
-            if (hasPendingPayments) alerts.push('PENDING_PAYMENTS');
-            if (hasExpiringLeases) alerts.push('EXPIRING_LEASE');
 
             return {
                 ...wrap(unit).toObject(),
