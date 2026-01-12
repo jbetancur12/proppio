@@ -1,7 +1,13 @@
-import { api } from "../../../api/client";
+import { api } from '../../../api/client';
+
+export interface Property {
+    id: string;
+    name: string;
+    address: string;
+}
 
 export const propertiesApi = {
-    getAll: async () => {
+    getAll: async (): Promise<Property[]> => {
         const res = await api.get('/api/properties');
         return res.data;
     },
@@ -21,7 +27,15 @@ export const propertiesApi = {
         return res.data.data;
     },
 
-    createUnit: async (data: { propertyId: string; name: string; type: string; bedrooms?: number; bathrooms?: number; area?: number; baseRent?: number }) => {
+    createUnit: async (data: {
+        propertyId: string;
+        name: string;
+        type: string;
+        bedrooms?: number;
+        bathrooms?: number;
+        area?: number;
+        baseRent?: number;
+    }) => {
         const res = await api.post('/api/properties/units', data);
         return res.data.data;
     },
@@ -35,7 +49,18 @@ export const propertiesApi = {
         await api.delete(`/api/properties/${id}`);
     },
 
-    updateUnit: async (id: string, data: { name: string; type: string; bedrooms?: number; bathrooms?: number; area?: number; baseRent?: number, status?: 'VACANT' | 'OCCUPIED' | 'MAINTENANCE' }) => {
+    updateUnit: async (
+        id: string,
+        data: {
+            name: string;
+            type: string;
+            bedrooms?: number;
+            bathrooms?: number;
+            area?: number;
+            baseRent?: number;
+            status?: 'VACANT' | 'OCCUPIED' | 'MAINTENANCE';
+        },
+    ) => {
         const res = await api.put(`/api/properties/units/${id}`, data);
         return res.data;
     },
@@ -47,5 +72,5 @@ export const propertiesApi = {
     getStats: async (id: string) => {
         const res = await api.get(`/api/properties/${id}/stats`);
         return res.data;
-    }
+    },
 };
