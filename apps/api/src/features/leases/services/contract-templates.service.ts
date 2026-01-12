@@ -2,6 +2,7 @@ import { EntityManager } from '@mikro-orm/core';
 import { ContractTemplate } from '../entities/ContractTemplate';
 import { CreateContractTemplateDto, UpdateContractTemplateDto } from '../dtos/contract-template.dto';
 import { ValidationError } from '../../../shared/errors/AppError';
+import { MAX_CONTRACT_TEMPLATES } from '../../../shared/constants';
 
 export class ContractTemplatesService {
     constructor(private readonly em: EntityManager) {}
@@ -16,8 +17,8 @@ export class ContractTemplatesService {
 
     async create(data: CreateContractTemplateDto): Promise<ContractTemplate> {
         const count = await this.em.count(ContractTemplate);
-        if (count >= 2) {
-            throw new ValidationError('Solo se permiten crear un máximo de 2 plantillas.');
+        if (count >= MAX_CONTRACT_TEMPLATES) {
+            throw new ValidationError(`Solo se permiten crear un máximo de ${MAX_CONTRACT_TEMPLATES} plantillas.`);
         }
 
         const template = new ContractTemplate();
