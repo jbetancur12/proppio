@@ -1,10 +1,13 @@
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
+interface LogContext {
+    [key: string]: unknown;
+}
+
 class Logger {
     private apiUrl = '/api/logs';
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private log(level: LogLevel, message: string, context?: any) {
+    private log(level: LogLevel, message: string, context?: unknown) {
         // 1. Console Output (Source of truth in Dev)
         if (context) {
              
@@ -21,8 +24,7 @@ class Logger {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async sendToBackend(level: LogLevel, message: string, context?: any) {
+    private async sendToBackend(level: LogLevel, message: string, context?: unknown) {
         try {
             // Use fetch to avoid dependencies. Fire and forget.
             const payload = {
@@ -47,9 +49,9 @@ class Logger {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private sanitize(context: any): any {
-        if (!context) return undefined;
+    private sanitize(context: unknown): LogContext | undefined {
+        if (context === undefined || context === null) return undefined;
+
         // Simple sanitization to handle Error objects
         if (context instanceof Error) {
             return {
@@ -58,26 +60,24 @@ class Logger {
                 stack: context.stack,
             };
         }
+
         // Handle objects with potential circular refs (basic)
         try {
-            return JSON.parse(JSON.stringify(context));
+            return JSON.parse(JSON.stringify(context)) as LogContext;
         } catch {
-            return '[Circular / Non-Serializable]';
+            return { error: '[Circular / Non-Serializable]' };
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public info(message: string, context?: any) {
+    public info(message: string, context?: unknown) {
         this.log('info', message, context);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public warn(message: string, context?: any) {
+    public warn(message: string, context?: unknown) {
         this.log('warn', message, context);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public error(message: string, context?: any) {
+    public error(message: string, context?: unknown) {
         this.log('error', message, context);
     }
 }
