@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { logger } from '../../lib/logger';
 
 interface Props {
     children?: ReactNode;
@@ -23,8 +24,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error('Uncaught error:', error, errorInfo);
-        // dataDog/Sentry logging would go here
+        // Log to our backend logger
+        logger.error('Uncaught error in ErrorBoundary', { error, errorInfo });
     }
 
     private handleReload = () => {

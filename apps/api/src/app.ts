@@ -46,6 +46,11 @@ export const startExpressServer = async () => {
 
     // 4. Public Routes
     app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
+
+    // Logs ingestion
+    const logsController = new (await import('./shared/controllers/logs.controller')).LogsController();
+    app.post('/api/logs', (req, res, next) => logsController.ingest(req, res, next));
+
     app.use('/api/receipts', receiptsPublicRouter); // Public receipt downloads
     app.use('/auth', authRoutes);
 
