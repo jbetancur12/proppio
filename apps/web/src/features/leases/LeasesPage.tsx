@@ -1,38 +1,52 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
-import { Plus, Search, FileText } from "lucide-react";
-import { useLeases, useCreateLease, useActivateLease, useTerminateLease } from "./hooks/useLeases";
-import { useRenters } from "../renters/hooks/useRenters";
-import { useProperties } from "../properties/hooks/useProperties";
-import { LeaseCard } from "./components/LeaseCard";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createLeaseSchema, CreateLeaseDto } from "@proppio/shared";
-import { FormField } from "@/components/forms/FormField";
-import { CurrencyInput } from "@/components/ui/CurrencyInput";
-import { toUTC } from "@/lib/dateUtils";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { useState, useEffect } from 'react';
+import { Plus, Search, FileText } from 'lucide-react';
+import { useLeases, useCreateLease, useActivateLease, useTerminateLease } from './hooks/useLeases';
+import { useRenters } from '../renters/hooks/useRenters';
+import { useProperties } from '../properties/hooks/useProperties';
+import { LeaseCard } from './components/LeaseCard';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { createLeaseSchema, CreateLeaseDto } from '@proppio/shared';
+import { FormField } from '@/components/forms/FormField';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { toUTC } from '@/lib/dateUtils';
 
 interface Unit {
     id: string;
     name: string;
+    status: 'VACANT' | 'OCCUPIED' | 'MAINTENANCE';
     propertyName?: string;
-    status: string;
+}
+
+interface Property {
+    id: string;
+    name: string;
+    units: Unit[];
 }
 
 interface Renter {
     id: string;
     firstName: string;
     lastName: string;
+    documentNumber: string;
+}
+
+interface Renter {
+    id: string;
+    firstName: string;
+    lastName: string;
+    documentNumber: string;
 }
 
 export function LeasesPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [isCreating, setIsCreating] = useState(false);
-    const [duration, setDuration] = useState("12"); // For date calculation
+    const [duration, setDuration] = useState('12'); // For date calculation
 
     const { data: leases, isLoading } = useLeases();
     const { data: renters } = useRenters();
@@ -42,11 +56,19 @@ export function LeasesPage() {
     const terminateMutation = useTerminateLease();
 
     // Form with validation
-    const { register, handleSubmit, formState: { errors }, reset, setValue, watch, control } = useForm<CreateLeaseDto>({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+        setValue,
+        watch,
+        control,
+    } = useForm<CreateLeaseDto>({
         resolver: zodResolver(createLeaseSchema),
         defaultValues: {
-            monthlyRent: 0
-        }
+            monthlyRent: 0,
+        },
     });
 
     const startDate = watch('startDate');
@@ -76,13 +98,13 @@ export function LeasesPage() {
     }, [startDate, duration, setValue]);
 
     // Flatten units from all properties and filter only VACANT ones
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const allUnits = properties?.flatMap((p: any) =>
-        (p.units || [])
-            .filter((u: Unit) => u.status === 'VACANT')
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .map((u: any) => ({ ...u, propertyName: p.name }))
-    ) || [];
+    // Flatten units from all properties and filter only VACANT ones
+    const allUnits =
+        properties?.flatMap((p: Property) =>
+            (p.units || [])
+                .filter((u: Unit) => u.status === 'VACANT')
+                .map((u: Unit) => ({ ...u, propertyName: p.name })),
+        ) || [];
 
     const onSubmit = (data: CreateLeaseDto) => {
         const formattedData = {
@@ -94,9 +116,9 @@ export function LeasesPage() {
         createMutation.mutate(formattedData, {
             onSuccess: () => {
                 reset();
-                setDuration("12");
+                setDuration('12');
                 setIsCreating(false);
-            }
+            },
         });
     };
 
@@ -128,7 +150,9 @@ export function LeasesPage() {
                                 >
                                     <option value="">Seleccionar unidad...</option>
                                     {allUnits.map((u: Unit) => (
-                                        <option key={u.id} value={u.id}>{u.propertyName} - {u.name}</option>
+                                        <option key={u.id} value={u.id}>
+                                            {u.propertyName} - {u.name}
+                                        </option>
                                     ))}
                                 </select>
                             </FormField>
@@ -139,7 +163,9 @@ export function LeasesPage() {
                                 >
                                     <option value="">Seleccionar inquilino...</option>
                                     {renters?.map((r: Renter) => (
-                                        <option key={r.id} value={r.id}>{r.firstName} {r.lastName}</option>
+                                        <option key={r.id} value={r.id}>
+                                            {r.firstName} {r.lastName}
+                                        </option>
                                     ))}
                                 </select>
                             </FormField>
@@ -152,29 +178,42 @@ export function LeasesPage() {
                                         {...register('isExisting')}
                                         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                                     />
-                                    <label htmlFor="isExisting" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    <label
+                                        htmlFor="isExisting"
+                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                    >
                                         ¿Es un contrato existente (migración)?
                                     </label>
                                 </div>
                                 <p className="text-xs text-gray-500 ml-6">
-                                    Marca esta opción si el contrato ya está en curso. Esto evitará generar cobros retroactivos.
+                                    Marca esta opción si el contrato ya está en curso. Esto evitará generar cobros
+                                    retroactivos.
                                 </p>
 
                                 {watch('isExisting') && (
-                                    <FormField label="Fecha de Primer Cobro en Proppio" error={errors.firstPaymentDate?.message} required>
+                                    <FormField
+                                        label="Fecha de Primer Cobro en Proppio"
+                                        error={errors.firstPaymentDate?.message}
+                                        required
+                                    >
                                         <Input
                                             type="date"
                                             {...register('firstPaymentDate')}
                                             className={`bg-white ${errors.firstPaymentDate ? 'border-destructive' : ''}`}
                                         />
                                         <p className="text-xs text-gray-500 mt-1">
-                                            A partir de esta fecha se generarán los recibos automáticos. Meses anteriores no tendrán cobro.
+                                            A partir de esta fecha se generarán los recibos automáticos. Meses
+                                            anteriores no tendrán cobro.
                                         </p>
                                     </FormField>
                                 )}
                             </div>
 
-                            <FormField label={watch('isExisting') ? "Fecha Original de Inicio" : "Fecha Inicio"} error={errors.startDate?.message} required>
+                            <FormField
+                                label={watch('isExisting') ? 'Fecha Original de Inicio' : 'Fecha Inicio'}
+                                error={errors.startDate?.message}
+                                required
+                            >
                                 <Input
                                     type="date"
                                     {...register('startDate')}
@@ -186,7 +225,7 @@ export function LeasesPage() {
                                 <Input
                                     type="number"
                                     value={duration}
-                                    onChange={e => setDuration(e.target.value)}
+                                    onChange={(e) => setDuration(e.target.value)}
                                     className="bg-white"
                                 />
                             </div>
@@ -226,10 +265,18 @@ export function LeasesPage() {
                                     )}
                                 />
                             </FormField>
-
                         </CardContent>
                         <div className="px-6 pb-6 flex justify-end gap-2">
-                            <Button type="button" variant="ghost" onClick={() => { reset(); setIsCreating(false); }}>Cancelar</Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => {
+                                    reset();
+                                    setIsCreating(false);
+                                }}
+                            >
+                                Cancelar
+                            </Button>
                             <Button type="submit" disabled={createMutation.isPending}>
                                 {createMutation.isPending ? 'Guardando...' : 'Crear Contrato'}
                             </Button>
@@ -250,7 +297,9 @@ export function LeasesPage() {
 
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {[1, 2].map(i => <div key={i} className="h-40 bg-gray-100 animate-pulse rounded-xl"></div>)}
+                        {[1, 2].map((i) => (
+                            <div key={i} className="h-40 bg-gray-100 animate-pulse rounded-xl"></div>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -275,6 +324,6 @@ export function LeasesPage() {
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
 }
