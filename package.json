@@ -20,10 +20,12 @@
         "apps/api/**/*.{ts}": "eslint --config apps/api/eslint.config.js --fix"
     },
     "devDependencies": {
+        "@vitejs/plugin-react": "^5.1.1",
         "eslint": "^9.39.2",
         "husky": "^9.1.7",
         "lint-staged": "^16.2.7",
         "prettier": "^3.7.4",
-        "turbo": "^2.7.4"
+        "turbo": "^2.7.4",
+        "vite": "^5.3.1"
     }
 }
