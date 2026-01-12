@@ -7,6 +7,24 @@ import { Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toUTC } from '@/lib/dateUtils';
+import { translateAuditAction, translateResourceType } from '@/lib/auditTranslations';
+
+interface AuditLog {
+    id: string;
+    createdAt: string;
+    action: string;
+    resourceType?: string;
+    resourceId?: string;
+    user?: {
+        firstName: string;
+        lastName: string;
+        email: string;
+    };
+    tenant?: {
+        name: string;
+    };
+    details?: Record<string, unknown>;
+}
 
 export function AuditLogsPage() {
     const [filters, setFilters] = useState({
@@ -14,14 +32,14 @@ export function AuditLogsPage() {
         startDate: '',
         endDate: '',
         limit: 50,
-        offset: 0
+        offset: 0,
     });
 
     // Transform dates to UTC ranges respecting user timezone
     const queryFilters = {
         ...filters,
         startDate: filters.startDate ? toUTC(new Date(`${filters.startDate}T00:00:00`)) : undefined,
-        endDate: filters.endDate ? toUTC(new Date(`${filters.endDate}T23:59:59.999`)) : undefined
+        endDate: filters.endDate ? toUTC(new Date(`${filters.endDate}T23:59:59.999`)) : undefined,
     };
 
     const { data, isLoading } = useAuditLogs(queryFilters);
@@ -51,19 +69,19 @@ export function AuditLogsPage() {
                         <Input
                             placeholder="Buscar por acción..."
                             value={filters.action}
-                            onChange={(e) => setFilters(prev => ({ ...prev, action: e.target.value }))}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, action: e.target.value }))}
                         />
                         <Input
                             type="date"
                             placeholder="Fecha inicio"
                             value={filters.startDate}
-                            onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
                         />
                         <Input
                             type="date"
                             placeholder="Fecha fin"
                             value={filters.endDate}
-                            onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
                         />
                     </div>
                 </CardContent>
@@ -85,21 +103,33 @@ export function AuditLogsPage() {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Fecha</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Usuario</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Tenant</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Acción</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Recurso</th>
-                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Detalles</th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                            Usuario
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                            Tenant
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                            Acción
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                            Recurso
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                            Detalles
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {data?.logs?.map((log: any) => (
+                                    {data?.logs?.map((log: AuditLog) => (
                                         <tr key={log.id} className="hover:bg-gray-50">
                                             <td className="px-4 py-3 text-sm text-gray-600">
                                                 {format(new Date(log.createdAt), 'PP pp', { locale: es })}
                                             </td>
                                             <td className="px-4 py-3 text-sm">
-                                                <div className="font-medium text-gray-900">{log.user?.firstName} {log.user?.lastName}</div>
+                                                <div className="font-medium text-gray-900">
+                                                    {log.user?.firstName} {log.user?.lastName}
+                                                </div>
                                                 <div className="text-xs text-gray-500">{log.user?.email}</div>
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-600">
@@ -113,14 +143,18 @@ export function AuditLogsPage() {
                                             </td>
                                             <td className="px-4 py-3 text-sm">
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                    {log.action}
+                                                    {translateAuditAction(log.action)}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3 text-sm text-gray-600">
                                                 {log.resourceType && (
                                                     <div>
-                                                        <span className="font-medium">{log.resourceType}</span>
-                                                        <span className="text-xs text-gray-400 ml-1">#{log.resourceId?.substring(0, 8)}</span>
+                                                        <span className="font-medium">
+                                                            {translateResourceType(log.resourceType)}
+                                                        </span>
+                                                        <span className="text-xs text-gray-400 ml-1">
+                                                            #{log.resourceId?.substring(0, 8)}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </td>
