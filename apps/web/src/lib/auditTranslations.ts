@@ -47,6 +47,7 @@ export function translateAuditAction(action: string): string {
         UPDATE_TENANT: 'Actualizar Tenant',
         DELETE_TENANT: 'Eliminar Tenant',
         UPDATE_TENANT_STATUS: 'Actualizar Estado de Tenant',
+        UPDATE_TENANT_CONFIG: 'Actualizar Configuración de Tenant',
 
         // Users
         CREATE_USER: 'Crear Usuario',
