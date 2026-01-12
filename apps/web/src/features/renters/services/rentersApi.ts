@@ -1,9 +1,19 @@
-import { api } from "../../../api/client";
+import { api } from '../../../api/client';
+import { PaginatedResponse } from '@/types/pagination';
+
+export interface Renter {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone: string;
+    identification: string;
+}
 
 export const rentersApi = {
-    getAll: async () => {
-        const res = await api.get('/api/renters');
-        return res.data.data; // ApiResponse format
+    getAll: async (params?: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Renter>> => {
+        const res = await api.get('/api/renters', { params });
+        return res.data; // Returns { data: [], meta: {...}, success: true }
     },
 
     create: async (data: {
@@ -17,13 +27,16 @@ export const rentersApi = {
         return res.data.data;
     },
 
-    update: async (id: string, data: Partial<{
-        firstName: string;
-        lastName: string;
-        email?: string;
-        phone: string;
-        identification: string;
-    }>) => {
+    update: async (
+        id: string,
+        data: Partial<{
+            firstName: string;
+            lastName: string;
+            email?: string;
+            phone: string;
+            identification: string;
+        }>,
+    ) => {
         const res = await api.put(`/api/renters/${id}`, data);
         return res.data.data;
     },
@@ -31,5 +44,5 @@ export const rentersApi = {
     getHistory: async (id: string) => {
         const res = await api.get(`/api/renters/${id}/history`);
         return res.data.data;
-    }
+    },
 };

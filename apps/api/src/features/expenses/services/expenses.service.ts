@@ -4,14 +4,38 @@ import { CreateExpenseDto, UpdateExpenseDto } from '../dtos/expense.dto';
 import { PropertyEntity } from '../../properties/entities/Property';
 import { UnitEntity } from '../../properties/entities/Unit';
 import { NotFoundError, ValidationError } from '../../../shared/errors/AppError';
+import { PaginationDto, PaginatedResponse } from '../../../shared/dtos/pagination.dto';
 
 export class ExpensesService {
     constructor(private readonly em: EntityManager) {}
 
-    async findAll(propertyId?: string): Promise<Expense[]> {
+    async findAll(query: PaginationDto & { propertyId?: string }): Promise<PaginatedResponse<Expense>> {
+        const { page = 1, limit = 10, search, propertyId } = query;
+        const offset = (page - 1) * limit;
+
         const where: FilterQuery<Expense> = {};
         if (propertyId) where.property = { id: propertyId } as any;
-        return this.em.find(Expense, where, { populate: ['property', 'unit'], orderBy: { date: 'DESC' } });
+
+        if (search) {
+            where.description = { $ilike: `%${search}%` };
+        }
+
+        const [items, total] = await this.em.findAndCount(Expense, where, {
+            populate: ['property', 'unit'],
+            orderBy: { date: 'DESC' },
+            limit,
+            offset,
+        });
+
+        return {
+            data: items,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
 
     async findOne(id: string): Promise<Expense> {

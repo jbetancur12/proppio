@@ -1,4 +1,5 @@
-import { api } from "../../../api/client";
+import { api } from '../../../api/client';
+import { PaginatedResponse } from '@/types/pagination';
 
 export interface ExpenseData {
     id: string;
@@ -14,10 +15,14 @@ export interface ExpenseData {
 }
 
 export const expensesApi = {
-    getAll: async (propertyId?: string): Promise<ExpenseData[]> => {
-        const url = propertyId ? `/api/expenses?propertyId=${propertyId}` : '/api/expenses';
-        const res = await api.get(url);
-        return res.data.data;
+    getAll: async (params?: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        propertyId?: string;
+    }): Promise<PaginatedResponse<ExpenseData>> => {
+        const res = await api.get('/api/expenses', { params });
+        return res.data;
     },
 
     getById: async (id: string): Promise<ExpenseData> => {
@@ -47,5 +52,5 @@ export const expensesApi = {
 
     delete: async (id: string) => {
         await api.delete(`/api/expenses/${id}`);
-    }
+    },
 };

@@ -1,16 +1,44 @@
-import { EntityManager } from "@mikro-orm/core";
-import { Renter } from "../entities/Renter";
-import { CreateRenterDto, UpdateRenterDto } from "../dtos/renter.dto";
-import { AppError, NotFoundError, ValidationError } from "../../../shared/errors/AppError";
-import { Lease } from "../../leases/entities/Lease";
-import { Payment } from "../../payments/entities/Payment";
-import { MaintenanceTicket } from "../../maintenance/entities/MaintenanceTicket";
+import { EntityManager } from '@mikro-orm/core';
+import { Renter } from '../entities/Renter';
+import { CreateRenterDto, UpdateRenterDto } from '../dtos/renter.dto';
+import { AppError, NotFoundError, ValidationError } from '../../../shared/errors/AppError';
+import { Lease } from '../../leases/entities/Lease';
+import { Payment } from '../../payments/entities/Payment';
+import { MaintenanceTicket } from '../../maintenance/entities/MaintenanceTicket';
+import { PaginationDto, PaginatedResponse } from '../../../shared/dtos/pagination.dto';
 
 export class RentersService {
-    constructor(private readonly em: EntityManager) { }
+    constructor(private readonly em: EntityManager) {}
 
-    async findAll(): Promise<Renter[]> {
-        return this.em.find(Renter, {});
+    async findAll(query: PaginationDto): Promise<PaginatedResponse<Renter>> {
+        const { page = 1, limit = 10, search } = query;
+        const offset = (page - 1) * limit;
+
+        const where: any = {};
+        if (search) {
+            where.$or = [
+                { firstName: { $ilike: `%${search}%` } },
+                { lastName: { $ilike: `%${search}%` } },
+                { email: { $ilike: `%${search}%` } },
+                { identification: { $ilike: `%${search}%` } },
+            ];
+        }
+
+        const [items, total] = await this.em.findAndCount(Renter, where, {
+            limit,
+            offset,
+            orderBy: { createdAt: 'DESC' },
+        });
+
+        return {
+            data: items,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
 
     async findOne(id: string): Promise<Renter> {
@@ -36,7 +64,7 @@ export class RentersService {
                 action: 'CREATE_RENTER',
                 resourceType: 'Renter',
                 resourceId: renter.id,
-                newValues: data
+                newValues: data,
             });
         } catch (error) {
             console.error('Audit log failed for create renter:', error);
@@ -70,9 +98,9 @@ export class RentersService {
                     lastName: oldValues.lastName,
                     email: oldValues.email,
                     phone: oldValues.phone,
-                    identification: oldValues.identification
+                    identification: oldValues.identification,
                 },
-                newValues: data
+                newValues: data,
             });
         } catch (error) {
             console.error('Audit log failed for update renter:', error);
@@ -85,7 +113,7 @@ export class RentersService {
         const renter = await this.findOne(id);
         const oldValues = {
             name: `${renter.firstName} ${renter.lastName}`,
-            email: renter.email
+            email: renter.email,
         };
 
         await this.em.removeAndFlush(renter);
@@ -97,7 +125,7 @@ export class RentersService {
                 action: 'DELETE_RENTER',
                 resourceType: 'Renter',
                 resourceId: id,
-                oldValues
+                oldValues,
             });
         } catch (error) {
             console.error('Audit log failed for delete renter:', error);
@@ -108,22 +136,35 @@ export class RentersService {
         const renter = await this.findOne(id);
 
         // Find Leases
-        const leases = await this.em.find(Lease, { renter }, { populate: ['unit', 'unit.property'], orderBy: { startDate: 'DESC' } });
-        const leaseIds = leases.map(l => l.id);
+        const leases = await this.em.find(
+            Lease,
+            { renter },
+            { populate: ['unit', 'unit.property'], orderBy: { startDate: 'DESC' } },
+        );
+        const leaseIds = leases.map((l) => l.id);
 
         // Find Payments (linked to Renter's leases)
-        const payments = leaseIds.length > 0
-            ? await this.em.find(Payment, { lease: { $in: leaseIds } }, { populate: ['lease', 'lease.unit'], orderBy: { paymentDate: 'DESC' } })
-            : [];
+        const payments =
+            leaseIds.length > 0
+                ? await this.em.find(
+                      Payment,
+                      { lease: { $in: leaseIds } },
+                      { populate: ['lease', 'lease.unit'], orderBy: { paymentDate: 'DESC' } },
+                  )
+                : [];
 
         // Find Tickets
-        const tickets = await this.em.find(MaintenanceTicket, { reportedBy: renter }, { populate: ['unit', 'unit.property'], orderBy: { createdAt: 'DESC' } });
+        const tickets = await this.em.find(
+            MaintenanceTicket,
+            { reportedBy: renter },
+            { populate: ['unit', 'unit.property'], orderBy: { createdAt: 'DESC' } },
+        );
 
         return {
             renter,
             leases,
             payments,
-            tickets
+            tickets,
         };
     }
 }

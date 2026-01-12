@@ -4,9 +4,9 @@ import { ExpensesService } from '../services/expenses.service';
 import { createExpenseSchema, updateExpenseSchema } from '../dtos/expense.dto';
 import { ApiResponse } from '../../../shared/utils/ApiResponse';
 import { ValidationError } from '../../../shared/errors/AppError';
+import { paginationSchema } from '../../../shared/dtos/pagination.dto';
 
 export class ExpensesController {
-
     private getService(): ExpensesService {
         const em = RequestContext.getEntityManager();
         if (!em) throw new Error('EntityManager not found in context');
@@ -16,9 +16,13 @@ export class ExpensesController {
     async list(req: Request, res: Response, next: NextFunction) {
         try {
             const { propertyId } = req.query;
+            const validation = paginationSchema.safeParse(req.query);
+            const query = validation.success ? validation.data : { page: 1, limit: 10 };
+
             const service = this.getService();
-            const expenses = await service.findAll(propertyId as string);
-            ApiResponse.success(res, expenses);
+            const result = await service.findAll({ ...query, propertyId: propertyId as string });
+
+            ApiResponse.paginated(res, result.data, result.meta.total, result.meta.page, result.meta.limit);
         } catch (error) {
             next(error);
         }

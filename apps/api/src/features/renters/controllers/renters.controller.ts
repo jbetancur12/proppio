@@ -4,9 +4,9 @@ import { RentersService } from '../services/renters.service';
 import { createRenterSchema, updateRenterSchema } from '../dtos/renter.dto';
 import { ApiResponse } from '../../../shared/utils/ApiResponse';
 import { AppError, ValidationError } from '../../../shared/errors/AppError';
+import { paginationSchema } from '../../../shared/dtos/pagination.dto';
 
 export class RentersController {
-
     private getService(): RentersService {
         const em = RequestContext.getEntityManager();
         if (!em) throw new Error('EntityManager not found in context');
@@ -15,9 +15,22 @@ export class RentersController {
 
     async list(req: Request, res: Response, next: NextFunction) {
         try {
+            const validation = paginationSchema.safeParse(req.query);
+            if (!validation.success) {
+                // Should return validation error, but for list we can specific
+                // Or just use default if invalid? safeParse validation ensures types
+            }
+            // If validation fails, use defaults or throw. Let's throw specific error if malformed
+            // but for query params usually we ignore extra params.
+            // Zod coerce will handle string -> number.
+
+            const query = validation.success ? validation.data : { page: 1, limit: 10 };
+
             const service = this.getService();
-            const renters = await service.findAll();
-            ApiResponse.success(res, renters);
+            const result = await service.findAll(query);
+
+            // Use static helper if generic result, or manually
+            ApiResponse.paginated(res, result.data, result.meta.total, result.meta.page, result.meta.limit);
         } catch (error) {
             next(error);
         }

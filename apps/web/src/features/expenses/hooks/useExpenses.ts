@@ -1,11 +1,19 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { expensesApi } from "../services/expensesApi";
-import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { expensesApi } from '../services/expensesApi';
+import { toast } from 'sonner';
 
-export function useExpenses(propertyId?: string) {
+interface UseExpensesParams {
+    page?: number;
+    limit?: number;
+    search?: string;
+    propertyId?: string;
+}
+
+export function useExpenses(params: UseExpensesParams = {}) {
     return useQuery({
-        queryKey: ['expenses', propertyId],
-        queryFn: () => expensesApi.getAll(propertyId)
+        queryKey: ['expenses', params],
+        queryFn: () => expensesApi.getAll(params),
+        placeholderData: (previousData) => previousData,
     });
 }
 
@@ -27,12 +35,12 @@ export function useCreateExpense() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['expenses'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-            toast.success("Gasto registrado exitosamente");
+            toast.success('Gasto registrado exitosamente');
         },
         onError: (error: unknown) => {
             const apiError = error as ApiError;
-            toast.error(apiError.response?.data?.error?.message || "Error al registrar gasto");
-        }
+            toast.error(apiError.response?.data?.error?.message || 'Error al registrar gasto');
+        },
     });
 }
 
@@ -44,8 +52,8 @@ export function useDeleteExpense() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['expenses'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-            toast.success("Gasto eliminado");
+            toast.success('Gasto eliminado');
         },
-        onError: () => toast.error("Error al eliminar gasto")
+        onError: () => toast.error('Error al eliminar gasto'),
     });
 }
