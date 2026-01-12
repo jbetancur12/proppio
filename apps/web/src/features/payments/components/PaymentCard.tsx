@@ -2,7 +2,7 @@ import { DollarSign, Calendar, CreditCard, CheckCircle, XCircle, Clock, Download
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { PaymentData } from "../services/paymentsApi";
+import { Payment } from "@proppio/types";
 import { useState } from "react";
 import { paymentsApi } from "../services/paymentsApi";
 import { toast } from "sonner";
@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface PaymentCardProps {
-    payment: PaymentData;
-    onAction?: (payment: PaymentData) => void;
+    payment: Payment;
+    onAction?: (payment: Payment) => void;
     onDelete?: (id: string) => void;
 }
 
@@ -66,7 +66,7 @@ export function PaymentCard({ payment, onAction, onDelete }: PaymentCardProps) {
         try {
             setIsDownloading(true);
             await paymentsApi.downloadReceipt(payment.id, payment.reference);
-        } catch (error) {
+        } catch {
             toast.error("Error al descargar el recibo");
         } finally {
             setIsDownloading(false);

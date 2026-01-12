@@ -1,13 +1,13 @@
 import { Wrench, Zap, Hammer, FileText, Shield, HelpCircle, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { ExpenseData } from "../services/expensesApi";
+import { Expense } from "@proppio/types";
 
 interface ExpenseCardProps {
-    expense: ExpenseData;
+    expense: Expense;
 }
 
-const categoryConfig: Record<string, { label: string; icon: any; color: string }> = {
+const categoryConfig: Record<string, { label: string; icon: React.ComponentType<{ size?: number }>; color: string }> = {
     MAINTENANCE: { label: 'Mantenimiento', icon: Wrench, color: 'text-blue-600 bg-blue-50' },
     REPAIRS: { label: 'Reparación', icon: Hammer, color: 'text-orange-600 bg-orange-50' },
     UTILITIES: { label: 'Servicios', icon: Zap, color: 'text-yellow-600 bg-yellow-50' },
