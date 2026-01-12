@@ -50,7 +50,8 @@ export class UnitsService {
         const units = await this.unitRepo.find(
             { property: { id: propertyId } },
             {
-                populate: ['leases', 'leases.renter', 'leases.payments'] as any,
+                // Removed 'as any' - assuming relations are correctly typed in Entity
+                populate: ['leases', 'leases.renter', 'leases.payments'],
                 populateWhere: {
                     leases: { status: LeaseStatus.ACTIVE },
                 },
@@ -63,22 +64,32 @@ export class UnitsService {
         const warningDate = new Date();
         warningDate.setDate(today.getDate() + 60);
 
+        // Date Normalization for robust comparison
+        today.setHours(0, 0, 0, 0);
+        warningDate.setHours(23, 59, 59, 999);
+
         return units.map((unit) => {
-            // Since we filtered in the query, the collection only contains active leases (max 1)
-            const activeLease = unit.leases.getItems()[0];
+            // Defensive: Check if collection is initialized
+            const activeLease = unit.leases.isInitialized() ? unit.leases.getItems()[0] : undefined;
 
             const alerts: string[] = [];
 
             if (activeLease) {
-                // Check Expiry
+                // Check Expiry with normalized dates
                 const endDate = new Date(activeLease.endDate);
+                endDate.setHours(0, 0, 0, 0);
+
                 if (endDate <= warningDate && endDate >= today) {
                     alerts.push('EXPIRING_LEASE');
                 }
 
                 // Check Pending Payments
-                // We loaded payments for the active lease, so we can check them
-                const hasPendingPayments = activeLease.payments.getItems().some((p) => p.status === 'PENDING');
+                // Defensive check + length check
+                // We loaded all payments for the active lease, so we filter in memory
+                const hasPendingPayments =
+                    activeLease.payments.isInitialized() &&
+                    activeLease.payments.getItems().some((p) => p.status === 'PENDING');
+
                 if (hasPendingPayments) {
                     alerts.push('PENDING_PAYMENTS');
                 }
@@ -90,10 +101,13 @@ export class UnitsService {
                 activeLease: activeLease
                     ? {
                           id: activeLease.id,
-                          renterId: activeLease.renter.id,
-                          renterName: `${activeLease.renter.firstName} ${activeLease.renter.lastName}`,
-                          email: activeLease.renter.email,
-                          phone: activeLease.renter.phone,
+                          // Safe access to renter (it might be null in edge cases)
+                          renterId: activeLease.renter?.id ?? null,
+                          renterName: activeLease.renter
+                              ? `${activeLease.renter.firstName} ${activeLease.renter.lastName}`
+                              : null,
+                          email: activeLease.renter?.email ?? null,
+                          phone: activeLease.renter?.phone ?? null,
                           startDate: activeLease.startDate,
                           endDate: activeLease.endDate,
                           monthlyRent: activeLease.monthlyRent,
