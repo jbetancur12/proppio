@@ -24,6 +24,16 @@ export function useLease(id: string) {
     });
 }
 
+interface ApiError {
+    response?: {
+        data?: {
+            error?: {
+                message?: string;
+            };
+        };
+    };
+}
+
 export function useCreateLease() {
     const queryClient = useQueryClient();
 
@@ -33,8 +43,9 @@ export function useCreateLease() {
             queryClient.invalidateQueries({ queryKey: ['leases'] });
             toast.success("Contrato creado!");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al crear contrato");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al crear contrato");
         }
     });
 }
@@ -48,8 +59,9 @@ export function useActivateLease() {
             queryClient.invalidateQueries({ queryKey: ['leases'] });
             toast.success("Contrato activado!");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al activar contrato");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al activar contrato");
         }
     });
 }
@@ -63,8 +75,9 @@ export function useTerminateLease() {
             queryClient.invalidateQueries({ queryKey: ['leases'] });
             toast.success("Contrato terminado");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al terminar contrato");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al terminar contrato");
         }
     });
 }
@@ -78,8 +91,9 @@ export function useUploadContract() {
             queryClient.invalidateQueries({ queryKey: ['lease', variables.id] });
             toast.success("Contrato subido exitosamente");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al subir contrato");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al subir contrato");
         }
     });
 }

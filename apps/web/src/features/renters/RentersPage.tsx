@@ -11,6 +11,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createRenterSchema, CreateRenterDto } from "@proppio/shared";
 import { FormField } from "@/components/forms/FormField";
 
+interface Renter {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone: string;
+    identification: string;
+}
+
 /**
  * Container component - manages state and orchestrates data flow
  * Following design_guidelines.md section 3.1
@@ -123,7 +132,7 @@ export function RentersPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {renters?.map((renter: any) => (
+                        {renters?.map((renter: Renter) => (
                             <RenterCard key={renter.id} renter={renter} onClick={() => navigate(`/renters/${renter.id}`)} />
                         ))}
                         {renters?.length === 0 && (

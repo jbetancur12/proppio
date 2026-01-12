@@ -17,6 +17,16 @@ export function useTenant(id: string) {
     });
 }
 
+interface ApiError {
+    response?: {
+        data?: {
+            error?: {
+                message?: string;
+            };
+        };
+    };
+}
+
 export function useCreateTenant() {
     const queryClient = useQueryClient();
 
@@ -26,8 +36,9 @@ export function useCreateTenant() {
             queryClient.invalidateQueries({ queryKey: ['admin-tenants'] });
             toast.success('Tenant creado exitosamente');
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || 'Error al crear tenant');
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || 'Error al crear tenant');
         }
     });
 }
@@ -43,8 +54,9 @@ export function useUpdateTenantStatus() {
             queryClient.invalidateQueries({ queryKey: ['admin-tenant', variables.id] });
             toast.success(`Tenant ${variables.status === 'ACTIVE' ? 'activado' : 'suspendido'} exitosamente`);
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || 'Error al actualizar tenant');
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || 'Error al actualizar tenant');
         }
     });
 }
@@ -56,7 +68,7 @@ export function useGlobalMetrics() {
     });
 }
 
-export function useAuditLogs(filters: any) {
+export function useAuditLogs(filters: Record<string, unknown>) {
     return useQuery({
         queryKey: ['admin-audit-logs', filters],
         queryFn: () => adminApi.getAuditLogs(filters)

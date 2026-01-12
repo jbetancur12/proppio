@@ -10,6 +10,14 @@ export function useExitNotices(leaseId: string) {
     });
 }
 
+interface ApiError {
+    response?: {
+        data?: {
+            message?: string;
+        };
+    };
+}
+
 export function useCreateExitNotice() {
     const queryClient = useQueryClient();
 
@@ -21,8 +29,9 @@ export function useCreateExitNotice() {
             queryClient.invalidateQueries({ queryKey: ['lease', variables.leaseId] });
             toast.success('Aviso de salida registrado exitosamente');
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Error al registrar aviso de salida');
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.message || 'Error al registrar aviso de salida');
         }
     });
 }
@@ -37,8 +46,9 @@ export function useConfirmExitNotice() {
             queryClient.invalidateQueries({ queryKey: ['lease'] });
             toast.success('Aviso de salida confirmado');
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Error al confirmar aviso');
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.message || 'Error al confirmar aviso');
         }
     });
 }
@@ -52,8 +62,9 @@ export function useCancelExitNotice() {
             queryClient.invalidateQueries({ queryKey: ['exitNotices'] });
             toast.success('Aviso de salida cancelado');
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Error al cancelar aviso');
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.message || 'Error al cancelar aviso');
         }
     });
 }

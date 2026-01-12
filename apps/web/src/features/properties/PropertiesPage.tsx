@@ -11,6 +11,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createPropertySchema, CreatePropertyDto } from "@proppio/shared";
 import { FormField } from "@/components/forms/FormField";
 
+interface Property {
+    id: string;
+    name: string;
+    address: string;
+    units?: unknown[];
+    alerts?: string[];
+    occupancyRate?: number;
+}
+
 export function PropertiesPage() {
     const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
@@ -94,7 +103,7 @@ export function PropertiesPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {properties?.map((property: any) => (
+                        {properties?.map((property: Property) => (
                             <PropertyCard key={property.id} property={property} onClick={() => navigate(`/properties/${property.id}`)} />
                         ))}
                         {properties?.length === 0 && (

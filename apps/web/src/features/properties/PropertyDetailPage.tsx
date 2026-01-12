@@ -16,6 +16,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createUnitSchema, CreateUnitDto } from "@proppio/shared";
 import { FormField } from "@/components/forms/FormField";
 
+interface Unit {
+    id: string;
+    name: string;
+    type?: string;
+    bedrooms?: number;
+    bathrooms?: number;
+    area?: number;
+    baseRent?: number;
+    status?: 'VACANT' | 'OCCUPIED' | 'MAINTENANCE';
+    activeLease?: {
+        id: string;
+        renterName: string;
+    };
+    alerts?: string[];
+}
+
 /**
  * Container component for Property Details
  * Following design_guidelines.md section 3.1
@@ -23,7 +39,7 @@ import { FormField } from "@/components/forms/FormField";
 export function PropertyDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [editingUnit, setEditingUnit] = useState<any>(null);
+    const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
     const [activeTab, setActiveTab] = useState("units");
 
     const { data: property, isLoading: loadingProp } = useProperty(id || "");
@@ -122,7 +138,7 @@ export function PropertyDetailPage() {
 
                             {loadingUnits ? <p>Cargando...</p> : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {units?.map((u: any) => (
+                                    {units?.map((u: Unit) => (
                                         <Card key={u.id} className={`hover:border-indigo-300 transition-colors group ${u.activeLease ? 'border-green-100 bg-green-50/20' : ''}`}>
                                             <CardContent className="p-4 flex justify-between items-center">
                                                 <div>
@@ -160,7 +176,7 @@ export function PropertyDetailPage() {
                                                                 className="text-xs font-semibold text-indigo-600 cursor-pointer hover:underline flex items-center justify-end gap-1"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    navigate(`/leases/${u.activeLease.id}`);
+                                                                    navigate(`/leases/${u.activeLease!.id}`);
                                                                 }}
                                                             >
                                                                 <User size={10} />
@@ -226,26 +242,26 @@ export function PropertyDetailPage() {
                                     <div className="space-y-4 py-4">
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium">Nombre / Número</label>
-                                            <Input defaultValue={editingUnit?.name} onChange={e => setEditingUnit({ ...editingUnit, name: e.target.value })} />
+                                            <Input defaultValue={editingUnit?.name} onChange={e => setEditingUnit(prev => prev ? { ...prev, name: e.target.value } as Unit : null)} />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium">Habitaciones</label>
-                                                <Input type="number" defaultValue={editingUnit?.bedrooms} onChange={e => setEditingUnit({ ...editingUnit, bedrooms: parseInt(e.target.value) })} />
+                                                <Input type="number" defaultValue={editingUnit?.bedrooms} onChange={e => setEditingUnit(prev => prev ? { ...prev, bedrooms: parseInt(e.target.value) } as Unit : null)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium">Baños</label>
-                                                <Input type="number" defaultValue={editingUnit?.bathrooms} onChange={e => setEditingUnit({ ...editingUnit, bathrooms: parseInt(e.target.value) })} />
+                                                <Input type="number" defaultValue={editingUnit?.bathrooms} onChange={e => setEditingUnit(prev => prev ? { ...prev, bathrooms: parseInt(e.target.value) } as Unit : null)} />
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium">Área (m²)</label>
-                                                <Input type="number" defaultValue={editingUnit?.area} onChange={e => setEditingUnit({ ...editingUnit, area: parseFloat(e.target.value) })} />
+                                                <Input type="number" defaultValue={editingUnit?.area} onChange={e => setEditingUnit(prev => prev ? { ...prev, area: parseFloat(e.target.value) } as Unit : null)} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium">Canon Base</label>
-                                                <Input type="number" defaultValue={editingUnit?.baseRent} onChange={e => setEditingUnit({ ...editingUnit, baseRent: parseFloat(e.target.value) })} />
+                                                <Input type="number" defaultValue={editingUnit?.baseRent} onChange={e => setEditingUnit(prev => prev ? { ...prev, baseRent: parseFloat(e.target.value) } as Unit : null)} />
                                             </div>
                                         </div>
 
@@ -253,7 +269,7 @@ export function PropertyDetailPage() {
                                             <label className="text-sm font-medium">Estado</label>
                                             <Select
                                                 value={editingUnit?.status || 'VACANT'}
-                                                onValueChange={(val) => setEditingUnit({ ...editingUnit, status: val })}
+                                                onValueChange={(val) => setEditingUnit(prev => prev ? { ...prev, status: val as 'VACANT' | 'OCCUPIED' | 'MAINTENANCE' } as Unit : null)}
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Seleccionar estado" />
@@ -269,9 +285,13 @@ export function PropertyDetailPage() {
                                     <DialogFooter>
                                         <Button variant="outline" onClick={() => setEditingUnit(null)}>Cancelar</Button>
                                         <Button onClick={() => {
-                                            updateUnitMutation.mutate({ id: editingUnit.id, data: editingUnit }, {
-                                                onSuccess: () => setEditingUnit(null)
-                                            });
+                                            if (editingUnit) {
+                                                // Using any for data to avoid strict strict DTO mismatch with Unit interface extra props
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                                updateUnitMutation.mutate({ id: editingUnit.id, data: editingUnit as any }, {
+                                                    onSuccess: () => setEditingUnit(null)
+                                                });
+                                            }
                                         }}>Guardar Cambios</Button>
                                     </DialogFooter>
                                 </DialogContent>

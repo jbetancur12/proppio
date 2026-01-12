@@ -17,6 +17,16 @@ export function usePayment(id: string) {
     });
 }
 
+interface ApiError {
+    response?: {
+        data?: {
+            error?: {
+                message?: string;
+            };
+        };
+    };
+}
+
 export function useCreatePayment() {
     const queryClient = useQueryClient();
 
@@ -27,8 +37,9 @@ export function useCreatePayment() {
             queryClient.invalidateQueries({ queryKey: ['leases'] });
             toast.success("Pago registrado!");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al registrar pago");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al registrar pago");
         }
     });
 }
@@ -43,8 +54,9 @@ export function useUpdatePayment() {
             queryClient.invalidateQueries({ queryKey: ['leases'] }); // For pending payments count
             toast.success("Pago actualizado exitosamente");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al actualizar pago");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al actualizar pago");
         }
     });
 }
@@ -59,8 +71,9 @@ export function useDeletePayment() {
             queryClient.invalidateQueries({ queryKey: ['leases'] });
             toast.success("Pago eliminado");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al eliminar pago");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al eliminar pago");
         }
     });
 }

@@ -11,6 +11,30 @@ import { PaymentCard } from "./components/PaymentCard";
 
 // ... existing code ...
 
+interface Lease {
+    id: string;
+    monthlyRent: number;
+    status: string;
+    unit?: { name: string };
+    renter?: { firstName: string; lastName: string };
+}
+
+interface Payment {
+    id: string;
+    amount: number;
+    status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+    paymentDate: string;
+    periodStart: string;
+    periodEnd: string;
+    method: 'TRANSFER' | 'CASH' | 'CHECK' | 'CARD' | 'OTHER';
+    reference?: string;
+    lease: {
+        id: string;
+        unit: { id: string; name: string };
+        renter: { id: string; firstName: string; lastName: string };
+    };
+}
+
 /**
  * PaymentsPage - Container component
  * Following design_guidelines.md section 3.1
@@ -28,10 +52,10 @@ export function PaymentsPage() {
     });
     const [periodStart, setPeriodStart] = useState("");
     const [periodEnd, setPeriodEnd] = useState("");
-    const [method, setMethod] = useState("TRANSFER");
+    const [method, setMethod] = useState<'TRANSFER' | 'CASH' | 'CHECK' | 'CARD' | 'OTHER'>("TRANSFER");
     const [reference, setReference] = useState("");
 
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const autoSelectPaymentId = searchParams.get('paymentId');
 
     const { data: payments, isLoading } = usePayments();
@@ -40,14 +64,18 @@ export function PaymentsPage() {
     // Auto-open modal if paymentId provided
     useEffect(() => {
         if (autoSelectPaymentId && payments) {
-            const payment = payments.find((p: any) => p.id === autoSelectPaymentId);
+            const payment = payments.find((p: Payment) => p.id === autoSelectPaymentId);
             if (payment && payment.status === 'PENDING') {
                 handleRegister(payment);
                 // Optional: clear param
-                window.history.replaceState({}, '', '/payments');
+                setSearchParams(prev => {
+                    const newParams = new URLSearchParams(prev);
+                    newParams.delete('paymentId');
+                    return newParams;
+                });
             }
         }
-    }, [autoSelectPaymentId, payments]);
+    }, [autoSelectPaymentId, payments, setSearchParams]);
     const createMutation = useCreatePayment();
     const updateMutation = useUpdatePayment();
     const deleteMutation = useDeletePayment();
@@ -58,11 +86,11 @@ export function PaymentsPage() {
 
 
     // Filter active leases
-    const activeLeases = leases?.filter((l: any) => l.status === 'ACTIVE') || [];
+    const activeLeases = leases?.filter((l: Lease) => l.status === 'ACTIVE') || [];
 
     // Calculate totals
-    const totalReceived = payments?.filter((p: any) => p.status === 'COMPLETED')
-        .reduce((sum: number, p: any) => sum + p.amount, 0) || 0;
+    const totalReceived = payments?.filter((p: Payment) => p.status === 'COMPLETED')
+        .reduce((sum: number, p: Payment) => sum + p.amount, 0) || 0;
 
     const handleCreateOrUpdate = () => {
         const payload = {
@@ -91,7 +119,7 @@ export function PaymentsPage() {
                 id: editingPaymentId,
                 data: {
                     ...payload,
-                    method: payload.method as any
+                    method: payload.method
                 }
             }, { onSuccess: resetForm });
         } else {
@@ -99,7 +127,7 @@ export function PaymentsPage() {
         }
     };
 
-    const handleRegister = (payment: any) => {
+    const handleRegister = (payment: Payment) => {
         setEditingPaymentId(payment.id);
         setSelectedLease(payment.lease.id);
         setAmount(payment.amount);
@@ -182,13 +210,13 @@ export function PaymentsPage() {
                                 value={selectedLease}
                                 onChange={e => {
                                     setSelectedLease(e.target.value);
-                                    const lease = activeLeases.find((l: any) => l.id === e.target.value);
+                                    const lease = activeLeases.find((l: Lease) => l.id === e.target.value);
                                     if (lease) setAmount(lease.monthlyRent);
                                 }}
                                 disabled={!!editingPaymentId}
                             >
                                 <option value="">Seleccionar contrato activo...</option>
-                                {activeLeases.map((l: any) => (
+                                {activeLeases.map((l: Lease) => (
                                     <option key={l.id} value={l.id}>
                                         {l.unit?.name} - {l.renter?.firstName} {l.renter?.lastName} ({formatCurrency(l.monthlyRent)}/mes)
                                     </option>
@@ -221,7 +249,7 @@ export function PaymentsPage() {
                             <select
                                 className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white"
                                 value={method}
-                                onChange={e => setMethod(e.target.value)}
+                                onChange={e => setMethod(e.target.value as 'TRANSFER' | 'CASH' | 'CHECK' | 'CARD' | 'OTHER')}
                             >
                                 <option value="TRANSFER">Transferencia</option>
                                 <option value="CASH">Efectivo</option>
@@ -264,7 +292,7 @@ export function PaymentsPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {payments?.map((payment: any) => (
+                        {payments?.map((payment: Payment) => (
                             <PaymentCard
                                 key={payment.id}
                                 payment={payment}

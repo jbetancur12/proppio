@@ -9,6 +9,16 @@ export function useExpenses(propertyId?: string) {
     });
 }
 
+interface ApiError {
+    response?: {
+        data?: {
+            error?: {
+                message?: string;
+            };
+        };
+    };
+}
+
 export function useCreateExpense() {
     const queryClient = useQueryClient();
 
@@ -19,8 +29,9 @@ export function useCreateExpense() {
             queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
             toast.success("Gasto registrado exitosamente");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al registrar gasto");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al registrar gasto");
         }
     });
 }

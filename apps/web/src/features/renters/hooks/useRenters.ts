@@ -9,6 +9,16 @@ export function useRenters() {
     });
 }
 
+interface ApiError {
+    response?: {
+        data?: {
+            error?: {
+                message?: string;
+            };
+        };
+    };
+}
+
 export function useCreateRenter() {
     const queryClient = useQueryClient();
 
@@ -18,8 +28,9 @@ export function useCreateRenter() {
             queryClient.invalidateQueries({ queryKey: ['renters'] });
             toast.success("Inquilino creado!");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al crear inquilino");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al crear inquilino");
         }
     });
 }
@@ -36,14 +47,15 @@ export function useUpdateRenter() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => rentersApi.update(id, data),
+        mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => rentersApi.update(id, data),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['renters'] });
             queryClient.invalidateQueries({ queryKey: ['renter', data.id, 'history'] });
             toast.success("Inquilino actualizado!");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || "Error al actualizar inquilino");
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || "Error al actualizar inquilino");
         }
     });
 }

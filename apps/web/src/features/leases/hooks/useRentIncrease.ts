@@ -10,6 +10,16 @@ export function useRentIncreasePreviews(increasePercentage: number, targetDate?:
     });
 }
 
+interface ApiError {
+    response?: {
+        data?: {
+            error?: {
+                message?: string;
+            };
+        };
+    };
+}
+
 export function useApplyRentIncrease() {
     const queryClient = useQueryClient();
 
@@ -19,8 +29,9 @@ export function useApplyRentIncrease() {
             queryClient.invalidateQueries({ queryKey: ['leases'] });
             toast.success('Aumento aplicado exitosamente');
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || 'Error al aplicar aumento');
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || 'Error al aplicar aumento');
         }
     });
 }
@@ -34,8 +45,9 @@ export function useBulkApplyIncreases() {
             queryClient.invalidateQueries({ queryKey: ['leases'] });
             toast.success(`${variables.length} aumentos aplicados exitosamente`);
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || 'Error al aplicar aumentos');
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || 'Error al aplicar aumentos');
         }
     });
 }
@@ -57,8 +69,9 @@ export function useSetIPC() {
             queryClient.invalidateQueries({ queryKey: ['ipc-config', variables.year] });
             toast.success(`IPC ${variables.year} configurado: ${variables.ipcRate}%`);
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || 'Error al configurar IPC');
+        onError: (error: unknown) => {
+            const apiError = error as ApiError;
+            toast.error(apiError.response?.data?.error?.message || 'Error al configurar IPC');
         }
     });
 }

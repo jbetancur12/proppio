@@ -75,8 +75,9 @@ export function useDeleteProperty() {
             queryClient.invalidateQueries({ queryKey: ['properties'] });
             toast.success("Propiedad eliminada");
         },
-        onError: (error: any) => {
-            const message = error?.response?.data?.message || "Error al eliminar propiedad";
+        onError: (error: unknown) => {
+            const apiError = error as { response?: { data?: { message?: string } } };
+            const message = apiError?.response?.data?.message || "Error al eliminar propiedad";
             toast.error(message);
         }
     });
