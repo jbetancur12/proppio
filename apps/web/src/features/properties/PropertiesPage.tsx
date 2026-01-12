@@ -1,15 +1,16 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { Plus, Search, Building2 } from "lucide-react";
-import { useProperties, useCreateProperty } from "./hooks/useProperties";
-import { PropertyCard } from "./components/PropertyCard";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createPropertySchema, CreatePropertyDto } from "@proppio/shared";
-import { FormField } from "@/components/forms/FormField";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useState, useMemo } from 'react';
+import { Plus, Search, Building2 } from 'lucide-react';
+import { useProperties, useCreateProperty } from './hooks/useProperties';
+import { PropertyCard } from './components/PropertyCard';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { createPropertySchema, CreatePropertyDto } from '@proppio/shared';
+import { FormField } from '@/components/forms/FormField';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 interface Property {
     id: string;
@@ -23,13 +24,20 @@ interface Property {
 export function PropertiesPage() {
     const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { data: properties, isLoading } = useProperties();
     const createMutation = useCreateProperty();
+    const debouncedSearch = useDebouncedValue(searchTerm, 300);
 
     // Form with validation
-    const { register, handleSubmit, formState: { errors }, reset } = useForm<CreatePropertyDto>({
-        resolver: zodResolver(createPropertySchema)
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm<CreatePropertyDto>({
+        resolver: zodResolver(createPropertySchema),
     });
 
     const onSubmit = (data: CreatePropertyDto) => {
@@ -37,9 +45,21 @@ export function PropertiesPage() {
             onSuccess: () => {
                 reset();
                 setIsCreating(false);
-            }
+            },
         });
     };
+
+    // Filter properties based on debounced search
+    const filteredProperties = useMemo(() => {
+        if (!properties) return [];
+        if (!debouncedSearch) return properties;
+
+        const searchLower = debouncedSearch.toLowerCase();
+        return properties.filter(
+            (p: Property) =>
+                p.name?.toLowerCase().includes(searchLower) || p.address?.toLowerCase().includes(searchLower),
+        );
+    }, [properties, debouncedSearch]);
 
     return (
         <div className="space-y-8">
@@ -79,7 +99,16 @@ export function PropertiesPage() {
                             </FormField>
                         </CardContent>
                         <div className="px-6 pb-6 flex justify-end gap-2">
-                            <Button type="button" variant="ghost" onClick={() => { reset(); setIsCreating(false); }}>Cancelar</Button>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => {
+                                    reset();
+                                    setIsCreating(false);
+                                }}
+                            >
+                                Cancelar
+                            </Button>
                             <Button type="submit" disabled={createMutation.isPending}>
                                 {createMutation.isPending ? 'Guardando...' : 'Crear Propiedad'}
                             </Button>
@@ -93,20 +122,31 @@ export function PropertiesPage() {
                     <h2 className="text-xl font-bold text-gray-800">Todas las Propiedades</h2>
                     <div className="relative w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                        <Input placeholder="Buscar propiedades..." className="pl-9 bg-white" />
+                        <Input
+                            placeholder="Buscar propiedades..."
+                            className="pl-9 bg-white"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
                 </div>
 
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[1, 2, 3].map(i => <div key={i} className="h-40 bg-gray-100 animate-pulse rounded-xl"></div>)}
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-40 bg-gray-100 animate-pulse rounded-xl"></div>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {properties?.map((property: Property) => (
-                            <PropertyCard key={property.id} property={property} onClick={() => navigate(`/properties/${property.id}`)} />
+                        {filteredProperties?.map((property: Property) => (
+                            <PropertyCard
+                                key={property.id}
+                                property={property}
+                                onClick={() => navigate(`/properties/${property.id}`)}
+                            />
                         ))}
-                        {properties?.length === 0 && (
+                        {filteredProperties?.length === 0 && (
                             <div className="col-span-full py-12 text-center bg-gray-50 rounded-xl border border-dashed border-gray-300">
                                 <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
                                     <Building2 size={24} />

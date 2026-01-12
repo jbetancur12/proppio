@@ -4,6 +4,7 @@ import { AuditLog } from '../entities/AuditLog';
 import { User } from '../../auth/entities/User';
 import { Tenant } from '../../tenants/entities/Tenant';
 import { getContext } from '../../../shared/utils/RequestContext';
+import { DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT } from '../../../shared/constants';
 
 export interface AuditLogDto {
     action: string;
@@ -12,13 +13,13 @@ export interface AuditLogDto {
     oldValues?: any;
     newValues?: any;
     details?: any;
-    userId?: string;   // Explicit override
+    userId?: string; // Explicit override
     tenantId?: string; // Explicit override
     performedBy?: string; // User ID or SYSTEM
 }
 
 export class AuditLogService {
-    constructor(private readonly em: EntityManager) { }
+    constructor(private readonly em: EntityManager) {}
 
     async log(data: AuditLogDto): Promise<void> {
         try {
@@ -29,8 +30,8 @@ export class AuditLogService {
                 // Ignore if no context available and overrides provided
             }
 
-            // Use fork to ensure we have a clean state/context if needed, 
-            // but usually for logging we might want to share transaction or not. 
+            // Use fork to ensure we have a clean state/context if needed,
+            // but usually for logging we might want to share transaction or not.
             // Original code used fork(), let's keep it but check if it's needed.
             // If em is generic, fork() returns generic EM.
             const em = this.em.fork();
@@ -52,8 +53,8 @@ export class AuditLogService {
                 resourceId: data.resourceId,
                 oldValues: data.oldValues,
                 newValues: data.newValues || data.details,
-                // ipAddress: (ctx as any).ip, 
-                // userAgent: (ctx as any).userAgent 
+                // ipAddress: (ctx as any).ip,
+                // userAgent: (ctx as any).userAgent
             });
 
             await em.persistAndFlush(log);
@@ -99,13 +100,12 @@ export class AuditLogService {
             qb.andWhere({ createdAt: { $lte: filters.endDate } });
         }
 
-        if (filters.limit) {
-            qb.limit(filters.limit);
-        }
+        // Validate and apply pagination limits
+        const limit = Math.min(filters.limit || DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT);
+        const offset = Math.max(filters.offset || 0, 0);
 
-        if (filters.offset) {
-            qb.offset(filters.offset);
-        }
+        qb.limit(limit);
+        qb.offset(offset);
 
         const [logs, count] = await qb.getResultAndCount();
         return { logs, count };
