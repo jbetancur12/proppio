@@ -7,6 +7,8 @@ export function translateAuditAction(action: string): string {
         LOGIN: 'Iniciar Sesión',
         LOGOUT: 'Cerrar Sesión',
         REGISTER: 'Registrarse',
+        REGISTER_USER: 'Registrar Usuario',
+        CHANGE_PASSWORD: 'Cambiar Contraseña',
 
         // Leases
         CREATE_LEASE: 'Crear Contrato',
@@ -15,6 +17,7 @@ export function translateAuditAction(action: string): string {
         ACTIVATE_LEASE: 'Activar Contrato',
         TERMINATE_LEASE: 'Terminar Contrato',
         DELETE_LEASE_CONTRACT: 'Eliminar PDF de Contrato',
+        LEASE_RENEWED: 'Contrato Renovado',
 
         // Properties
         CREATE_PROPERTY: 'Crear Propiedad',
@@ -48,6 +51,8 @@ export function translateAuditAction(action: string): string {
         DELETE_TENANT: 'Eliminar Tenant',
         UPDATE_TENANT_STATUS: 'Actualizar Estado de Tenant',
         UPDATE_TENANT_CONFIG: 'Actualizar Configuración de Tenant',
+        SUSPEND_TENANT: 'Suspender Tenant',
+        ACTIVATE_TENANT: 'Activar Tenant',
 
         // Users
         CREATE_USER: 'Crear Usuario',
@@ -63,6 +68,9 @@ export function translateAuditAction(action: string): string {
         CREATE_EXIT_NOTICE: 'Crear Aviso de Salida',
         CONFIRM_EXIT_NOTICE: 'Confirmar Aviso de Salida',
         CANCEL_EXIT_NOTICE: 'Cancelar Aviso de Salida',
+        EXIT_NOTICE_CREATED: 'Aviso de Salida Creado',
+        EXIT_NOTICE_CONFIRMED: 'Aviso de Salida Confirmado',
+        EXIT_NOTICE_CANCELLED: 'Aviso de Salida Cancelado',
 
         // Rent Increases
         APPLY_RENT_INCREASE: 'Aplicar Aumento de Canon',
