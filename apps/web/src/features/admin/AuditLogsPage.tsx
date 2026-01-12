@@ -45,8 +45,40 @@ export function AuditLogsPage() {
     const { data, isLoading } = useAuditLogs(queryFilters);
 
     const handleExport = () => {
-        // TODO: Implement CSV export
-        console.log('Exporting logs...');
+        if (!data?.logs || data.logs.length === 0) {
+            alert('No hay registros para exportar');
+            return;
+        }
+
+        // Prepare CSV data with translations
+        const headers = ['Fecha', 'Usuario', 'Email', 'Tenant', 'Acción', 'Recurso', 'ID Recurso', 'Detalles'];
+        const rows = data.logs.map((log: AuditLog) => [
+            format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss', { locale: es }),
+            log.user ? `${log.user.firstName} ${log.user.lastName}` : '',
+            log.user?.email || '',
+            log.tenant?.name || 'Global',
+            translateAuditAction(log.action),
+            log.resourceType ? translateResourceType(log.resourceType) : '',
+            log.resourceId || '',
+            log.details ? JSON.stringify(log.details) : '',
+        ]);
+
+        // Create CSV content
+        const csvContent = [
+            headers.join(','),
+            ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+        ].join('\n');
+
+        // Create and download file
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `audit-logs-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
