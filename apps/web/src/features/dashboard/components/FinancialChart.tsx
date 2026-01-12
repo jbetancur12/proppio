@@ -44,12 +44,14 @@ export const FinancialChart = memo(function FinancialChart({ data }: FinancialCh
                             />
                             <Tooltip
                                 cursor={{ fill: '#f9fafb' }}
-                                contentStyle={{
-                                    borderRadius: '0.5rem',
-                                    border: '1px solid #e5e7eb',
-                                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                                }}
-                                formatter={(value: number) => [`$${Number(value).toLocaleString()}`, '']}
+                                contentStyle={
+                                    {
+                                        borderRadius: '0.5rem',
+                                        border: '1px solid #e5e7eb',
+                                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                                    } as React.CSSProperties
+                                }
+                                formatter={(value: number | undefined) => [`$${Number(value).toLocaleString()}`, '']}
                             />
                             <Bar dataKey="income" name="Ingresos" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
                             <Bar dataKey="expense" name="Gastos" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={20} />
