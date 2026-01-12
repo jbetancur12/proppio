@@ -1,4 +1,5 @@
 import NodeCache from 'node-cache';
+import { logger } from '../logger';
 
 /**
  * CacheService implementation
@@ -11,7 +12,7 @@ export class CacheService {
     private constructor() {
         // Standard TTL 300 seconds (5 minutes), check period 60 seconds
         this.cache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
-        console.log('CacheService initialized.');
+        logger.info('CacheService initialized.');
     }
 
     public static getInstance(): CacheService {
@@ -38,6 +39,6 @@ export class CacheService {
 
     public flush(): void {
         this.cache.flushAll();
-        console.log('Cache flushed.');
+        logger.info('Cache flushed.');
     }
 }

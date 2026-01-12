@@ -1,4 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { PropertyEntity } from '../../properties/entities/Property';
 import { UnitEntity, UnitStatus } from '../../properties/entities/Unit';
 import { Renter } from '../../renters/entities/Renter';
@@ -38,11 +39,11 @@ export class StatsService {
         const cachedStats = this.cacheService.get<DashboardStats>(cacheKey);
 
         if (cachedStats) {
-            console.log('Cache Hit: Dashboard Stats');
+            logger.info('Cache Hit: Dashboard Stats');
             return cachedStats;
         }
 
-        console.log('Cache Miss: Dashboard Stats. Calculating...');
+        logger.info('Cache Miss: Dashboard Stats. Calculating...');
 
         // Counts
         const totalProperties = await this.em.count(PropertyEntity, {});
@@ -107,11 +108,11 @@ export class StatsService {
         const cachedHistory = this.cacheService.get<any[]>(cacheKey);
 
         if (cachedHistory) {
-            console.log(`Cache Hit: Financial History (${months} months)`);
+            logger.info(`Cache Hit: Financial History (${months} months)`);
             return cachedHistory;
         }
 
-        console.log(`Cache Miss: Financial History (${months} months). Calculating...`);
+        logger.info(`Cache Miss: Financial History (${months} months). Calculating...`);
 
         // Calculate date range
         const end = new Date();
