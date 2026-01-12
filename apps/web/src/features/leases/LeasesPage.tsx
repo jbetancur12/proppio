@@ -35,13 +35,6 @@ interface Renter {
     documentNumber: string;
 }
 
-interface Renter {
-    id: string;
-    firstName: string;
-    lastName: string;
-    documentNumber: string;
-}
-
 export function LeasesPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
