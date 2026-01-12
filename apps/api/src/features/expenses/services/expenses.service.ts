@@ -1,4 +1,5 @@
 import { EntityManager, FilterQuery } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { Expense, ExpenseCategory, ExpenseStatus } from '../entities/Expense';
 import { CreateExpenseDto, UpdateExpenseDto } from '../dtos/expense.dto';
 import { PropertyEntity } from '../../properties/entities/Property';
@@ -78,7 +79,7 @@ export class ExpensesService {
                 newValues: data,
             });
         } catch (error) {
-            console.error('Audit log failed for create expense:', error);
+            logger.error({ err: error }, 'Audit log failed for create expense');
         }
 
         return expense;
@@ -114,7 +115,7 @@ export class ExpensesService {
                 newValues: data,
             });
         } catch (error) {
-            console.error('Audit log failed for update expense:', error);
+            logger.error({ err: error }, 'Audit log failed for update expense');
         }
 
         return expense;
@@ -141,7 +142,7 @@ export class ExpensesService {
                 oldValues: expenseData,
             });
         } catch (error) {
-            console.error('Audit log failed for delete expense:', error);
+            logger.error({ err: error }, 'Audit log failed for delete expense');
         }
     }
 }

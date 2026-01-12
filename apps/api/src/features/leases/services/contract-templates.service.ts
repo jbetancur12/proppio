@@ -1,4 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { ContractTemplate } from '../entities/ContractTemplate';
 import { CreateContractTemplateDto, UpdateContractTemplateDto } from '../dtos/contract-template.dto';
 import { ValidationError } from '../../../shared/errors/AppError';
@@ -35,7 +36,7 @@ export class ContractTemplatesService {
                 newValues: data,
             });
         } catch (error) {
-            console.error('Audit log failed for create template:', error);
+            logger.error({ err: error }, 'Audit log failed for create template');
         }
 
         return template;
@@ -58,7 +59,7 @@ export class ContractTemplatesService {
                 newValues: data,
             });
         } catch (error) {
-            console.error('Audit log failed for update template:', error);
+            logger.error({ err: error }, 'Audit log failed for update template');
         }
 
         return template;
@@ -80,7 +81,7 @@ export class ContractTemplatesService {
                 oldValues: templateData,
             });
         } catch (error) {
-            console.error('Audit log failed for delete template:', error);
+            logger.error({ err: error }, 'Audit log failed for delete template');
         }
     }
 }

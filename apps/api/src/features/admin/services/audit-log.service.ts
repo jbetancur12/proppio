@@ -1,4 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { EntityManager as SqlEntityManager } from '@mikro-orm/postgresql';
 import { AuditLog } from '../entities/AuditLog';
 import { User } from '../../auth/entities/User';
@@ -59,7 +60,7 @@ export class AuditLogService {
 
             await em.persistAndFlush(log);
         } catch (error) {
-            console.error('Failed to create audit log:', error);
+            logger.error({ err: error }, 'Failed to create audit log');
         }
     }
 

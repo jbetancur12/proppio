@@ -1,9 +1,10 @@
-import { EntityManager } from "@mikro-orm/core";
-import { Lease, LeaseStatus } from "../entities/Lease";
-import { CreateLeaseDto, UpdateLeaseDto } from "../dtos/lease.dto";
-import { NotFoundError, ValidationError } from "../../../shared/errors/AppError";
-import { UnitEntity, UnitStatus } from "../../properties/entities/Unit";
-import { Renter } from "../../renters/entities/Renter";
+import { EntityManager } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
+import { Lease, LeaseStatus } from '../entities/Lease';
+import { CreateLeaseDto, UpdateLeaseDto } from '../dtos/lease.dto';
+import { NotFoundError, ValidationError } from '../../../shared/errors/AppError';
+import { UnitEntity, UnitStatus } from '../../properties/entities/Unit';
+import { Renter } from '../../renters/entities/Renter';
 import puppeteer from 'puppeteer';
 
 /**
@@ -11,7 +12,7 @@ import puppeteer from 'puppeteer';
  * Following design_guidelines.md section 2.1 Services Pattern
  */
 export class LeasesService {
-    constructor(private readonly em: EntityManager) { }
+    constructor(private readonly em: EntityManager) {}
 
     async findAll(): Promise<Lease[]> {
         return this.em.find(Lease, {}, { populate: ['unit', 'renter'] });
@@ -39,9 +40,7 @@ export class LeasesService {
         const existingLease = await this.em.findOne(Lease, {
             unit: { id: data.unitId },
             status: { $in: [LeaseStatus.ACTIVE, LeaseStatus.DRAFT] },
-            $or: [
-                { startDate: { $lte: new Date(data.endDate) }, endDate: { $gte: new Date(data.startDate) } }
-            ]
+            $or: [{ startDate: { $lte: new Date(data.endDate) }, endDate: { $gte: new Date(data.startDate) } }],
         });
         if (existingLease) {
             throw new ValidationError('Ya existe un contrato activo para esta unidad en el período indicado');
@@ -57,7 +56,7 @@ export class LeasesService {
             notes: data.notes,
             status: LeaseStatus.DRAFT,
             firstPaymentDate: data.firstPaymentDate ? new Date(data.firstPaymentDate) : undefined,
-            contractContent: data.contractContent
+            contractContent: data.contractContent,
         });
 
         await this.em.persistAndFlush(lease);
@@ -69,10 +68,10 @@ export class LeasesService {
                 action: 'CREATE_LEASE',
                 resourceType: 'Lease',
                 resourceId: lease.id,
-                newValues: { ...data, unitId: data.unitId, renterId: data.renterId }
+                newValues: { ...data, unitId: data.unitId, renterId: data.renterId },
             });
         } catch (error) {
-            console.error('Audit log failed for create lease:', error);
+            logger.error({ err: error }, 'Audit log failed for create lease');
         }
 
         if (data.contractContent) {
@@ -111,12 +110,12 @@ export class LeasesService {
                     monthlyRent: oldValues.monthlyRent,
                     securityDeposit: oldValues.securityDeposit,
                     status: oldValues.status,
-                    notes: oldValues.notes
+                    notes: oldValues.notes,
                 },
-                newValues: data
+                newValues: data,
             });
         } catch (error) {
-            console.error('Audit log failed for update lease:', error);
+            logger.error({ err: error }, 'Audit log failed for update lease');
         }
 
         if (data.contractContent) {
@@ -153,10 +152,10 @@ export class LeasesService {
                 resourceType: 'Lease',
                 resourceId: lease.id,
                 oldValues: { status: oldStatus },
-                newValues: { status: LeaseStatus.ACTIVE }
+                newValues: { status: LeaseStatus.ACTIVE },
             });
         } catch (error) {
-            console.error('Audit log failed for activate lease:', error);
+            logger.error({ err: error }, 'Audit log failed for activate lease');
         }
 
         return lease;
@@ -187,10 +186,10 @@ export class LeasesService {
                 resourceType: 'Lease',
                 resourceId: lease.id,
                 oldValues: { status: oldStatus },
-                newValues: { status: LeaseStatus.TERMINATED }
+                newValues: { status: LeaseStatus.TERMINATED },
             });
         } catch (error) {
-            console.error('Audit log failed for terminate lease:', error);
+            logger.error({ err: error }, 'Audit log failed for terminate lease');
         }
 
         return lease;
@@ -201,13 +200,17 @@ export class LeasesService {
         const futureDate = new Date();
         futureDate.setDate(today.getDate() + days);
 
-        return this.em.find(Lease, {
-            status: LeaseStatus.ACTIVE,
-            endDate: { $gte: today, $lte: futureDate }
-        }, {
-            populate: ['unit', 'renter', 'unit.property'],
-            orderBy: { endDate: 'ASC' }
-        });
+        return this.em.find(
+            Lease,
+            {
+                status: LeaseStatus.ACTIVE,
+                endDate: { $gte: today, $lte: futureDate },
+            },
+            {
+                populate: ['unit', 'renter', 'unit.property'],
+                orderBy: { endDate: 'ASC' },
+            },
+        );
     }
 
     async updateContractPdf(id: string, filePath: string): Promise<Lease> {
@@ -249,10 +252,10 @@ export class LeasesService {
                 resourceType: 'Lease',
                 resourceId: lease.id,
                 oldValues: { contractPdfPath: 'DELETED' },
-                newValues: { contractPdfPath: null }
+                newValues: { contractPdfPath: null },
             });
         } catch (error) {
-            console.error('Audit log failed for delete contract pdf:', error);
+            logger.error({ err: error }, 'Audit log failed for delete contract pdf');
         }
 
         return lease;
@@ -275,7 +278,7 @@ export class LeasesService {
 
             return key;
         } catch (error) {
-            console.error('Error generating PDF:', error);
+            logger.error({ err: error }, 'Error generating PDF');
             throw new Error('Error al generar el PDF del contrato');
         } finally {
             if (browser) await browser.close();

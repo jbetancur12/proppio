@@ -1,4 +1,5 @@
 import { EntityManager, EntityRepository } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { PropertyEntity } from '../entities/Property';
 import { CreatePropertyDto, UpdatePropertyDto } from '../dtos/property.dto';
 
@@ -13,14 +14,14 @@ export class PropertiesService {
         // Populate deeply to check for alerts
         // Note: In a high-scale system, this should be optimized with a custom query or view
         const properties = await this.repo.findAll({
-            populate: ['units', 'units.leases', 'units.leases.payments'] as any
+            populate: ['units', 'units.leases', 'units.leases.payments'] as any,
         });
 
         const today = new Date();
         const warningDate = new Date();
         warningDate.setDate(today.getDate() + 60); // 60 days warning
 
-        return properties.map(property => {
+        return properties.map((property) => {
             const alerts: string[] = [];
             const units = property.units.getItems();
 
@@ -73,22 +74,25 @@ export class PropertiesService {
                 ...property, // properties of the entity
                 units: property.units, // keep units collection
                 alerts, // Add alerts
-                occupancyRate: Math.round(occupancyRate) // Add integer occupancy rate
+                occupancyRate: Math.round(occupancyRate), // Add integer occupancy rate
             };
         });
     }
 
     async findOne(id: string): Promise<any> {
-        const property = await this.repo.findOneOrFail({ id }, {
-            populate: ['units', 'units.leases', 'units.leases.payments'] as any
-        });
+        const property = await this.repo.findOneOrFail(
+            { id },
+            {
+                populate: ['units', 'units.leases', 'units.leases.payments'] as any,
+            },
+        );
 
         const today = new Date();
         const warningDate = new Date();
         warningDate.setDate(today.getDate() + 60);
 
         // Calculate alerts per unit
-        const unitsWithAlerts = property.units.getItems().map(unit => {
+        const unitsWithAlerts = property.units.getItems().map((unit) => {
             const alerts: string[] = [];
             const leases = unit.leases?.getItems() || [];
 
@@ -115,14 +119,14 @@ export class PropertiesService {
 
             return {
                 ...unit,
-                alerts
+                alerts,
             };
         });
 
         // Return property with modified units
         return {
             ...property,
-            units: unitsWithAlerts
+            units: unitsWithAlerts,
         };
     }
 
@@ -141,10 +145,10 @@ export class PropertiesService {
                 action: 'CREATE_PROPERTY',
                 resourceType: 'Property',
                 resourceId: property.id,
-                newValues: dto
+                newValues: dto,
             });
         } catch (error) {
-            console.error('Audit log failed for create property:', error);
+            logger.error({ err: error }, 'Audit log failed for create property');
         }
 
         return property;
@@ -155,7 +159,7 @@ export class PropertiesService {
 
         const oldValues = {
             name: property.name,
-            address: property.address
+            address: property.address,
         };
 
         if (dto.name) property.name = dto.name;
@@ -171,10 +175,10 @@ export class PropertiesService {
                 resourceType: 'Property',
                 resourceId: property.id,
                 oldValues,
-                newValues: dto
+                newValues: dto,
             });
         } catch (error) {
-            console.error('Audit log failed for update property:', error);
+            logger.error({ err: error }, 'Audit log failed for update property');
         }
 
         return property;
@@ -191,17 +195,15 @@ export class PropertiesService {
         const { Lease, LeaseStatus } = await import('../../leases/entities/Lease');
         const activeLeases = await this.em.find(Lease, {
             unit: { property: { id } },
-            status: LeaseStatus.ACTIVE
+            status: LeaseStatus.ACTIVE,
         });
 
         // Occupancy calculation
         // We can map active leases to units.
-        const occupiedUnitIds = new Set(activeLeases.map(l => l.unit.id));
+        const occupiedUnitIds = new Set(activeLeases.map((l) => l.unit.id));
 
         // Also consider units marked as OCCUPIED manually even if no lease (though less likely in this system)
-        const occupiedCount = units.filter(u =>
-            u.status === 'OCCUPIED' || occupiedUnitIds.has(u.id)
-        ).length;
+        const occupiedCount = units.filter((u) => u.status === 'OCCUPIED' || occupiedUnitIds.has(u.id)).length;
 
         const occupancyRate = totalUnits > 0 ? (occupiedCount / totalUnits) * 100 : 0;
 
@@ -212,7 +214,7 @@ export class PropertiesService {
         const { MaintenanceTicket, TicketStatus } = await import('../../maintenance/entities/MaintenanceTicket');
         const openTickets = await this.em.count(MaintenanceTicket, {
             unit: { property: { id } },
-            status: { $in: [TicketStatus.OPEN, TicketStatus.IN_PROGRESS] }
+            status: { $in: [TicketStatus.OPEN, TicketStatus.IN_PROGRESS] },
         });
 
         return {
@@ -221,13 +223,13 @@ export class PropertiesService {
             vacantUnits: totalUnits - occupiedCount,
             occupancyRate: Math.round(occupancyRate * 10) / 10,
             projectedRevenue,
-            openMaintenanceTickets: openTickets
+            openMaintenanceTickets: openTickets,
         };
     }
 
     async delete(id: string): Promise<void> {
         const property = await this.repo.findOne(id, {
-            populate: ['units', 'units.leases']
+            populate: ['units', 'units.leases'],
         });
 
         if (!property) {
@@ -236,14 +238,14 @@ export class PropertiesService {
 
         // Check for active leases
         const units = property.units.getItems();
-        const activeLeases = units.flatMap(unit =>
-            unit.leases.getItems().filter((lease: any) => lease.status === 'ACTIVE')
+        const activeLeases = units.flatMap((unit) =>
+            unit.leases.getItems().filter((lease: any) => lease.status === 'ACTIVE'),
         );
 
         if (activeLeases.length > 0) {
             throw new Error(
                 `No puedes borrar esta propiedad porque tiene ${activeLeases.length} contrato(s) activo(s). ` +
-                `Primero debes terminar o cancelar los contratos.`
+                    `Primero debes terminar o cancelar los contratos.`,
             );
         }
 

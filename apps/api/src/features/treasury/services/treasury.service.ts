@@ -1,4 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { Payment, PaymentStatus } from '../../payments/entities/Payment';
 import { Expense, ExpenseStatus } from '../../expenses/entities/Expense';
 import { TreasuryTransaction, TransactionType } from '../entities/TreasuryTransaction';
@@ -21,7 +22,7 @@ export interface GlobalBalance {
 }
 
 export class TreasuryService {
-    constructor(private readonly em: EntityManager) { }
+    constructor(private readonly em: EntityManager) {}
 
     async getGlobalBalance(): Promise<GlobalBalance> {
         // 1. Lease Payments (Income)
@@ -35,11 +36,11 @@ export class TreasuryService {
         // 3. Treasury Transactions (Mixed)
         const treasuryTx = await this.em.find(TreasuryTransaction, {});
         const treasuryIncome = treasuryTx
-            .filter(t => t.type === TransactionType.INCOME)
+            .filter((t) => t.type === TransactionType.INCOME)
             .reduce((sum, t) => sum + Number(t.amount), 0);
 
         const treasuryExpenses = treasuryTx
-            .filter(t => t.type === TransactionType.EXPENSE)
+            .filter((t) => t.type === TransactionType.EXPENSE)
             .reduce((sum, t) => sum + Number(t.amount), 0);
 
         const totalIncome = totalPayments + treasuryIncome;
@@ -48,11 +49,13 @@ export class TreasuryService {
         return {
             totalIncome,
             totalExpenses,
-            balance: totalIncome - totalExpenses
+            balance: totalIncome - totalExpenses,
         };
     }
 
-    async getUnifiedTransactions(filters: { startDate?: Date; endDate?: Date; page?: number; limit?: number } = {}): Promise<{ data: UnifiedTransaction[], total: number }> {
+    async getUnifiedTransactions(
+        filters: { startDate?: Date; endDate?: Date; page?: number; limit?: number } = {},
+    ): Promise<{ data: UnifiedTransaction[]; total: number }> {
         const { startDate, endDate, page = 1, limit = 50 } = filters;
 
         const wherePayment: any = { status: PaymentStatus.COMPLETED };
@@ -76,13 +79,13 @@ export class TreasuryService {
         const [payments, expenses, treasuryTx] = await Promise.all([
             this.em.find(Payment, wherePayment, { populate: ['lease', 'lease.unit'] }),
             this.em.find(Expense, whereExpense, { populate: ['property'] }),
-            this.em.find(TreasuryTransaction, whereTreasury)
+            this.em.find(TreasuryTransaction, whereTreasury),
         ]);
 
         const unified: UnifiedTransaction[] = [];
 
         // Map Payments
-        payments.forEach(p => {
+        payments.forEach((p) => {
             try {
                 unified.push({
                     id: p.id,
@@ -92,15 +95,15 @@ export class TreasuryService {
                     category: 'RENT',
                     description: `Pago Arriendo - ${p.lease?.unit?.name || 'N/A'}`,
                     source: 'LEASE_PAYMENT',
-                    reference: p.reference
+                    reference: p.reference,
                 });
             } catch (err) {
-                console.error('Error mapping payment:', p.id, err);
+                logger.error({ err, paymentId: p.id }, 'Error mapping payment');
             }
         });
 
         // Map Expenses
-        expenses.forEach(e => {
+        expenses.forEach((e) => {
             unified.push({
                 id: e.id,
                 date: new Date(e.date),
@@ -109,12 +112,12 @@ export class TreasuryService {
                 category: e.category,
                 description: `Gasto Propiedad - ${e.property?.name || 'General'}`,
                 source: 'PROPERTY_EXPENSE',
-                reference: e.description
+                reference: e.description,
             });
         });
 
         // Map Treasury Transactions
-        treasuryTx.forEach(t => {
+        treasuryTx.forEach((t) => {
             unified.push({
                 id: t.id,
                 date: new Date(t.date),
@@ -123,7 +126,7 @@ export class TreasuryService {
                 category: t.category,
                 description: t.description || 'Movimiento de Tesorería',
                 source: 'TREASURY',
-                reference: t.reference
+                reference: t.reference,
             });
         });
 
@@ -140,7 +143,7 @@ export class TreasuryService {
 
         return {
             data: slicedData,
-            total
+            total,
         };
     }
 

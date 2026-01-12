@@ -1,4 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { Payment, PaymentStatus, PaymentMethod } from '../entities/Payment';
 import { CreatePaymentDto, UpdatePaymentDto } from '../dtos/payment.dto';
 import { NotFoundError, ValidationError } from '../../../shared/errors/AppError';
@@ -70,7 +71,7 @@ export class PaymentsService {
                 newValues: { ...data, leaseId: data.leaseId },
             });
         } catch (error) {
-            console.error('Audit log failed for create payment:', error);
+            logger.error({ err: error }, 'Audit log failed for create payment');
         }
 
         // Send Email Receipt
@@ -103,7 +104,7 @@ export class PaymentsService {
                 newValues: data,
             });
         } catch (error) {
-            console.error('Audit log failed for update payment:', error);
+            logger.error({ err: error }, 'Audit log failed for update payment');
         }
 
         // Send receipt if status changed to COMPLETED
@@ -126,18 +127,22 @@ export class PaymentsService {
                 if (fullPayment.lease.renter.email) {
                     const { EmailService } = await import('../../../shared/services/EmailService');
                     const emailService = new EmailService();
-                    emailService.sendPaymentReceipt(fullPayment).catch(console.error);
+                    emailService
+                        .sendPaymentReceipt(fullPayment)
+                        .catch((err) => logger.error({ err }, 'Error sending email receipt'));
                 }
 
                 // Send WhatsApp if available
                 if (fullPayment.lease.renter.phone) {
                     const { WhatsAppService } = await import('../../../shared/services/WhatsAppService');
                     const whatsappService = new WhatsAppService();
-                    whatsappService.sendPaymentReceipt(fullPayment).catch(console.error);
+                    whatsappService
+                        .sendPaymentReceipt(fullPayment)
+                        .catch((err) => logger.error({ err }, 'Error sending whatsapp receipt'));
                 }
             }
         } catch (error) {
-            console.error('Error sending receipt notifications:', error);
+            logger.error({ err: error }, 'Error sending receipt notifications');
         }
     }
 
@@ -177,7 +182,7 @@ export class PaymentsService {
                 oldValues: paymentData,
             });
         } catch (error) {
-            console.error('Audit log failed for delete payment:', error);
+            logger.error({ err: error }, 'Audit log failed for delete payment');
         }
     }
 }

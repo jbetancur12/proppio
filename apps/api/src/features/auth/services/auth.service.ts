@@ -1,4 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User, GlobalRole } from '../entities/User';
@@ -8,7 +9,7 @@ import { UnauthorizedError, ValidationError } from '../../../shared/errors/AppEr
 import { AuditLogService } from '../../admin/services/audit-log.service';
 
 export class AuthService {
-    constructor(private readonly em: EntityManager) { }
+    constructor(private readonly em: EntityManager) {}
 
     /**
      * Login - Supports both Super Admin and regular users
@@ -34,7 +35,7 @@ export class AuthService {
             const payload = {
                 userId: user.id,
                 email: user.email,
-                globalRole: GlobalRole.SUPER_ADMIN
+                globalRole: GlobalRole.SUPER_ADMIN,
             };
 
             const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '7d' });
@@ -43,7 +44,7 @@ export class AuthService {
             await audit.log({
                 action: 'LOGIN',
                 userId: user.id,
-                details: { role: GlobalRole.SUPER_ADMIN }
+                details: { role: GlobalRole.SUPER_ADMIN },
             });
 
             return {
@@ -53,8 +54,8 @@ export class AuthService {
                     email: user.email,
                     firstName: user.firstName,
                     lastName: user.lastName,
-                    globalRole: user.globalRole
-                }
+                    globalRole: user.globalRole,
+                },
             };
         }
 
@@ -74,7 +75,7 @@ export class AuthService {
             role: tenantUser.role,
             email: user.email,
             features: tenantUser.tenant.config?.features || {},
-            timezone: tenantUser.tenant.config?.timezone || 'America/Bogota'
+            timezone: tenantUser.tenant.config?.timezone || 'America/Bogota',
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '7d' });
@@ -84,7 +85,7 @@ export class AuthService {
             action: 'LOGIN',
             userId: user.id,
             tenantId: tenantUser.tenant.id,
-            details: { role: tenantUser.role }
+            details: { role: tenantUser.role },
         });
 
         return {
@@ -98,8 +99,8 @@ export class AuthService {
                 tenantName: tenantUser.tenant.name,
                 role: tenantUser.role,
                 features: tenantUser.tenant.config?.features || {},
-                timezone: tenantUser.tenant.config?.timezone || 'America/Bogota'
-            }
+                timezone: tenantUser.tenant.config?.timezone || 'America/Bogota',
+            },
         };
     }
 
@@ -122,7 +123,7 @@ export class AuthService {
             passwordHash,
             firstName: dto.firstName,
             lastName: dto.lastName,
-            globalRole: GlobalRole.USER
+            globalRole: GlobalRole.USER,
         });
 
         await this.em.persistAndFlush(user);
@@ -143,7 +144,7 @@ export class AuthService {
                 // For tenant member addition, it's usually an authenticated action.
             });
         } catch (error) {
-            console.error('Audit log failed for register user:', error);
+            logger.error({ err: error }, 'Audit log failed for register user');
         }
 
         return { message: 'Usuario creado exitosamente' };
@@ -170,10 +171,10 @@ export class AuthService {
                 resourceType: 'User',
                 resourceId: user.id,
                 userId: user.id, // Self-change
-                details: { method: 'user_initiated' }
+                details: { method: 'user_initiated' },
             });
         } catch (error) {
-            console.error('Audit log failed for password change:', error);
+            logger.error({ err: error }, 'Audit log failed for password change');
         }
 
         return { message: 'Contraseña actualizada exitosamente' };

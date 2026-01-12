@@ -1,4 +1,5 @@
 import { EntityManager, EntityRepository, wrap } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { UnitEntity } from '../entities/Unit';
 import { PropertyEntity } from '../entities/Property';
 import { CreateUnitDto, UpdateUnitDto } from '../dtos/unit.dto';
@@ -38,7 +39,7 @@ export class UnitsService {
                 newValues: dto,
             });
         } catch (error) {
-            console.error('Audit log failed for create unit:', error);
+            logger.error({ err: error }, 'Audit log failed for create unit');
         }
 
         return unit;
@@ -134,7 +135,7 @@ export class UnitsService {
                 newValues: dto,
             });
         } catch (error) {
-            console.error('Audit log failed for update unit:', error);
+            logger.error({ err: error }, 'Audit log failed for update unit');
         }
 
         return unit;
@@ -156,7 +157,7 @@ export class UnitsService {
                 oldValues: unitData,
             });
         } catch (error) {
-            console.error('Audit log failed for delete unit:', error);
+            logger.error({ err: error }, 'Audit log failed for delete unit');
         }
     }
 }

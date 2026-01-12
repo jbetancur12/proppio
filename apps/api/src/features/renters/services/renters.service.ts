@@ -1,4 +1,5 @@
 import { EntityManager } from '@mikro-orm/core';
+import { logger } from '../../../shared/logger';
 import { Renter } from '../entities/Renter';
 import { CreateRenterDto, UpdateRenterDto } from '../dtos/renter.dto';
 import { AppError, NotFoundError, ValidationError } from '../../../shared/errors/AppError';
@@ -67,7 +68,7 @@ export class RentersService {
                 newValues: data,
             });
         } catch (error) {
-            console.error('Audit log failed for create renter:', error);
+            logger.error({ err: error }, 'Audit log failed for create renter');
         }
 
         return renter;
@@ -103,7 +104,7 @@ export class RentersService {
                 newValues: data,
             });
         } catch (error) {
-            console.error('Audit log failed for update renter:', error);
+            logger.error({ err: error }, 'Audit log failed for update renter');
         }
 
         return renter;
@@ -128,7 +129,7 @@ export class RentersService {
                 oldValues,
             });
         } catch (error) {
-            console.error('Audit log failed for delete renter:', error);
+            logger.error({ err: error }, 'Audit log failed for delete renter');
         }
     }
 
