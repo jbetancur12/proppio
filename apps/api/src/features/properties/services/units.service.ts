@@ -27,14 +27,31 @@ export class UnitsService {
         unit.property = property;
 
         await this.em.persistAndFlush(unit);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'CREATE_UNIT',
+                resourceType: 'Unit',
+                resourceId: unit.id,
+                newValues: dto,
+            });
+        } catch (error) {
+            console.error('Audit log failed for create unit:', error);
+        }
+
         return unit;
     }
 
     async findAllByProperty(propertyId: string) {
         // Use deep populate to get everything in one query (or few optimized queries)
-        const units = await this.unitRepo.find({ property: { id: propertyId } }, {
-            populate: ['leases', 'leases.renter', 'leases.payments'] as any
-        });
+        const units = await this.unitRepo.find(
+            { property: { id: propertyId } },
+            {
+                populate: ['leases', 'leases.renter', 'leases.payments'] as any,
+            },
+        );
 
         if (units.length === 0) return [];
 
@@ -42,7 +59,7 @@ export class UnitsService {
         const warningDate = new Date();
         warningDate.setDate(today.getDate() + 60);
 
-        return units.map(unit => {
+        return units.map((unit) => {
             // Find active lease from populated collection
             const leases = unit.leases.getItems();
             let activeLease: Lease | undefined;
@@ -63,7 +80,7 @@ export class UnitsService {
 
                     // Check Pending Payments
                     const payments = lease.payments.getItems();
-                    const pending = payments.some(p => p.status === 'PENDING');
+                    const pending = payments.some((p) => p.status === 'PENDING');
                     if (pending) {
                         hasPendingPayments = true;
                     }
@@ -76,29 +93,62 @@ export class UnitsService {
             return {
                 ...wrap(unit).toObject(),
                 alerts,
-                activeLease: activeLease ? {
-                    id: activeLease.id,
-                    renterId: activeLease.renter.id,
-                    renterName: `${activeLease.renter.firstName} ${activeLease.renter.lastName}`,
-                    email: activeLease.renter.email,
-                    phone: activeLease.renter.phone,
-                    startDate: activeLease.startDate,
-                    endDate: activeLease.endDate,
-                    monthlyRent: activeLease.monthlyRent
-                } : null
+                activeLease: activeLease
+                    ? {
+                          id: activeLease.id,
+                          renterId: activeLease.renter.id,
+                          renterName: `${activeLease.renter.firstName} ${activeLease.renter.lastName}`,
+                          email: activeLease.renter.email,
+                          phone: activeLease.renter.phone,
+                          startDate: activeLease.startDate,
+                          endDate: activeLease.endDate,
+                          monthlyRent: activeLease.monthlyRent,
+                      }
+                    : null,
             };
         });
     }
 
     async update(id: string, dto: UpdateUnitDto) {
         const unit = await this.unitRepo.findOneOrFail({ id });
+        const oldValues = { ...wrap(unit).toObject() };
         wrap(unit).assign(dto);
         await this.em.flush();
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'UPDATE_UNIT',
+                resourceType: 'Unit',
+                resourceId: unit.id,
+                oldValues: { name: oldValues.name, type: oldValues.type, baseRent: oldValues.baseRent },
+                newValues: dto,
+            });
+        } catch (error) {
+            console.error('Audit log failed for update unit:', error);
+        }
+
         return unit;
     }
 
     async delete(id: string) {
         const unit = await this.unitRepo.findOneOrFail({ id });
+        const unitData = { id: unit.id, name: unit.name, propertyId: unit.property.id };
+
         await this.em.removeAndFlush(unit);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'DELETE_UNIT',
+                resourceType: 'Unit',
+                resourceId: unitData.id,
+                oldValues: unitData,
+            });
+        } catch (error) {
+            console.error('Audit log failed for delete unit:', error);
+        }
     }
 }

@@ -1,12 +1,12 @@
-import { EntityManager, FilterQuery } from "@mikro-orm/core";
-import { Expense, ExpenseCategory, ExpenseStatus } from "../entities/Expense";
-import { CreateExpenseDto, UpdateExpenseDto } from "../dtos/expense.dto";
-import { PropertyEntity } from "../../properties/entities/Property";
-import { UnitEntity } from "../../properties/entities/Unit";
-import { NotFoundError, ValidationError } from "../../../shared/errors/AppError";
+import { EntityManager, FilterQuery } from '@mikro-orm/core';
+import { Expense, ExpenseCategory, ExpenseStatus } from '../entities/Expense';
+import { CreateExpenseDto, UpdateExpenseDto } from '../dtos/expense.dto';
+import { PropertyEntity } from '../../properties/entities/Property';
+import { UnitEntity } from '../../properties/entities/Unit';
+import { NotFoundError, ValidationError } from '../../../shared/errors/AppError';
 
 export class ExpensesService {
-    constructor(private readonly em: EntityManager) { }
+    constructor(private readonly em: EntityManager) {}
 
     async findAll(propertyId?: string): Promise<Expense[]> {
         const where: FilterQuery<Expense> = {};
@@ -39,15 +39,35 @@ export class ExpensesService {
             category: data.category as ExpenseCategory,
             status: data.status as ExpenseStatus,
             property,
-            unit
+            unit,
         });
 
         await this.em.persistAndFlush(expense);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'CREATE_EXPENSE',
+                resourceType: 'Expense',
+                resourceId: expense.id,
+                newValues: data,
+            });
+        } catch (error) {
+            console.error('Audit log failed for create expense:', error);
+        }
+
         return expense;
     }
 
     async update(id: string, data: UpdateExpenseDto): Promise<Expense> {
         const expense = await this.findOne(id);
+        const oldValues = {
+            description: expense.description,
+            amount: expense.amount,
+            category: expense.category,
+            status: expense.status,
+        };
 
         if (data.description) expense.description = data.description;
         if (data.amount) expense.amount = data.amount;
@@ -58,11 +78,46 @@ export class ExpensesService {
         if (data.invoiceNumber !== undefined) expense.invoiceNumber = data.invoiceNumber;
 
         await this.em.flush();
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'UPDATE_EXPENSE',
+                resourceType: 'Expense',
+                resourceId: expense.id,
+                oldValues,
+                newValues: data,
+            });
+        } catch (error) {
+            console.error('Audit log failed for update expense:', error);
+        }
+
         return expense;
     }
 
     async delete(id: string): Promise<void> {
         const expense = await this.findOne(id);
+        const expenseData = {
+            id: expense.id,
+            description: expense.description,
+            amount: expense.amount,
+            category: expense.category,
+        };
+
         await this.em.removeAndFlush(expense);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'DELETE_EXPENSE',
+                resourceType: 'Expense',
+                resourceId: expenseData.id,
+                oldValues: expenseData,
+            });
+        } catch (error) {
+            console.error('Audit log failed for delete expense:', error);
+        }
     }
 }

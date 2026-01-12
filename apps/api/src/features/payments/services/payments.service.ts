@@ -1,27 +1,35 @@
-import { EntityManager } from "@mikro-orm/core";
-import { Payment, PaymentStatus, PaymentMethod } from "../entities/Payment";
-import { CreatePaymentDto, UpdatePaymentDto } from "../dtos/payment.dto";
-import { NotFoundError, ValidationError } from "../../../shared/errors/AppError";
-import { Lease, LeaseStatus } from "../../leases/entities/Lease";
+import { EntityManager } from '@mikro-orm/core';
+import { Payment, PaymentStatus, PaymentMethod } from '../entities/Payment';
+import { CreatePaymentDto, UpdatePaymentDto } from '../dtos/payment.dto';
+import { NotFoundError, ValidationError } from '../../../shared/errors/AppError';
+import { Lease, LeaseStatus } from '../../leases/entities/Lease';
 
 /**
  * PaymentsService - Business logic for payment management
  * Following design_guidelines.md section 2.1 Services Pattern
  */
 export class PaymentsService {
-    constructor(private readonly em: EntityManager) { }
+    constructor(private readonly em: EntityManager) {}
 
     async findAll(): Promise<Payment[]> {
-        return this.em.find(Payment, {}, {
-            populate: ['lease', 'lease.unit', 'lease.renter'],
-            orderBy: { paymentDate: 'DESC' }
-        });
+        return this.em.find(
+            Payment,
+            {},
+            {
+                populate: ['lease', 'lease.unit', 'lease.renter'],
+                orderBy: { paymentDate: 'DESC' },
+            },
+        );
     }
 
     async findByLease(leaseId: string): Promise<Payment[]> {
-        return this.em.find(Payment, { lease: { id: leaseId } }, {
-            orderBy: { periodStart: 'DESC' }
-        });
+        return this.em.find(
+            Payment,
+            { lease: { id: leaseId } },
+            {
+                orderBy: { periodStart: 'DESC' },
+            },
+        );
     }
 
     async findOne(id: string): Promise<Payment> {
@@ -47,10 +55,23 @@ export class PaymentsService {
             method: data.method as PaymentMethod,
             reference: data.reference,
             notes: data.notes,
-            status: PaymentStatus.COMPLETED
+            status: PaymentStatus.COMPLETED,
         });
 
         await this.em.persistAndFlush(payment);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'CREATE_PAYMENT',
+                resourceType: 'Payment',
+                resourceId: payment.id,
+                newValues: { ...data, leaseId: data.leaseId },
+            });
+        } catch (error) {
+            console.error('Audit log failed for create payment:', error);
+        }
 
         // Send Email Receipt
         await this.sendReceiptNotification(payment);
@@ -61,6 +82,7 @@ export class PaymentsService {
     async update(id: string, data: UpdatePaymentDto): Promise<Payment> {
         const payment = await this.findOne(id);
         const previousStatus = payment.status;
+        const oldValues = { status: previousStatus, reference: payment.reference, method: payment.method };
 
         if (data.status) payment.status = data.status as PaymentStatus;
         if (data.reference !== undefined) payment.reference = data.reference;
@@ -69,6 +91,20 @@ export class PaymentsService {
         if (data.method) payment.method = data.method as PaymentMethod;
 
         await this.em.flush();
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'UPDATE_PAYMENT',
+                resourceType: 'Payment',
+                resourceId: payment.id,
+                oldValues,
+                newValues: data,
+            });
+        } catch (error) {
+            console.error('Audit log failed for update payment:', error);
+        }
 
         // Send receipt if status changed to COMPLETED
         if (previousStatus !== PaymentStatus.COMPLETED && payment.status === PaymentStatus.COMPLETED) {
@@ -80,7 +116,11 @@ export class PaymentsService {
 
     private async sendReceiptNotification(payment: Payment) {
         try {
-            const fullPayment = await this.em.findOne(Payment, { id: payment.id }, { populate: ['lease', 'lease.renter', 'lease.unit'] });
+            const fullPayment = await this.em.findOne(
+                Payment,
+                { id: payment.id },
+                { populate: ['lease', 'lease.renter', 'lease.unit'] },
+            );
             if (fullPayment && fullPayment.lease?.renter) {
                 // Send email if available
                 if (fullPayment.lease.renter.email) {
@@ -104,21 +144,40 @@ export class PaymentsService {
     async getPaymentSummary(leaseId: string): Promise<{ total: number; count: number }> {
         const payments = await this.em.find(Payment, {
             lease: { id: leaseId },
-            status: PaymentStatus.COMPLETED
+            status: PaymentStatus.COMPLETED,
         });
 
         return {
             total: payments.reduce((sum, p) => sum + p.amount, 0),
-            count: payments.length
+            count: payments.length,
         };
     }
     async delete(id: string): Promise<void> {
         const payment = await this.findOne(id);
+        const paymentData = {
+            id: payment.id,
+            amount: payment.amount,
+            status: payment.status,
+            leaseId: payment.lease.id,
+        };
 
         // Optional: Add logic to restrict deletion of COMPLETED payments if needed
         // For now, allow deletion but perhaps we should check status?
         // if (payment.status === PaymentStatus.COMPLETED) ...
 
         await this.em.removeAndFlush(payment);
+
+        // Audit Log
+        try {
+            const auditService = new (await import('../../admin/services/audit-log.service')).AuditLogService(this.em);
+            await auditService.log({
+                action: 'DELETE_PAYMENT',
+                resourceType: 'Payment',
+                resourceId: paymentData.id,
+                oldValues: paymentData,
+            });
+        } catch (error) {
+            console.error('Audit log failed for delete payment:', error);
+        }
     }
 }
