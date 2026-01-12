@@ -5,6 +5,14 @@ WORKDIR /app
 # Copy root configurations
 COPY package.json package-lock.json turbo.json ./
 
+# Accept build argument BEFORE copying source files
+ARG VITE_API_URL
+# Set as environment variable for Vite to read during build
+ENV VITE_API_URL=$VITE_API_URL
+
+# Debug: Print the variable to verify it's set
+RUN echo "Building with VITE_API_URL=$VITE_API_URL"
+
 # Copy all workspaces
 COPY packages ./packages
 COPY apps ./apps
@@ -13,14 +21,6 @@ COPY apps ./apps
 RUN npm install
 
 # Build Web (using Turbo)
-# Accept build argument
-ARG VITE_API_URL
-# Set as environment variable for Vite to read during build
-ENV VITE_API_URL=$VITE_API_URL
-
-# Debug: Print the variable to verify it's set
-RUN echo "Building with VITE_API_URL=$VITE_API_URL"
-
 RUN npx turbo run build --filter=web...
 
 # Production Stage - Nginx
