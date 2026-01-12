@@ -14,10 +14,19 @@ import { createLeaseSchema, CreateLeaseDto } from "@proppio/shared";
 import { FormField } from "@/components/forms/FormField";
 import { CurrencyInput } from "@/components/ui/CurrencyInput";
 import { toUTC } from "@/lib/dateUtils";
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import { api } from "@/api/client";
+
+interface Unit {
+    id: string;
+    name: string;
+    propertyName?: string;
+    status: string;
+}
+
+interface Renter {
+    id: string;
+    firstName: string;
+    lastName: string;
+}
 
 export function LeasesPage() {
     const navigate = useNavigate();
@@ -41,28 +50,6 @@ export function LeasesPage() {
     });
 
     const startDate = watch('startDate');
-    const selectedUnitId = watch('unitId');
-    const selectedRenterId = watch('renterId');
-    const monthlyRent = watch('monthlyRent');
-
-    // Contract Template State
-    const [templates, setTemplates] = useState<any[]>([]);
-    const [creationMethod, setCreationMethod] = useState<'manual' | 'template'>('manual');
-    const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-
-    const editor = useEditor({
-        extensions: [
-            StarterKit,
-            Placeholder.configure({ placeholder: 'El contenido del contrato aparecerá aquí...' }),
-        ],
-        content: '',
-        editable: true,
-    });
-
-    // Fetch templates on mount
-    useEffect(() => {
-        api.get('/api/leases/templates').then(res => setTemplates(res.data.data)).catch(console.error);
-    }, []);
 
     // Effect to handle URL params for creation
     useEffect(() => {
@@ -89,48 +76,19 @@ export function LeasesPage() {
     }, [startDate, duration, setValue]);
 
     // Flatten units from all properties and filter only VACANT ones
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allUnits = properties?.flatMap((p: any) =>
         (p.units || [])
-            .filter((u: any) => u.status === 'VACANT')
+            .filter((u: Unit) => u.status === 'VACANT')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .map((u: any) => ({ ...u, propertyName: p.name }))
     ) || [];
-
-    // Effect to auto-fill template when selected
-    useEffect(() => {
-        if (selectedTemplateId && selectedUnitId && selectedRenterId) {
-            const template = templates.find(t => t.id === selectedTemplateId);
-            if (template) {
-                // Find data objects
-                const unit = allUnits.find((u: any) => u.id === selectedUnitId);
-                const renter = renters?.find((r: any) => r.id === selectedRenterId);
-
-                let content = template.content;
-                // Simple replacement
-                if (renter) {
-                    content = content.replace(/{{renter.firstName}}/g, renter.firstName || '')
-                        .replace(/{{renter.lastName}}/g, renter.lastName || '')
-                        .replace(/{{renter.documentNumber}}/g, renter.documentNumber || '');
-                }
-                if (unit) {
-                    content = content.replace(/{{unit.name}}/g, unit.name || '')
-                        .replace(/{{unit.property.address}}/g, unit.propertyName || '');
-                }
-                const formattedRent = monthlyRent ? new Intl.NumberFormat('es-CO').format(monthlyRent) : '0';
-                content = content.replace(/{{monthlyRent}}/g, `$${formattedRent}`);
-                content = content.replace(/{{startDate}}/g, startDate || '');
-                // endDate might not be ready in watch if calculated, but users can edit manually
-
-                editor?.commands.setContent(content);
-            }
-        }
-    }, [selectedTemplateId, selectedUnitId, selectedRenterId, monthlyRent, startDate, templates, editor, allUnits, renters]);
 
     const onSubmit = (data: CreateLeaseDto) => {
         const formattedData = {
             ...data,
             startDate: toUTC(new Date(`${data.startDate}T00:00:00`)),
             endDate: toUTC(new Date(`${data.endDate}T00:00:00`)),
-            contractContent: creationMethod === 'template' ? editor?.getHTML() : undefined
         };
 
         createMutation.mutate(formattedData, {
@@ -138,9 +96,6 @@ export function LeasesPage() {
                 reset();
                 setDuration("12");
                 setIsCreating(false);
-                setCreationMethod('manual');
-                setSelectedTemplateId("");
-                editor?.commands.setContent("");
             }
         });
     };
@@ -172,7 +127,7 @@ export function LeasesPage() {
                                     className={`w-full h-10 px-3 rounded-md border ${errors.unitId ? 'border-destructive' : 'border-gray-200'} bg-white`}
                                 >
                                     <option value="">Seleccionar unidad...</option>
-                                    {allUnits.map((u: any) => (
+                                    {allUnits.map((u: Unit) => (
                                         <option key={u.id} value={u.id}>{u.propertyName} - {u.name}</option>
                                     ))}
                                 </select>
@@ -183,7 +138,7 @@ export function LeasesPage() {
                                     className={`w-full h-10 px-3 rounded-md border ${errors.renterId ? 'border-destructive' : 'border-gray-200'} bg-white`}
                                 >
                                     <option value="">Seleccionar inquilino...</option>
-                                    {renters?.map((r: any) => (
+                                    {renters?.map((r: Renter) => (
                                         <option key={r.id} value={r.id}>{r.firstName} {r.lastName}</option>
                                     ))}
                                 </select>
@@ -272,46 +227,9 @@ export function LeasesPage() {
                                 />
                             </FormField>
 
-                            <div className="md:col-span-2 space-y-4 pt-4 border-t">
-                                <label className="text-sm font-medium">Método de Generación de Contrato</label>
-                                <div className="flex gap-4">
-                                    <div className={`p-4 border rounded-lg cursor-pointer flex-1 transition-all ${creationMethod === 'manual' ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'hover:bg-gray-50 border-gray-200'}`} onClick={() => setCreationMethod('manual')}>
-                                        <h4 className="font-medium text-gray-900">Subir PDF Manualmente</h4>
-                                        <p className="text-sm text-gray-500 mt-1">Crear el contrato y subir el archivo PDF escaneado después.</p>
-                                    </div>
-                                    <div className={`p-4 border rounded-lg cursor-pointer flex-1 transition-all ${creationMethod === 'template' ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'hover:bg-gray-50 border-gray-200'}`} onClick={() => setCreationMethod('template')}>
-                                        <h4 className="font-medium text-gray-900">Usar Plantilla</h4>
-                                        <p className="text-sm text-gray-500 mt-1">Generar automáticamente desde una plantilla guardada.</p>
-                                    </div>
-                                </div>
-
-                                {creationMethod === 'template' && (
-                                    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
-                                        <FormField label="Seleccionar Plantilla">
-                                            <select
-                                                className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white"
-                                                value={selectedTemplateId}
-                                                onChange={(e) => setSelectedTemplateId(e.target.value)}
-                                            >
-                                                <option value="">Selecciona una plantilla...</option>
-                                                {templates.map(t => (
-                                                    <option key={t.id} value={t.id}>{t.name}</option>
-                                                ))}
-                                            </select>
-                                        </FormField>
-
-                                        <div className="border rounded-md p-2 bg-white min-h-[300px] shadow-inner">
-                                            <EditorContent editor={editor} className="prose max-w-none focus:outline-none min-h-[300px] p-2" />
-                                        </div>
-                                        <p className="text-xs text-gray-500">
-                                            Revisa y edita el contenido generado arriba. Este será el documento final del contrato.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
                         </CardContent>
                         <div className="px-6 pb-6 flex justify-end gap-2">
-                            <Button type="button" variant="ghost" onClick={() => { reset(); setIsCreating(false); setCreationMethod('manual'); }}>Cancelar</Button>
+                            <Button type="button" variant="ghost" onClick={() => { reset(); setIsCreating(false); }}>Cancelar</Button>
                             <Button type="submit" disabled={createMutation.isPending}>
                                 {createMutation.isPending ? 'Guardando...' : 'Crear Contrato'}
                             </Button>
@@ -336,7 +254,7 @@ export function LeasesPage() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {leases?.map((lease: any) => (
+                        {leases?.map((lease) => (
                             <LeaseCard
                                 key={lease.id}
                                 lease={lease}
@@ -357,6 +275,6 @@ export function LeasesPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

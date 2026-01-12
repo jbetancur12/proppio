@@ -3,14 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Plus, Edit, Trash2, CheckCircle } from "lucide-react";
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
 import { api } from "@/api/client";
 import { toast } from "sonner";
-
-// Local axios instance removed in favor of shared client
-
+import { ContractEditor } from "../../leases/components/ContractEditor";
 
 interface ContractTemplate {
     id: string;
@@ -24,18 +19,8 @@ export function ContractTemplatesSettingsTab() {
     const [isEditing, setIsEditing] = useState(false);
     const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null);
     const [templateName, setTemplateName] = useState("");
+    const [templateContent, setTemplateContent] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-
-    const editor = useEditor({
-        extensions: [
-            StarterKit,
-            Placeholder.configure({
-                placeholder: 'Escribe el contenido del contrato aquí...',
-            }),
-        ],
-        content: '',
-        editable: true,
-    });
 
     useEffect(() => {
         fetchTemplates();
@@ -62,34 +47,33 @@ export function ContractTemplatesSettingsTab() {
         setIsEditing(true);
         setCurrentTemplateId(null);
         setTemplateName("");
-        editor?.commands.setContent("");
+        setTemplateContent("");
     };
 
     const handleEdit = (template: ContractTemplate) => {
         setIsEditing(true);
         setCurrentTemplateId(template.id);
         setTemplateName(template.name);
-        editor?.commands.setContent(template.content);
+        setTemplateContent(template.content);
     };
 
     const handleSave = async () => {
-        if (!templateName.trim() || !editor?.getHTML()) {
+        if (!templateName.trim() || !templateContent.trim()) {
             toast.error("Nombre y contenido son requeridos");
             return;
         }
 
-        const content = editor.getHTML();
-
         try {
             if (currentTemplateId) {
-                await api.put(`/api/leases/templates/${currentTemplateId}`, { name: templateName, content });
+                await api.put(`/api/leases/templates/${currentTemplateId}`, { name: templateName, content: templateContent });
                 toast.success("Plantilla actualizada");
             } else {
-                await api.post('/api/leases/templates', { name: templateName, content });
+                await api.post('/api/leases/templates', { name: templateName, content: templateContent });
                 toast.success("Plantilla creada");
             }
             setIsEditing(false);
             fetchTemplates();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Error al guardar");
         }
@@ -101,13 +85,9 @@ export function ContractTemplatesSettingsTab() {
             await api.delete(`/api/leases/templates/${id}`);
             toast.success("Plantilla eliminada");
             fetchTemplates();
-        } catch (error) {
+        } catch {
             toast.error("Error al eliminar");
         }
-    };
-
-    const insertVariable = (variable: string) => {
-        editor?.chain().focus().insertContent(variable).run();
     };
 
     const variables = [
@@ -138,32 +118,27 @@ export function ContractTemplatesSettingsTab() {
                     onChange={e => setTemplateName(e.target.value)}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-3 border rounded-lg p-2 min-h-[400px] bg-white">
-                        <div className="mb-2 border-b pb-2 space-x-2">
-                            <Button size="sm" variant="ghost" onClick={() => editor?.chain().focus().toggleBold().run()} className={editor?.isActive('bold') ? 'bg-slate-200' : ''}>Bold</Button>
-                            <Button size="sm" variant="ghost" onClick={() => editor?.chain().focus().toggleItalic().run()} className={editor?.isActive('italic') ? 'bg-slate-200' : ''}>Italic</Button>
-                            <Button size="sm" variant="ghost" onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} className={editor?.isActive('heading', { level: 2 }) ? 'bg-slate-200' : ''}>H2</Button>
-                            <Button size="sm" variant="ghost" onClick={() => editor?.chain().focus().toggleBulletList().run()} className={editor?.isActive('bulletList') ? 'bg-slate-200' : ''}>List</Button>
-                        </div>
-                        <EditorContent editor={editor} className="prose max-w-none focus:outline-none min-h-[300px]" />
-                    </div>
-                    <div className="md:col-span-1 border rounded-lg p-4 bg-gray-50 h-fit">
-                        <h4 className="font-medium mb-3 text-sm text-gray-700">Variables Disponibles</h4>
-                        <div className="space-y-2">
-                            {variables.map(v => (
-                                <button
-                                    key={v.value}
-                                    onClick={() => insertVariable(v.value)}
-                                    className="w-full text-left text-xs bg-white border p-2 rounded hover:bg-gray-100 transition-colors flex justify-between group"
-                                >
-                                    <span>{v.label}</span>
-                                    <span className="text-blue-600 opacity-0 group-hover:opacity-100">+</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                <ContractEditor
+                    initialContent={templateContent}
+                    onUpdate={setTemplateContent}
+                    variables={variables}
+                    previewData={{
+                        renter: {
+                            firstName: "Juan",
+                            lastName: "Pérez",
+                            documentNumber: "12345678"
+                        },
+                        unit: {
+                            name: "Apto 101",
+                            property: {
+                                address: "Calle 123 # 45-67"
+                            }
+                        },
+                        monthlyRent: "$1.500.000",
+                        startDate: "2024-01-01",
+                        endDate: "2025-01-01"
+                    }}
+                />
             </div>
         );
     }

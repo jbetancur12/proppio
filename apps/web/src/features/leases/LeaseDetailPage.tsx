@@ -10,10 +10,158 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { LeaseRenewalSection } from "./components/LeaseRenewalSection";
 import { usePendingPayments } from "../payments/hooks/usePaymentTracking";
-import { paymentTrackingApi } from "../payments/services/paymentTrackingApi";
+import { paymentTrackingApi, PendingPayment } from "../payments/services/paymentTrackingApi";
 import { addDays, differenceInMonths } from "date-fns";
 import { leasesApi } from "./services/leasesApi";
 import { formatDateUTC } from "@/lib/dateUtils";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ContractEditor } from "./components/ContractEditor";
+import { useState, useEffect } from "react";
+import { api } from "@/api/client";
+
+// Define types locally if not available in shared DTOs (ideally should be shared)
+interface Template {
+    id: string;
+    name: string;
+    content: string;
+}
+
+interface LeasePreview {
+    id?: string;
+    renter?: {
+        firstName?: string;
+        lastName?: string;
+        documentNumber?: string;
+    };
+    unit?: {
+        name?: string;
+        property?: {
+            name: string;
+            address?: string;
+        };
+    };
+    monthlyRent?: number;
+    startDate?: string | Date;
+    endDate?: string | Date;
+}
+
+function GenerateFromTemplateDialog({ lease }: { lease: LeasePreview }) {
+    const [open, setOpen] = useState(false);
+    const [templates, setTemplates] = useState<Template[]>([]);
+    const [selectedTemplateId, setSelectedTemplateId] = useState("");
+    const [content, setContent] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (open) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            api.get('/api/leases/templates').then((res: any) => setTemplates(res.data.data)).catch(console.error);
+        }
+    }, [open]);
+
+    const replaceVariables = (text: string) => {
+        let newContent = text;
+        if (lease.renter) {
+            newContent = newContent.replace(/{{renter.firstName}}/g, lease.renter.firstName || '')
+                .replace(/{{renter.lastName}}/g, lease.renter.lastName || '')
+                .replace(/{{renter.documentNumber}}/g, lease.renter.documentNumber || '');
+        }
+        if (lease.unit) {
+            newContent = newContent.replace(/{{unit.name}}/g, lease.unit.name || '')
+                .replace(/{{unit.property.address}}/g, lease.unit.property?.address || lease.unit.property?.name || '');
+        }
+        const formattedRent = lease.monthlyRent ? new Intl.NumberFormat('es-CO').format(lease.monthlyRent) : '0';
+        newContent = newContent.replace(/{{monthlyRent}}/g, `$${formattedRent}`);
+        newContent = newContent.replace(/{{startDate}}/g, lease.startDate ? formatDateUTC(lease.startDate) : '');
+        newContent = newContent.replace(/{{endDate}}/g, lease.endDate ? formatDateUTC(lease.endDate) : '');
+        return newContent;
+    };
+
+    const handleTemplateSelect = (templateId: string) => {
+        setSelectedTemplateId(templateId);
+        const template = templates.find(t => t.id === templateId);
+        if (template) {
+            setContent(replaceVariables(template.content));
+        }
+    };
+
+    const handleSave = async () => {
+        if (!content) return;
+        setIsSaving(true);
+
+        // Final pass replacement to catch any newly added variables
+        const finalContent = replaceVariables(content);
+
+        try {
+            // Use update endpoint. Logic implies if contractContent is present, PDF is generated.
+            await api.put(`/api/leases/${lease.id}`, { contractContent: finalContent });
+            toast.success("Contrato generado y guardado exitosamente");
+            setOpen(false);
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            toast.error("Error al guardar el contrato");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                    <FileText size={14} className="mr-2" /> Generar desde Plantilla
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Generar Contrato desde Plantilla</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-sm font-medium mb-1 block">Seleccionar Plantilla</label>
+                        <select
+                            className="w-full p-2 border rounded-md"
+                            value={selectedTemplateId}
+                            onChange={(e) => handleTemplateSelect(e.target.value)}
+                        >
+                            <option value="">Seleccione...</option>
+                            {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                    </div>
+
+                    {selectedTemplateId && (
+                        <div className="border rounded-md p-1 min-h-[400px]">
+                            <ContractEditor
+                                initialContent={content}
+                                onUpdate={setContent}
+                                previewData={lease as unknown as Record<string, unknown>}
+                                variables={[
+                                    { label: "Nombre Inquilino", value: "{{renter.firstName}}" },
+                                    { label: "Apellido Inquilino", value: "{{renter.lastName}}" },
+                                    { label: "Cédula", value: "{{renter.documentNumber}}" },
+                                    { label: "Dirección Inmueble", value: "{{unit.property.address}}" },
+                                    { label: "Unidad", value: "{{unit.name}}" },
+                                    { label: "Canon", value: "{{monthlyRent}}" },
+                                    { label: "Fecha Inicio", value: "{{startDate}}" },
+                                    { label: "Fecha Fin", value: "{{endDate}}" },
+                                ]}
+                            />
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleSave} disabled={!selectedTemplateId || isSaving}>
+                            {isSaving ? 'Guardando...' : 'Guardar y Generar PDF'}
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 const statusConfig = {
     DRAFT: { label: 'Borrador', color: 'bg-gray-100 text-gray-700', icon: FileText },
@@ -126,9 +274,9 @@ export function LeaseDetailPage() {
                                 leaseId={id!}
                                 monthlyRent={lease.monthlyRent}
                                 startDate={lease.startDate}
-                                renewalCount={(lease as any).renewalCount}
-                                noticeRequiredDays={(lease as any).noticeRequiredDays}
-                                earlyTerminationPenalty={(lease as any).earlyTerminationPenalty}
+                                renewalCount={(lease as unknown as { renewalCount: number }).renewalCount}
+                                noticeRequiredDays={(lease as unknown as { noticeRequiredDays: number }).noticeRequiredDays}
+                                earlyTerminationPenalty={(lease as unknown as { earlyTerminationPenalty: number }).earlyTerminationPenalty}
                             />
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
@@ -181,7 +329,7 @@ export function LeaseDetailPage() {
                             {pendingPayments.length} {pendingPayments.length === 1 ? 'cobro pendiente' : 'cobros pendientes'} por gestionar.
                         </p>
                         <ul className="text-sm space-y-2">
-                            {pendingPayments.map((pending) => (
+                            {pendingPayments.map((pending: PendingPayment) => (
                                 <li key={pending.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 bg-white rounded border border-red-100">
                                     <div className="flex flex-col">
                                         <span className="font-semibold text-gray-900">{pending.description || `Arriendo ${new Date(pending.periodStart).toLocaleDateString('es-CO', { month: 'long' })}`}</span>
@@ -312,7 +460,7 @@ export function LeaseDetailPage() {
                                                             try {
                                                                 const url = await leasesApi.getContractUrl(id!);
                                                                 window.open(url, '_blank');
-                                                            } catch (error) {
+                                                            } catch {
                                                                 toast.error("Error al descargar el contrato");
                                                             }
                                                         }}
@@ -329,7 +477,8 @@ export function LeaseDetailPage() {
                                                                     await leasesApi.deleteContract(id!);
                                                                     toast.success("Contrato eliminado exitosamente");
                                                                     window.location.reload();
-                                                                } catch (error) {
+                                                                    window.location.reload();
+                                                                } catch {
                                                                     toast.error("Error al eliminar el contrato");
                                                                 }
                                                             }
@@ -341,16 +490,19 @@ export function LeaseDetailPage() {
                                                 </div>
                                             </div>
                                         ) : (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-full sm:w-auto"
-                                                onClick={() => document.getElementById('upload-contract')?.click()}
-                                                disabled={uploadContractMutation.isPending}
-                                                title="El archivo debe pesar menos de 5MB"
-                                            >
-                                                {uploadContractMutation.isPending ? 'Subiendo...' : 'Subir PDF'}
-                                            </Button>
+                                            <div className="flex gap-2 w-full sm:w-auto">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full sm:w-auto"
+                                                    onClick={() => document.getElementById('upload-contract')?.click()}
+                                                    disabled={uploadContractMutation.isPending}
+                                                    title="El archivo debe pesar menos de 5MB"
+                                                >
+                                                    {uploadContractMutation.isPending ? 'Subiendo...' : 'Subir PDF'}
+                                                </Button>
+                                                <GenerateFromTemplateDialog lease={lease} />
+                                            </div>
                                         )}
                                     </div>
                                 </div>
