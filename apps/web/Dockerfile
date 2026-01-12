@@ -21,7 +21,8 @@ COPY apps ./apps
 RUN npm install
 
 # Build Web (using Turbo)
-RUN npx turbo run build --filter=web...
+# Force clear Turbo cache to ensure fresh build with correct env vars
+RUN npx turbo run build --filter=web... --force
 
 # Production Stage - Nginx
 FROM nginx:alpine
