@@ -45,16 +45,17 @@ export class UnitsService {
     }
 
     async findAllByProperty(propertyId: string) {
-        // Optimize: Use QueryBuilder to only fetch ACTIVE leases
+        // Optimize: Use populateWhere to only fetch ACTIVE leases
         // This avoids loading historical leases and reduces memory/CPU usage
-        const units = await this.em
-            .createQueryBuilder(UnitEntity, 'u')
-            .select('*')
-            .leftJoinAndSelect('u.leases', 'l', { 'l.status': LeaseStatus.ACTIVE })
-            .leftJoinAndSelect('l.renter', 'r')
-            .leftJoinAndSelect('l.payments', 'p')
-            .where({ 'u.property': propertyId })
-            .getResultList();
+        const units = await this.unitRepo.find(
+            { property: { id: propertyId } },
+            {
+                populate: ['leases', 'leases.renter', 'leases.payments'] as any,
+                populateWhere: {
+                    leases: { status: LeaseStatus.ACTIVE },
+                },
+            },
+        );
 
         if (units.length === 0) return [];
 
