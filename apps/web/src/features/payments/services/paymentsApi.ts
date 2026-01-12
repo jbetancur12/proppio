@@ -1,30 +1,14 @@
-import { api } from "../../../api/client";
-
-export interface PaymentData {
-    id: string;
-    lease: {
-        id: string;
-        unit: { id: string; name: string };
-        renter: { id: string; firstName: string; lastName: string };
-    };
-    amount: number;
-    paymentDate: string;
-    periodStart: string;
-    periodEnd: string;
-    method: 'CASH' | 'TRANSFER' | 'CHECK' | 'CARD' | 'OTHER';
-    status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-    reference?: string;
-    notes?: string;
-}
+import { api } from '../../../api/client';
+import { Payment } from '@proppio/types';
 
 export const paymentsApi = {
-    getAll: async (leaseId?: string): Promise<PaymentData[]> => {
+    getAll: async (leaseId?: string): Promise<Payment[]> => {
         const url = leaseId ? `/api/payments?leaseId=${leaseId}` : '/api/payments';
         const res = await api.get(url);
         return res.data.data;
     },
 
-    getById: async (id: string): Promise<PaymentData> => {
+    getById: async (id: string): Promise<Payment> => {
         const res = await api.get(`/api/payments/${id}`);
         return res.data.data;
     },
@@ -43,7 +27,7 @@ export const paymentsApi = {
         return res.data.data;
     },
 
-    update: async (params: { id: string; data: Partial<PaymentData> }) => {
+    update: async (params: { id: string; data: Partial<Payment> }) => {
         const res = await api.put(`/api/payments/${params.id}`, params.data);
         return res.data.data;
     },
@@ -59,7 +43,7 @@ export const paymentsApi = {
 
     downloadReceipt: async (id: string, reference?: string) => {
         const res = await api.get(`/api/payments/${id}/receipt`, {
-            responseType: 'blob'
+            responseType: 'blob',
         });
 
         // Create download link
@@ -71,5 +55,5 @@ export const paymentsApi = {
         document.body.appendChild(link);
         link.click();
         link.remove();
-    }
+    },
 };

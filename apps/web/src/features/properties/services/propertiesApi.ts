@@ -1,17 +1,5 @@
 import { api } from '../../../api/client';
-
-export interface Unit {
-    id: string;
-    name: string;
-    status: 'VACANT' | 'OCCUPIED' | 'MAINTENANCE';
-}
-
-export interface Property {
-    id: string;
-    name: string;
-    address: string;
-    units?: Unit[];
-}
+import { Property, Unit } from '@proppio/types';
 
 export const propertiesApi = {
     getAll: async (): Promise<Property[]> => {
@@ -29,7 +17,7 @@ export const propertiesApi = {
         return res.data;
     },
 
-    getUnits: async (propertyId: string) => {
+    getUnits: async (propertyId: string): Promise<Unit[]> => {
         const res = await api.get(`/api/properties/${propertyId}/units`);
         return res.data.data;
     },
@@ -42,7 +30,7 @@ export const propertiesApi = {
         bathrooms?: number;
         area?: number;
         baseRent?: number;
-    }) => {
+    }): Promise<Unit> => {
         const res = await api.post('/api/properties/units', data);
         return res.data.data;
     },

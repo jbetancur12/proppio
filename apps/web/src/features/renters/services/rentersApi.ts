@@ -1,14 +1,6 @@
 import { api } from '../../../api/client';
 import { PaginatedResponse } from '@/types/pagination';
-
-export interface Renter {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email?: string;
-    phone: string;
-    identification: string;
-}
+import { Renter } from '@proppio/types';
 
 export const rentersApi = {
     getAll: async (params?: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<Renter>> => {
