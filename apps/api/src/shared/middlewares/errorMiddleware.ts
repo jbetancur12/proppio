@@ -3,7 +3,7 @@ import { AppError } from '../errors/AppError';
 import { logger } from '../logger';
 
 export const errorMiddleware = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    let error = err;
+    const error = err;
 
     // Set default values
     let statusCode = 500;
