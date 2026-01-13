@@ -1,1 +1,2 @@
-export { createPropertySchema, CreatePropertyDto, updatePropertySchema, UpdatePropertyDto } from '@proppio/schemas';
+export { createPropertySchema, updatePropertySchema } from '@proppio/schemas';
+export type { CreatePropertyDto, UpdatePropertyDto } from '@proppio/schemas';

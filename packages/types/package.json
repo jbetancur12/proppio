@@ -1,6 +1,7 @@
 {
     "name": "@proppio/types",
     "version": "1.0.0",
+    "private": true,
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
@@ -13,8 +14,8 @@
         }
     },
     "scripts": {
-        "build": "tsc",
-        "dev": "tsc --watch"
+        "build": "tsc -p tsconfig.json",
+        "dev": "tsc -p tsconfig.json --watch"
     },
     "devDependencies": {
         "typescript": "^5.0.0"
