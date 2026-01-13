@@ -1,15 +1,10 @@
 import { User, Phone, Mail, IdCard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { Renter } from "@proppio/types";
+
 interface RenterCardProps {
-    renter: {
-        id: string;
-        firstName: string;
-        lastName: string;
-        email?: string;
-        phone: string;
-        identification: string;
-    };
+    renter: Renter;
     onClick?: () => void;
 }
 

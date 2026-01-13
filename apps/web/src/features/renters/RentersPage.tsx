@@ -11,7 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createRenterSchema, CreateRenterDto } from '@proppio/shared';
 import { FormField } from '@/components/forms/FormField';
 
-import { Renter } from './services/rentersApi';
+import { Renter } from "@proppio/types"; // Import from shared types
 
 /**
  * Container component - manages state and orchestrates data flow

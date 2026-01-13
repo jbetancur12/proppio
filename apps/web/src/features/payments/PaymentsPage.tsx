@@ -11,29 +11,7 @@ import { PaymentCard } from "./components/PaymentCard";
 
 // ... existing code ...
 
-interface Lease {
-    id: string;
-    monthlyRent: number;
-    status: string;
-    unit?: { name: string };
-    renter?: { firstName: string; lastName: string };
-}
-
-interface Payment {
-    id: string;
-    amount: number;
-    status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-    paymentDate: string;
-    periodStart: string;
-    periodEnd: string;
-    method: 'TRANSFER' | 'CASH' | 'CHECK' | 'CARD' | 'OTHER';
-    reference?: string;
-    lease: {
-        id: string;
-        unit: { id: string; name: string };
-        renter: { id: string; firstName: string; lastName: string };
-    };
-}
+import { Payment, Lease } from "@proppio/types";
 
 /**
  * PaymentsPage - Container component
@@ -52,7 +30,7 @@ export function PaymentsPage() {
     });
     const [periodStart, setPeriodStart] = useState("");
     const [periodEnd, setPeriodEnd] = useState("");
-    const [method, setMethod] = useState<'TRANSFER' | 'CASH' | 'CHECK' | 'CARD' | 'OTHER'>("TRANSFER");
+    const [method, setMethod] = useState<Payment['method']>("TRANSFER");
     const [reference, setReference] = useState("");
 
     const [searchParams, setSearchParams] = useSearchParams();
@@ -60,6 +38,20 @@ export function PaymentsPage() {
 
     const { data: payments, isLoading } = usePayments();
     const { data: leases } = useLeases();
+
+    const handleRegister = (payment: Payment) => {
+        setEditingPaymentId(payment.id);
+        setSelectedLease(payment.lease.id);
+        setAmount(payment.amount);
+        const today = new Date();
+        const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        setPaymentDate(localDate); // Default to today local time
+        setPeriodStart(payment.periodStart.split('T')[0]);
+        setPeriodEnd(payment.periodEnd.split('T')[0]);
+        setMethod(payment.method || "TRANSFER");
+        setReference(payment.reference || "");
+        setIsCreating(true);
+    };
 
     // Auto-open modal if paymentId provided
     useEffect(() => {
@@ -75,7 +67,7 @@ export function PaymentsPage() {
                 });
             }
         }
-    }, [autoSelectPaymentId, payments, setSearchParams]);
+    }, [autoSelectPaymentId, payments, setSearchParams, handleRegister]);
     const createMutation = useCreatePayment();
     const updateMutation = useUpdatePayment();
     const deleteMutation = useDeletePayment();
@@ -125,20 +117,6 @@ export function PaymentsPage() {
         } else {
             createMutation.mutate(payload, { onSuccess: resetForm });
         }
-    };
-
-    const handleRegister = (payment: Payment) => {
-        setEditingPaymentId(payment.id);
-        setSelectedLease(payment.lease.id);
-        setAmount(payment.amount);
-        const today = new Date();
-        const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        setPaymentDate(localDate); // Default to today local time
-        setPeriodStart(payment.periodStart.split('T')[0]);
-        setPeriodEnd(payment.periodEnd.split('T')[0]);
-        setMethod(payment.method || "TRANSFER");
-        setReference(payment.reference || "");
-        setIsCreating(true);
     };
 
     const formatCurrency = (value: number) =>
@@ -249,7 +227,7 @@ export function PaymentsPage() {
                             <select
                                 className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white"
                                 value={method}
-                                onChange={e => setMethod(e.target.value as 'TRANSFER' | 'CASH' | 'CHECK' | 'CARD' | 'OTHER')}
+                                onChange={e => setMethod(e.target.value as Payment['method'])}
                             >
                                 <option value="TRANSFER">Transferencia</option>
                                 <option value="CASH">Efectivo</option>

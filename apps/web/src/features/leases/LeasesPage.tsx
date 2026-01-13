@@ -14,8 +14,7 @@ import { createLeaseSchema, CreateLeaseDto } from '@proppio/shared';
 import { FormField } from '@/components/forms/FormField';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { toUTC } from '@/lib/dateUtils';
-import { Property, Unit as ApiUnit } from '../properties/services/propertiesApi';
-import { Renter } from '../renters/services/rentersApi';
+import { Property, Unit as ApiUnit, Renter } from "@proppio/types";
 
 interface Unit extends ApiUnit {
     propertyName?: string;

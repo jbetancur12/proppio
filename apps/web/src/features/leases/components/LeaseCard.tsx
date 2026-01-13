@@ -2,13 +2,13 @@ import { FileText, Calendar, DollarSign, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { LeaseData } from "../services/leasesApi";
+import { Lease } from "@proppio/types";
 import { formatDateUTC } from "@/lib/dateUtils";
 
 interface LeaseCardProps {
-    lease: LeaseData;
-    onActivate?: () => void;
-    onTerminate?: () => void;
+    lease: Lease;
+    onActivate?: (id: string) => void;
+    onTerminate?: (id: string) => void;
     onClick?: () => void;
 }
 
@@ -67,12 +67,12 @@ export function LeaseCard({ lease, onActivate, onTerminate, onClick }: LeaseCard
                 {(lease.status === 'DRAFT' || lease.status === 'ACTIVE') && (
                     <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
                         {lease.status === 'DRAFT' && onActivate && (
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={onActivate}>
+                            <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={(e) => { e.stopPropagation(); onActivate(lease.id); }}>
                                 Activar
                             </Button>
                         )}
                         {lease.status === 'ACTIVE' && onTerminate && (
-                            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={onTerminate}>
+                            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); onTerminate(lease.id); }}>
                                 Terminar
                             </Button>
                         )}

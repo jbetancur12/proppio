@@ -1,18 +1,6 @@
 import { api } from '../../../api/client';
 import { PaginatedResponse } from '@/types/pagination';
-
-export interface ExpenseData {
-    id: string;
-    description: string;
-    amount: number;
-    date: string;
-    category: 'MAINTENANCE' | 'REPAIRS' | 'UTILITIES' | 'TAXES' | 'MANAGEMENT' | 'INSURANCE' | 'OTHER';
-    status: 'PENDING' | 'PAID' | 'CANCELLED';
-    property: { id: string; name: string };
-    unit?: { id: string; name: string };
-    supplier?: string;
-    invoiceNumber?: string;
-}
+import { Expense } from '@proppio/types';
 
 export const expensesApi = {
     getAll: async (params?: {
@@ -20,12 +8,12 @@ export const expensesApi = {
         limit?: number;
         search?: string;
         propertyId?: string;
-    }): Promise<PaginatedResponse<ExpenseData>> => {
+    }): Promise<PaginatedResponse<Expense>> => {
         const res = await api.get('/api/expenses', { params });
         return res.data;
     },
 
-    getById: async (id: string): Promise<ExpenseData> => {
+    getById: async (id: string): Promise<Expense> => {
         const res = await api.get(`/api/expenses/${id}`);
         return res.data.data;
     },
@@ -45,7 +33,7 @@ export const expensesApi = {
         return res.data.data;
     },
 
-    update: async (id: string, data: Partial<ExpenseData>) => {
+    update: async (id: string, data: Partial<Expense>) => {
         const res = await api.put(`/api/expenses/${id}`, data);
         return res.data.data;
     },
