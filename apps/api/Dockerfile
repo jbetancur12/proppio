@@ -24,8 +24,7 @@ RUN npm run build --workspace api
 FROM ghcr.io/puppeteer/puppeteer:22.8.2
 
 ENV NODE_ENV=production \
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 WORKDIR /app
 
