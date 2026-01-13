@@ -1,30 +1,30 @@
-########################################
-# ----------- BUILD STAGE --------------
-########################################
-FROM node:20-alpine AS builder
+# Stage 1: Pruner
+FROM node:20-alpine AS pruner
+WORKDIR /app
+RUN npm install -g turbo
+COPY . .
+RUN turbo prune --scope=web --docker
 
+# Stage 2: Builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# 1️⃣ Copiamos TODO el monorepo (obligatorio para workspaces)
-COPY . .
-
-# 2️⃣ Instalamos dependencias
+# Copy lockfile and package.json's first
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/package-lock.json ./package-lock.json
 RUN npm ci
 
-# 3️⃣ Variables de build (Vite)
+# Copy source code
+COPY --from=pruner /app/out/full/ .
+
+# Build arguments
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-# 4️⃣ Build packages primero (dependencias de web)
-RUN npm run build:packages
+# Build Web and its dependencies using Turbo
+RUN npx turbo run build --filter=web
 
-# 5️⃣ Build Web
-RUN npm run build --workspace web
-
-
-########################################
-# ----------- RUNTIME STAGE -------------
-########################################
+# Stage 3: Runner
 FROM nginx:alpine
 
 # Config Nginx
