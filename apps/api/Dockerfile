@@ -45,7 +45,7 @@ COPY --from=builder /app/apps/api/package*.json ./
 COPY --from=builder /app/packages ../packages
 # Copy shared apps to parent directory (for file:../shared reference)
 COPY --from=builder /app/apps/shared ../shared
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Copy compiled code and source files
 COPY --from=builder /app/apps/api/dist ./dist
