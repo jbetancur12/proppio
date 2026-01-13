@@ -26,7 +26,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 # 4. Optional: Run Migrations
 # Only run if you suspect schema changes, or uncomment to always run.
 echo "🗄️  Checking for database migrations..."
-docker compose -f docker-compose.prod.yml exec -T api npm run migration:up
+# docker compose -f docker-compose.prod.yml exec -T api npm run migration:up
 
 # 5. Cleanup
 echo "🧹 Cleaning up unused images..."
