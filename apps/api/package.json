@@ -20,6 +20,8 @@
         "test-renewals": "tsx test-renewals.ts"
     },
     "dependencies": {
+        "@proppio/schemas": "*",
+        "@proppio/types": "*",
         "@aws-sdk/client-s3": "^3.964.0",
         "@aws-sdk/s3-request-presigner": "^3.964.0",
         "@dotenvx/dotenvx": "^1.51.4",
