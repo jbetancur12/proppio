@@ -21,6 +21,10 @@ COPY --from=pruner /app/out/full/ .
 COPY --from=pruner /app/out/full/turbo.json ./turbo.json
 COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 
+# Build arguments
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build Web and its dependencies using npm scripts (bypassing turbo binary issues)
 # Pruned context guarantees only relevant packages are present.
 # Build dependencies sequentially if they exist (Manual Topological Sort)
