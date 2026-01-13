@@ -58,4 +58,5 @@ COPY --from=builder /app/apps/api/package.json ./apps/api/
 EXPOSE 3000
 
 WORKDIR /app/apps/api
+RUN npm install -g @dotenvx/dotenvx
 CMD ["npm", "run", "start"]
