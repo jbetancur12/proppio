@@ -7,8 +7,8 @@ dist
 !.env.vault
 
 .DS_Store
-coverage
-.vscode
+package-lock.json
+out/
 .idea
 *.log
 apps/api/node_modules
