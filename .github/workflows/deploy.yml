@@ -26,7 +26,7 @@ jobs:
             if [ "${GITHUB_REF##*/}" = "main" ]; then
               BRANCH="main"
             else
-              BRANCH="staging"
+              BRANCH="backup-main"
             fi
 
             echo "🚀 Deploying branch $BRANCH"
