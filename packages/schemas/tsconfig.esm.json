@@ -1,0 +1,21 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "module": "ESNext",
+        "lib": [
+            "ES2020"
+        ],
+        "declaration": true,
+        "outDir": "./dist/esm",
+        "rootDir": "./src",
+        "moduleResolution": "bundler",
+        "esModuleInterop": true
+    },
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

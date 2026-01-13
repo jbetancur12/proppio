@@ -1,0 +1,11 @@
+node_modules
+dist
+packages/*/dist
+apps/*/dist
+.git
+.env
+.env.*
+!.env.production
+.DS_Store
+coverage
+.turbo

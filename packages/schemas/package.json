@@ -2,21 +2,23 @@
     "name": "@proppio/schemas",
     "version": "1.0.0",
     "private": true,
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "main": "dist/cjs/index.js",
+    "module": "dist/esm/index.js",
+    "types": "dist/cjs/index.d.ts",
     "files": [
         "dist"
     ],
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts",
-            "require": "./dist/index.js",
-            "default": "./dist/index.js"
+            "types": "./dist/cjs/index.d.ts",
+            "import": "./dist/esm/index.js",
+            "require": "./dist/cjs/index.js",
+            "default": "./dist/cjs/index.js"
         }
     },
     "scripts": {
-        "build": "tsc -p tsconfig.json",
-        "dev": "tsc -p tsconfig.json --watch"
+        "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
+        "dev": "tsc -p tsconfig.cjs.json --watch"
     },
     "dependencies": {
         "zod": "^3.23.8"
