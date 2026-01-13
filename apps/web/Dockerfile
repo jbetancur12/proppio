@@ -21,8 +21,9 @@ COPY --from=pruner /app/out/full/ .
 COPY --from=pruner /app/out/full/turbo.json ./turbo.json
 
 # Build Web and its dependencies using npm scripts (bypassing turbo binary issues)
-# Pruned context guarantees only relevant packages are present
-RUN npm run build:packages 
+# Pruned context guarantees only relevant packages are present. 
+# Web only needs schemas, not types, so we build explicitly.
+RUN npm run build --workspace @proppio/schemas 
 RUN npm run build --workspace web
 
 # Stage 3: Runner
