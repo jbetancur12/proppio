@@ -17,13 +17,15 @@ RUN npm ci
 
 # Copy source code
 COPY --from=pruner /app/out/full/ .
+COPY --from=pruner /app/out/full/turbo.json ./turbo.json
 
 # Build arguments
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build Web and its dependencies using Turbo
-RUN npx turbo run build --filter=web
+# Use global turbo installed in previous step to avoid npx resolution issues
+RUN turbo run build --filter=web
 
 # Stage 3: Runner
 FROM nginx:alpine
