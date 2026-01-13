@@ -30,10 +30,19 @@ ENV NODE_ENV=production \
 WORKDIR /app
 
 # 4️⃣ Copiamos SOLO lo necesario para runtime
+# Cambiamos a root para poder copiar y asignar permisos
+USER root
+
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+
+# Asignar propiedad a pptruser (usuario por defecto de la imagen)
+RUN chown -R pptruser:pptruser /app
+
+# Volver al usuario normal
+USER pptruser
 
 WORKDIR /app/apps/api
 
