@@ -8,6 +8,7 @@ RUN turbo prune --scope=web --docker
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy lockfile and package.json's first
@@ -24,8 +25,8 @@ ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build Web and its dependencies using Turbo
-# Use global turbo installed in previous step to avoid npx resolution issues
-RUN turbo run build --filter=web
+# Use npx to execute local turbo package
+RUN npx turbo run build --filter=web
 
 # Stage 3: Runner
 FROM nginx:alpine
