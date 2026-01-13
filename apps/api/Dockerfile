@@ -46,7 +46,8 @@ COPY package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
 # Prune dev dependencies
-RUN npm prune --production
+# Prune skipped to avoid breaking workspace dependencies
+# RUN npm prune --production
 
 # Copy compiled code and source files
 # Copy compiled code and source files
