@@ -1,38 +1,40 @@
-# Build Stage
+########################################
+# ----------- BUILD STAGE --------------
+########################################
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy root package files and install dependencies (includes workspaces)
-COPY package*.json ./
-COPY packages ./packages
-# Shared apps no longer exist
-# COPY apps/shared ./apps/shared (removed)
+# 1️⃣ Copiamos manifests primero (mejor cache)
+COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/package.json
+COPY packages/*/package.json ./packages/*/package.json
 
-# Instalar dependencias para todo el workspace
-RUN npm install
+# 2️⃣ Instalamos dependencias (workspaces)
+RUN npm ci
 
-# Build @proppio/types
-RUN cd packages/types && npm run build
-
-# Build @proppio/schemas
-RUN cd packages/schemas && npm run build
-
-# Build web app
+# 3️⃣ Copiamos el código
+COPY packages ./packages
 COPY apps/web ./apps/web
-WORKDIR /app/apps/web
 
+# 4️⃣ Variables de build (Vite)
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-RUN npm run build
+# 5️⃣ Build completo (packages + web)
+RUN npm run build --workspaces
 
-# Production Stage - Nginx
+
+########################################
+# ----------- RUNTIME STAGE -------------
+########################################
 FROM nginx:alpine
 
+# Config Nginx
+COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Build output
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
-COPY --from=builder /app/apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

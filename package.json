@@ -8,9 +8,10 @@
     ],
     "scripts": {
         "dev": "npm run dev --workspaces --if-present",
-        "build": "npm run build --workspaces --if-present",
+        "build:packages": "npm run build --workspace @proppio/types && npm run build --workspace @proppio/schemas",
+        "build:apps": "npm run build --workspaces --if-present",
+        "build": "npm run build:packages && npm run build:apps",
         "test": "npm run test --workspaces --if-present",
-        "cron": "npx ts-node src/scripts/run-cron.ts",
         "prepare": "husky"
     },
     "lint-staged": {

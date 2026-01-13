@@ -1,5 +1,7 @@
+version: "3.9"
+
 services:
-  # --- INFRASTRUCTURE ---
+  # ---------------- INFRA ----------------
   postgres:
     image: postgres:15-alpine
     container_name: proppio_db
@@ -11,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:5432:5432" # Bind to localhost only (for SSH Tunnel access)
+      - "127.0.0.1:5432:5432" # Solo accesible vía SSH tunnel
     networks:
       - app_network
 
@@ -29,8 +31,8 @@ services:
     container_name: proppio_minio
     restart: always
     environment:
-      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     command: [ "server", "/data", "--console-address", ":9001" ]
     volumes:
       - minio_data:/data
@@ -39,8 +41,10 @@ services:
 
   dozzle:
     image: amir20/dozzle:latest
+    container_name: proppio_dozzle
+    restart: always
     ports:
-      - "8888:8080" # Exposed to internet (Secured by users.yml)
+      - "8888:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - dozzle_data:/data
@@ -53,65 +57,65 @@ services:
     networks:
       - app_network
 
-  # --- APPLICATIONS ---
+  # ---------------- APPS ----------------
   api:
+    container_name: proppio_api
     build:
       context: .
-      dockerfile: ./apps/api/Dockerfile
-    container_name: proppio_api
+      dockerfile: apps/api/Dockerfile
     restart: always
     depends_on:
       - postgres
       - redis
-    volumes:
-      - ./.env:/app/.env
-      - ./.env.production:/app/.env.production
-      - ./.env.keys:/app/.env.keys
+      - minio
+    env_file:
+      - .env
+      - .env.production
+      - .env.keys
     environment:
-      - PORT=3000
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=${DB_USER:-postgres}
-      - DB_PASSWORD=${DB_PASSWORD:-password}
-      - DB_NAME=${DB_NAME:-proppio_db}
-      - REDIS_HOST=redis
-      - REDIS_HOST=redis
-      - STORAGE_ENDPOINT=http://minio:9000
-      - STORAGE_PUBLIC_ENDPOINT=https://s3.betancur.work
-      - STORAGE_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
-      - STORAGE_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
-      - CORS_ORIGIN=http://localhost,https://app.tusass.com
-      - JWT_SECRET=${JWT_SECRET:-supersecret}
-      - PUBLIC_API_URL=${PUBLIC_API_URL:-https://api.tusass.com}
-      - MIKRO_ORM_USE_TS_NODE=false # Force use of JS migrations in prod
-      - NODE_ENV=production
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_NAME: ${DB_NAME:-proppio_db}
+      REDIS_HOST: redis
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_PUBLIC_ENDPOINT: https://s3.betancur.work
+      STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      CORS_ORIGIN: http://localhost,https://app.tusass.com
+      JWT_SECRET: ${JWT_SECRET:-supersecret}
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-https://api.tusass.com}
+      MIKRO_ORM_USE_TS_NODE: "false"
     networks:
       - app_network
 
   web:
+    container_name: proppio_web
     build:
       context: .
-      dockerfile: ./apps/web/Dockerfile
+      dockerfile: apps/web/Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL}
-    container_name: proppio_web
+        VITE_API_URL: ${VITE_API_URL}
     restart: always
-    expose:
-      - "80" # Exposed only to Docker network, not to host
     depends_on:
       - api
+    expose:
+      - "80"
     networks:
       - app_network
 
-  # --- NGINX PROXY MANAGER ---
+  # --------------- PROXY ----------------
   nginx-proxy-manager:
-    image: 'jc21/nginx-proxy-manager:latest'
+    image: jc21/nginx-proxy-manager:latest
     container_name: proppio_nginx_proxy
     restart: always
     ports:
-      - '80:80' # HTTP
-      - '443:443' # HTTPS
-      - '81:81' # Admin UI
+      - "80:80"
+      - "443:443"
+      - "81:81"
     environment:
       DB_SQLITE_FILE: "/data/database.sqlite"
     volumes:
@@ -120,6 +124,7 @@ services:
     networks:
       - app_network
 
+# ---------------- VOLUMES ----------------
 volumes:
   postgres_data:
   redis_data:
@@ -128,11 +133,12 @@ volumes:
   npm_letsencrypt:
   dozzle_data:
 
-
+    # ---------------- SECRETS ----------------
 secrets:
   dozzle_users:
     file: ./files/dozzle/users.yml
 
+# ---------------- NETWORK ----------------
 networks:
   app_network:
     driver: bridge

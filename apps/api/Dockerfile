@@ -1,31 +1,33 @@
-# Build Stage
+########################################
+# ----------- BUILD STAGE --------------
+########################################
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy root package files and workspace packages
-COPY package*.json ./
-COPY packages ./packages
-# Shared apps no longer exist, everything is in packages
-# COPY apps/shared ./apps/shared (removed)
+# 1️⃣ Copiamos manifests primero (cache)
+COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/package.json
-RUN npm install
+COPY packages/*/package.json ./packages/*/package.json
 
-# Build shared types package
-RUN cd packages/types && npm run build
+# 2️⃣ Instalamos dependencias (workspaces)
+RUN npm ci
 
-# Build shared schemas package
-RUN cd packages/schemas && npm run build
-
-# Copy and build API
+# 3️⃣ Copiamos el código
+COPY packages ./packages
 COPY apps/api ./apps/api
-WORKDIR /app/apps/api
-RUN npm run build
 
-# Production Stage
+# 4️⃣ Build completo respetando dependencias
+# (contracts / schemas / api en el orden correcto)
+RUN npm run build --workspaces
+
+
+########################################
+# ----------- RUNTIME STAGE -------------
+########################################
 FROM node:20-alpine
 
-# Install Chromium and dependencies for Puppeteer
+# Puppeteer deps
 RUN apk add --no-cache \
     chromium \
     nss \
@@ -34,31 +36,20 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont
 
-# Tell Puppeteer to skip downloading Chrome. We'll be using the installed package.
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+ENV NODE_ENV=production \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 
-# Copy root package.json
-COPY package*.json ./
-
-# Copy node_modules from builder (already has workspaces installed)
+# 5️⃣ Copiamos SOLO lo necesario
 COPY --from=builder /app/node_modules ./node_modules
-
-# Prune dev dependencies
-# Prune skipped to avoid breaking workspace dependencies
-# RUN npm prune --production
-
-# Copy compiled code and source files
-# Copy compiled code and source files
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/src ./apps/api/src
-COPY --from=builder /app/apps/api/tsconfig.json ./apps/api/
-COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
+
+WORKDIR /app/apps/api
 
 EXPOSE 3000
 
-WORKDIR /app/apps/api
-RUN npm install -g @dotenvx/dotenvx @mikro-orm/cli
-CMD ["npm", "run", "start"]
+# 6️⃣ Ejecutamos con dotenvx (sin instalar global)
+CMD ["npx", "dotenvx", "run", "--", "node", "dist/main.js"]
