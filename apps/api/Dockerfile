@@ -39,19 +39,22 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 WORKDIR /app
 
-# Copy package.json and install production dependencies
-COPY --from=builder /app/apps/api/package*.json ./
-# Copy packages to parent directory (for @proppio/shared reference)
-COPY --from=builder /app/packages ../packages
-# Copy shared apps to parent directory (for file:../shared reference)
-COPY --from=builder /app/apps/shared ../shared
-RUN npm install --omit=dev
+# Copy root package.json
+COPY package*.json ./
+
+# Copy node_modules from builder (already has workspaces installed)
+COPY --from=builder /app/node_modules ./node_modules
+
+# Prune dev dependencies
+RUN npm prune --production
 
 # Copy compiled code and source files
-COPY --from=builder /app/apps/api/dist ./dist
-COPY --from=builder /app/apps/api/src ./src
-COPY --from=builder /app/apps/api/tsconfig.json ./
+# Copy compiled code and source files
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/src ./apps/api/src
+COPY --from=builder /app/apps/api/tsconfig.json ./apps/api/
 
 EXPOSE 3000
 
+WORKDIR /app/apps/api
 CMD ["npm", "run", "start"]
