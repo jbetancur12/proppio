@@ -6,7 +6,6 @@
             "ES2020"
         ],
         "declaration": true,
-        "composite": true,
         "outDir": "./dist",
         "rootDir": "./src",
         "moduleResolution": "node",
