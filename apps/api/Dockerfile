@@ -18,9 +18,10 @@ RUN npm ci
 # Copy the source code
 COPY --from=pruner /app/out/full/ .
 COPY --from=pruner /app/out/full/turbo.json ./turbo.json
+COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 
 # Build API and its dependencies using npm scripts
-RUN npm run build:packages
+RUN npm run build --workspaces --if-present
 RUN npm run build --workspace api
 
 # Stage 3: Runner - Production image
