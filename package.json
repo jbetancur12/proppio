@@ -7,11 +7,12 @@
         "packages/*"
     ],
     "scripts": {
-        "dev": "npm run dev --workspaces --if-present",
+        "dev": "turbo run dev",
         "build:packages": "npm run build --workspace @proppio/types && npm run build --workspace @proppio/schemas",
         "build:apps": "npm run build --workspaces --if-present",
         "build": "npm run build:packages && npm run build:apps",
         "test": "npm run test --workspaces --if-present",
+        "ts-check": "npm run build:packages && turbo run ts-check",
         "prepare": "husky"
     },
     "lint-staged": {

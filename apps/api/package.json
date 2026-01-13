@@ -9,6 +9,7 @@
         "start": "dotenvx run -f ../../.env -f ../../.env.production -- node dist/index.js",
         "token": "dotenvx run -f ../../.env -f .env -- tsx src/scripts/generate-token.ts",
         "typecheck": "tsc --noEmit",
+        "ts-check": "tsc --noEmit",
         "migration:create": "mikro-orm migration:create",
         "migration:up": "mikro-orm migration:up",
         "migration:down": "mikro-orm migration:down",
