@@ -13,4 +13,4 @@ coverage
 apps/api/node_modules
 .turbo
 temp/
-apps/api/temp/
+apps/api/temp/.env.production
