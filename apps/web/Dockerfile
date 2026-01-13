@@ -16,16 +16,9 @@ ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
 # 4️⃣ Build packages primero (dependencias de web)
-RUN npm run build --workspace @proppio/types
-RUN npm run build --workspace @proppio/schemas
+RUN npm run build:packages
 
-# 4.5️⃣ Verificar que los .d.ts se generaron
-RUN ls -la /app/packages/schemas/dist/ && \
-    ls -la /app/packages/types/dist/ && \
-    test -f /app/packages/schemas/dist/index.d.ts && \
-    test -f /app/packages/types/dist/index.d.ts
-
-# 5️⃣ Build web
+# 5️⃣ Build Web
 RUN npm run build --workspace web
 
 
