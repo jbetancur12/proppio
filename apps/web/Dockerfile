@@ -23,8 +23,12 @@ COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 
 # Build Web and its dependencies using npm scripts (bypassing turbo binary issues)
 # Pruned context guarantees only relevant packages are present.
-# We use --workspaces --if-present to build whatever is available (future-proof)
-RUN npm run build --workspaces --if-present
+# Build dependencies sequentially if they exist (Manual Topological Sort)
+# This handles the pruned context (ignoring missing packages) and ensures order
+RUN if [ -d "packages/types" ]; then npm run build --workspace @proppio/types; fi
+RUN if [ -d "packages/schemas" ]; then npm run build --workspace @proppio/schemas; fi
+
+# Finally build the application
 RUN npm run build --workspace web
 
 # Stage 3: Runner
