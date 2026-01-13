@@ -25,7 +25,6 @@ COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 # Pruned context guarantees only relevant packages are present.
 # We use --workspaces --if-present to build whatever is available (future-proof)
 RUN npm run build --workspaces --if-present
-RUN npm run build --workspace web 
 RUN npm run build --workspace web
 
 # Stage 3: Runner
