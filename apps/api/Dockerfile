@@ -1,26 +1,28 @@
-########################################
-# ----------- BUILD STAGE --------------
-########################################
-FROM node:20-slim AS builder
+# Stage 1: Pruner - Isolates the workspace
+FROM node:20-alpine AS pruner
+WORKDIR /app
+RUN npm install -g turbo
+COPY . .
+RUN turbo prune --scope=api --docker
 
+# Stage 2: Builder - Builds the app with pruned context
+# Using slim (Debian) for glibc compatibility (bcrypt)
+FROM node:20-slim AS builder
 WORKDIR /app
 
-# 1️⃣ Copiamos TODO el monorepo (clave para workspaces)
-COPY . .
-
-# 2️⃣ Instalamos dependencias (usa package-lock del root)
+# Copy lockfile and package.json's first to cache dependencies
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/package-lock.json ./package-lock.json
 RUN npm ci
 
-# 3️⃣ Build packages primero (dependencias de las apps)
-RUN npm run build:packages
+# Copy the source code
+COPY --from=pruner /app/out/full/ .
 
-# 4️⃣ Build API
-RUN npm run build --workspace api
+# Build API and its dependencies (schemas, types) using Turbo
+# This triggers ^build (dependencies) automatically via turbo.json
+RUN npx turbo run build --filter=api
 
-
-########################################
-# ----------- RUNTIME STAGE -------------
-########################################
+# Stage 3: Runner - Production image
 FROM ghcr.io/puppeteer/puppeteer:22.8.2
 
 ENV NODE_ENV=production \
@@ -28,8 +30,7 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 
-# 4️⃣ Copiamos SOLO lo necesario para runtime
-# Cambiamos a root para poder copiar y asignar permisos
+# Switch to root to copy files and fix permissions
 USER root
 
 COPY --from=builder /app/node_modules ./node_modules
@@ -37,15 +38,13 @@ COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 
-# Asignar propiedad a pptruser (usuario por defecto de la imagen)
+# Fix permissions for pptruser
 RUN chown -R pptruser:pptruser /app
 
-# Volver al usuario normal
+# Switch back to non-root user
 USER pptruser
 
 WORKDIR /app/apps/api
-
 EXPOSE 3000
 
-# 5️⃣ Arranque limpio
 CMD ["node", "dist/index.js"]
