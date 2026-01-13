@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - backup-main
 
 jobs:
   deploy:
@@ -22,3 +23,11 @@ jobs:
           script: |
             cd ${{ secrets.VPS_PATH }}
             ./deploy_prod.sh
+            if [ "${GITHUB_REF##*/}" = "main" ]; then
+              BRANCH="main"
+            else
+              BRANCH="staging"
+            fi
+
+            echo "🚀 Deploying branch $BRANCH"
+            ./deploy_prod.sh $BRANCH

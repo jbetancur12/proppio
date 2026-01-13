@@ -1,15 +1,18 @@
 #!/bin/bash
 set -e
 
+BRANCH=${1:-main}
 
 # Zero/Minimal Downtime Deployment Script
 # Usage: ./deploy_prod.sh
 
-echo "🚀 Starting Deployment..."
+echo "🚀 Starting Deployment for branch $BRANCH ..."
 
 # 1. Pull latest changes
 echo "📥 Pulling latest code..."
-git pull origin main
+git fetch origin
+git checkout $BRANCH
+git pull origin $BRANCH
 
 # 2. Build images WITHOUT stopping containers (minimizes downtime)
 # Build one service at a time to save RAM on small VPS
