@@ -40,4 +40,4 @@ WORKDIR /app/apps/api
 EXPOSE 3000
 
 # 5️⃣ Arranque limpio
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/index.js"]
