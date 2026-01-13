@@ -12,7 +12,14 @@ COPY . .
 RUN npm ci
 
 # 3️⃣ Build packages primero (dependencias de las apps)
-RUN npm run build:packages
+RUN npm run build --workspace @proppio/types
+RUN npm run build --workspace @proppio/schemas
+
+# 3.5️⃣ Verificar que los .d.ts se generaron
+RUN ls -la /app/packages/schemas/dist/ && \
+    ls -la /app/packages/types/dist/ && \
+    test -f /app/packages/schemas/dist/index.d.ts && \
+    test -f /app/packages/types/dist/index.d.ts
 
 # 4️⃣ Build apps
 RUN npm run build --workspace api
