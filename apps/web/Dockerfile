@@ -15,8 +15,11 @@ RUN npm ci
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-# 4️⃣ Build completo (packages + web)
-RUN npm run build --workspaces
+# 4️⃣ Build packages primero (dependencias de web)
+RUN npm run build:packages
+
+# 5️⃣ Build web
+RUN npm run build --workspace web
 
 
 ########################################

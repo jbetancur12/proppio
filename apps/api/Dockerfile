@@ -11,8 +11,11 @@ COPY . .
 # 2️⃣ Instalamos dependencias (usa package-lock del root)
 RUN npm ci
 
-# 3️⃣ Build respetando dependencias entre workspaces
-RUN npm run build --workspaces
+# 3️⃣ Build packages primero (dependencias de las apps)
+RUN npm run build:packages
+
+# 4️⃣ Build apps
+RUN npm run build --workspace api
 
 
 ########################################
