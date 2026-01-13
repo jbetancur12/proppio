@@ -60,8 +60,8 @@ export function PaymentsPage() {
             if (payment && payment.status === 'PENDING') {
                 handleRegister(payment);
                 // Optional: clear param
-                setSearchParams(prev => {
-                    const newParams = new URLSearchParams(prev);
+                setSearchParams(currentParams => {
+                    const newParams = new URLSearchParams(currentParams);
                     newParams.delete('paymentId');
                     return newParams;
                 });
