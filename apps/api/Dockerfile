@@ -53,6 +53,7 @@ RUN npm prune --production
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/src ./apps/api/src
 COPY --from=builder /app/apps/api/tsconfig.json ./apps/api/
+COPY --from=builder /app/apps/api/package.json ./apps/api/
 
 EXPOSE 3000
 
