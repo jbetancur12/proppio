@@ -10,7 +10,7 @@ import { LeaseCard } from './components/LeaseCard';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createLeaseSchema, CreateLeaseDto } from '@proppio/shared';
+import { createLeaseSchema, CreateLeaseDto } from '@proppio/schemas';
 import { FormField } from '@/components/forms/FormField';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { toUTC } from '@/lib/dateUtils';

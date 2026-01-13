@@ -11,7 +11,7 @@ import { TicketCard } from "./components/TicketCard";
 import { useProperties } from "../properties/hooks/useProperties";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createTicketSchema, CreateTicketDto } from "@proppio/shared";
+import { createTicketSchema, CreateTicketDto } from '@proppio/schemas';
 import { FormField } from "@/components/forms/FormField";
 
 export function MaintenancePage() {

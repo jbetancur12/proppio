@@ -1,1 +1,1 @@
-export { createTicketSchema, updateTicketSchema, CreateTicketDto, UpdateTicketDto } from '@proppio/shared';
+export { createTicketSchema, updateTicketSchema, CreateTicketDto, UpdateTicketDto } from '@proppio/schemas';

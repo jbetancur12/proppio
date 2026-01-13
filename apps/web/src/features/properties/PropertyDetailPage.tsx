@@ -13,7 +13,7 @@ import { PropertyOverviewTab } from "./components/PropertyOverviewTab";
 import { PropertyTenantsTab } from "./components/PropertyTenantsTab";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUnitSchema, CreateUnitDto } from "@proppio/shared";
+import { createUnitSchema, CreateUnitDto, UpdatePropertyDto, updatePropertySchema } from '@proppio/schemas';
 import { FormField } from "@/components/forms/FormField";
 
 interface Unit {

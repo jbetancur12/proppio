@@ -13,7 +13,7 @@ import { PaymentCard } from "../payments/components/PaymentCard";
 import { TicketCard } from "../maintenance/components/TicketCard";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createRenterSchema, CreateRenterDto } from "@proppio/shared";
+import { updateRenterSchema, UpdateRenterDto } from '@proppio/schemas';
 import { FormField } from "@/components/forms/FormField";
 
 export function RenterDetailPage() {
@@ -22,8 +22,8 @@ export function RenterDetailPage() {
     const { data: history, isLoading } = useRenterHistory(id!);
     const [isEditing, setIsEditing] = useState(false);
     const updateMutation = useUpdateRenter();
-    const { register, handleSubmit, formState: { errors }, reset } = useForm<CreateRenterDto>({
-        resolver: zodResolver(createRenterSchema)
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<UpdateRenterDto>({
+        resolver: zodResolver(updateRenterSchema)
     });
 
     if (isLoading) return <div className="p-8 text-center text-gray-500">Cargando perfil...</div>;
@@ -45,7 +45,7 @@ export function RenterDetailPage() {
         }
     };
 
-    const onUpdate = (data: CreateRenterDto) => {
+    const onUpdate = (data: UpdateRenterDto) => {
         if (!id) return;
         updateMutation.mutate({ id, data }, {
             onSuccess: () => setIsEditing(false)

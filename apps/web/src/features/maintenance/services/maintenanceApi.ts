@@ -1,5 +1,5 @@
 import { api } from "../../../api/client";
-import { CreateTicketDto } from "@proppio/shared";
+import type { CreateTicketDto, UpdateTicketDto } from '@proppio/schemas';
 
 
 export enum TicketStatus {

@@ -28,7 +28,7 @@
         "@mikro-orm/postgresql": "^6.0.0",
         "@mikro-orm/reflection": "^6.0.0",
         "@mikro-orm/seeder": "^6.0.0",
-        "@proppio/shared": "file:../shared",
+        "@proppio/schemas": "file:../../packages/schemas",
         "@types/multer": "^2.0.0",
         "@types/node-cron": "^3.0.11",
         "bcrypt": "^5.1.0",

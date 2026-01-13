@@ -1,1 +1,1 @@
-export { createPaymentSchema, CreatePaymentDto, updatePaymentSchema, UpdatePaymentDto } from '@proppio/shared';
+export { createPaymentSchema, CreatePaymentDto, updatePaymentSchema, UpdatePaymentDto } from '@proppio/schemas';

@@ -1,1 +1,1 @@
-export { createUnitSchema, CreateUnitDto, updateUnitSchema, UpdateUnitDto } from '@proppio/shared';
+export { createUnitSchema, CreateUnitDto, updateUnitSchema, UpdateUnitDto } from '@proppio/schemas';

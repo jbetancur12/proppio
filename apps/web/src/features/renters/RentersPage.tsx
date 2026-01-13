@@ -8,7 +8,7 @@ import { RenterCard } from './components/RenterCard';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createRenterSchema, CreateRenterDto } from '@proppio/shared';
+import { createRenterSchema, CreateRenterDto } from '@proppio/schemas';
 import { FormField } from '@/components/forms/FormField';
 
 import { Renter } from "@proppio/types"; // Import from shared types

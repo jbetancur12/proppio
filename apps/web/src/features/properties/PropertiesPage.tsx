@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createPropertySchema, CreatePropertyDto } from '@proppio/shared';
+import { createPropertySchema, CreatePropertyDto } from '@proppio/schemas';
 import { FormField } from '@/components/forms/FormField';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 

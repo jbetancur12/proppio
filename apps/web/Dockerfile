@@ -6,7 +6,8 @@ WORKDIR /app
 # Copy root package files and install dependencies (includes workspaces)
 COPY package*.json ./
 COPY packages ./packages
-COPY apps/shared ./apps/shared
+# Shared apps no longer exist
+# COPY apps/shared ./apps/shared (removed)
 COPY apps/web/package.json ./apps/web/package.json
 
 # Instalar dependencias para todo el workspace
@@ -15,8 +16,8 @@ RUN npm install
 # Build @proppio/types
 RUN cd packages/types && npm run build
 
-# Build @proppio/shared
-RUN cd apps/shared && npm run build
+# Build @proppio/schemas
+RUN cd packages/schemas && npm run build
 
 # Build web app
 COPY apps/web ./apps/web

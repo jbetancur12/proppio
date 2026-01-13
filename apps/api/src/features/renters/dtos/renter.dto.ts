@@ -1,1 +1,1 @@
-export { createRenterSchema, CreateRenterDto, updateRenterSchema, UpdateRenterDto } from '@proppio/shared';
+export { createRenterSchema, CreateRenterDto, updateRenterSchema, UpdateRenterDto } from '@proppio/schemas';
