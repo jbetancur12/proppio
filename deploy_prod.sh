@@ -12,7 +12,8 @@ echo "📥 Pulling latest code..."
 git pull origin main
 
 # 2. Build images WITHOUT stopping containers (minimizes downtime)
-# This is the most important step: compile everything while the old app is still running.
+# Build one service at a time to save RAM on small VPS
+export COMPOSE_PARALLEL_LIMIT=1
 echo "🏗️  Building images (Background)..."
 docker compose --env-file .env.production -f docker-compose.prod.yml build
 
