@@ -20,16 +20,9 @@ RUN npm ci
 COPY --from=pruner /app/out/full/ .
 COPY --from=pruner /app/out/full/turbo.json ./turbo.json
 
-# DEBUG: Check if package.json has scripts
-RUN cat apps/web/package.json
-
-# Build arguments
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
 # Build Web and its dependencies using Turbo
-# Use npx to execute local turbo package
-RUN npx turbo run build --filter=web
+# Run build for everything in the pruned context (which is just web + deps)
+RUN npx turbo run build
 
 # Stage 3: Runner
 FROM nginx:alpine

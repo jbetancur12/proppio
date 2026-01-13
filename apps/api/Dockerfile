@@ -20,8 +20,8 @@ COPY --from=pruner /app/out/full/ .
 COPY --from=pruner /app/out/full/turbo.json ./turbo.json
 
 # Build API and its dependencies (schemas, types) using Turbo
-# This triggers ^build (dependencies) automatically via turbo.json
-RUN npx turbo run build --filter=api
+# Run build for everything in the pruned context
+RUN npx turbo run build
 
 # Stage 3: Runner - Production image
 FROM ghcr.io/puppeteer/puppeteer:22.8.2
