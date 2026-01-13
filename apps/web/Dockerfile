@@ -20,8 +20,14 @@ RUN npm ci
 COPY --from=pruner /app/out/full/ .
 COPY --from=pruner /app/out/full/turbo.json ./turbo.json
 
+# DEBUG: Inspect structure and content
+RUN ls -R
+RUN echo "=== ROOT PACKAGE.JSON ===" && cat package.json
+RUN echo "=== WEB PACKAGE.JSON ===" && cat apps/web/package.json
+RUN echo "=== TURBO LS ===" && npx turbo ls
+
 # Build Web and its dependencies using Turbo
-# Run build for everything in the pruned context (which is just web + deps)
+# Run build for everything in the pruned context
 RUN npx turbo run build
 
 # Stage 3: Runner
