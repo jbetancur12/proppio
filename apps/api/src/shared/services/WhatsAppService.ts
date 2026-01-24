@@ -1,4 +1,4 @@
-import { Payment } from '../../features/payments/entities/Payment';
+import type { Payment } from '../../features/payments/entities/Payment';
 import { logger } from '../logger';
 
 export class WhatsAppService {
@@ -32,13 +32,13 @@ export class WhatsAppService {
         const amountFormatted = new Intl.NumberFormat('es-CO', {
             style: 'currency',
             currency: 'COP',
-            maximumFractionDigits: 0
+            maximumFractionDigits: 0,
         }).format(payment.amount);
 
         const dateFormatted = new Date(payment.paymentDate).toLocaleDateString('es-CO', {
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
         });
 
         const receiptUrl = `${this.publicApiUrl}/api/receipts/${payment.id}/download`;
@@ -53,7 +53,10 @@ export class WhatsAppService {
         const recipientNumber = this.isTestMode ? this.testNumber : phoneNumber;
 
         if (this.isTestMode) {
-            logger.info({ original: phoneNumber, testNumber: this.testNumber }, 'WhatsApp test mode: routing to test number');
+            logger.info(
+                { original: phoneNumber, testNumber: this.testNumber },
+                'WhatsApp test mode: routing to test number',
+            );
         }
 
         const message = `✅ *Pago Recibido*
@@ -77,36 +80,42 @@ _- Proppio_`;
                 {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${this.accessToken}`,
-                        'Content-Type': 'application/json'
+                        Authorization: `Bearer ${this.accessToken}`,
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         messaging_product: 'whatsapp',
                         to: recipientNumber,
                         type: 'text',
                         text: {
-                            body: message
-                        }
-                    })
-                }
+                            body: message,
+                        },
+                    }),
+                },
             );
 
             if (!response.ok) {
                 const errorData = await response.json();
-                logger.error({
-                    err: errorData,
-                    paymentId: payment.id,
-                    recipientPhone: recipientNumber
-                }, 'WhatsApp API error');
+                logger.error(
+                    {
+                        err: errorData,
+                        paymentId: payment.id,
+                        recipientPhone: recipientNumber,
+                    },
+                    'WhatsApp API error',
+                );
                 return;
             }
 
             const data = await response.json();
-            logger.info({
-                paymentId: payment.id,
-                recipientPhone: recipientNumber,
-                messageId: data.messages?.[0]?.id
-            }, 'WhatsApp notification sent successfully');
+            logger.info(
+                {
+                    paymentId: payment.id,
+                    recipientPhone: recipientNumber,
+                    messageId: data.messages?.[0]?.id,
+                },
+                'WhatsApp notification sent successfully',
+            );
         } catch (err) {
             logger.error({ err, paymentId: payment.id }, 'Unexpected error sending WhatsApp notification');
         }
