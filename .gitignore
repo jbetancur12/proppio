@@ -1,7 +1,8 @@
 node_modules
 dist
 # Environment files
-.env
+# .env -> Allowed because it is encrypted
+# .env
 .env.production
 .env.keys
 !.env.vault
