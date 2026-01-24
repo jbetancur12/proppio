@@ -18,13 +18,14 @@ git pull origin $BRANCH
 # Build one service at a time to save RAM on small VPS
 export COMPOSE_PARALLEL_LIMIT=1
 echo "🏗️  Building images (Background)..."
-docker compose --env-file .env.production -f docker-compose.prod.yml build
+# Use dotenvx to decrypt .env vars into the shell environment for Docker substitution
+npx dotenvx run -f .env --quiet -- docker compose -f docker-compose.prod.yml build
 
 # 3. Apply changes (Restart containers)
 # Only initiates restart after a successful build.
 # Downtime is reduced to just the container restart time (seconds).
 echo "🔄 Recreating containers..."
-docker compose --env-file .env.production -f docker-compose.prod.yml up -d
+npx dotenvx run -f .env --quiet -- docker compose -f docker-compose.prod.yml up -d
 
 # 4. Optional: Run Migrations
 # Only run if you suspect schema changes, or uncomment to always run.
