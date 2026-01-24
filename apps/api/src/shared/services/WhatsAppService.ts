@@ -59,12 +59,17 @@ export class WhatsAppService {
             );
         }
 
+        const formatDate = (d: Date) =>
+            new Date(d).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+        const periodRange = `${formatDate(payment.periodStart)} - ${formatDate(payment.periodEnd)}`;
+
         const message = `✅ *Pago Recibido*
 
 Hola *${payment.lease.renter.firstName}*,
 
 Recibimos tu pago de *${amountFormatted}*
 📅 Fecha: ${dateFormatted}
+🗓️ Periodo: ${periodRange}
 🏠 Concepto: Canon de Arrendamiento
 📍 Propiedad: ${payment.lease.unit?.name || 'Unidad'}
 

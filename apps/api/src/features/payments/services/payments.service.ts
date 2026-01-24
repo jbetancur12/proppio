@@ -47,6 +47,29 @@ export class PaymentsService {
             throw new ValidationError('Solo se pueden registrar pagos en contratos activos');
         }
 
+        // Validate overlapping payments
+        const newStart = new Date(data.periodStart);
+        const newEnd = new Date(data.periodEnd);
+
+        const existingPayments = await this.em.find(Payment, {
+            lease: lease,
+            status: PaymentStatus.COMPLETED,
+        });
+
+        const overlap = existingPayments.find((p) => {
+            const existingStart = new Date(p.periodStart);
+            const existingEnd = new Date(p.periodEnd);
+            // Overlap logic: (StartA <= EndB) and (EndA >= StartB)
+            return newStart <= existingEnd && newEnd >= existingStart;
+        });
+
+        if (overlap) {
+            const formatDate = (d: Date) => d.toISOString().split('T')[0];
+            throw new ValidationError(
+                `El periodo (${formatDate(newStart)} - ${formatDate(newEnd)}) se solapa con un pago existente (${formatDate(overlap.periodStart)} - ${formatDate(overlap.periodEnd)})`,
+            );
+        }
+
         const payment = new Payment({
             lease,
             amount: data.amount,

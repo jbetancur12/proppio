@@ -1,17 +1,17 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { CurrencyInput } from "@/components/ui/CurrencyInput";
-import { useState, useEffect } from "react";
-import { Plus, Search, DollarSign, TrendingUp } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
-import { usePayments, useCreatePayment, useUpdatePayment, useDeletePayment } from "./hooks/usePayments";
-import { useLeases } from "../leases/hooks/useLeases";
-import { PaymentCard } from "./components/PaymentCard";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { useState, useEffect } from 'react';
+import { Plus, Search, DollarSign, TrendingUp } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { usePayments, useCreatePayment, useUpdatePayment, useDeletePayment } from './hooks/usePayments';
+import { useLeases } from '../leases/hooks/useLeases';
+import { PaymentCard } from './components/PaymentCard';
 
 // ... existing code ...
 
-import { Payment, Lease } from "@proppio/types";
+import { Payment, Lease } from '@proppio/types';
 
 /**
  * PaymentsPage - Container component
@@ -22,16 +22,16 @@ export function PaymentsPage() {
     const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
 
     // Form state
-    const [selectedLease, setSelectedLease] = useState("");
-    const [amount, setAmount] = useState<number | string>("");
+    const [selectedLease, setSelectedLease] = useState('');
+    const [amount, setAmount] = useState<number | string>('');
     const [paymentDate, setPaymentDate] = useState(() => {
         const today = new Date();
-        return new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
     });
-    const [periodStart, setPeriodStart] = useState("");
-    const [periodEnd, setPeriodEnd] = useState("");
-    const [method, setMethod] = useState<Payment['method']>("TRANSFER");
-    const [reference, setReference] = useState("");
+    const [periodStart, setPeriodStart] = useState('');
+    const [periodEnd, setPeriodEnd] = useState('');
+    const [method, setMethod] = useState<Payment['method']>('TRANSFER');
+    const [reference, setReference] = useState('');
 
     const [searchParams, setSearchParams] = useSearchParams();
     const autoSelectPaymentId = searchParams.get('paymentId');
@@ -44,12 +44,12 @@ export function PaymentsPage() {
         setSelectedLease(payment.lease.id);
         setAmount(payment.amount);
         const today = new Date();
-        const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
         setPaymentDate(localDate); // Default to today local time
         setPeriodStart(payment.periodStart.split('T')[0]);
         setPeriodEnd(payment.periodEnd.split('T')[0]);
-        setMethod(payment.method || "TRANSFER");
-        setReference(payment.reference || "");
+        setMethod(payment.method || 'TRANSFER');
+        setReference(payment.reference || '');
         setIsCreating(true);
     };
 
@@ -58,13 +58,8 @@ export function PaymentsPage() {
         if (autoSelectPaymentId && payments) {
             const payment = payments.find((p: Payment) => p.id === autoSelectPaymentId);
             if (payment && payment.status === 'PENDING') {
-                handleRegister(payment);
+                setTimeout(() => handleRegister(payment), 0);
                 // Optional: clear param
-                setSearchParams(currentParams => {
-                    const newParams = new URLSearchParams(currentParams);
-                    newParams.delete('paymentId');
-                    return newParams;
-                });
             }
         }
     }, [autoSelectPaymentId, payments, setSearchParams, handleRegister]);
@@ -76,13 +71,14 @@ export function PaymentsPage() {
         deleteMutation.mutate(id);
     };
 
-
     // Filter active leases
     const activeLeases = leases?.filter((l: Lease) => l.status === 'ACTIVE') || [];
 
     // Calculate totals
-    const totalReceived = payments?.filter((p: Payment) => p.status === 'COMPLETED')
-        .reduce((sum: number, p: Payment) => sum + p.amount, 0) || 0;
+    const totalReceived =
+        payments
+            ?.filter((p: Payment) => p.status === 'COMPLETED')
+            .reduce((sum: number, p: Payment) => sum + p.amount, 0) || 0;
 
     const handleCreateOrUpdate = () => {
         const payload = {
@@ -93,27 +89,30 @@ export function PaymentsPage() {
             periodEnd,
             method,
             reference: reference || undefined,
-            status: 'COMPLETED' as const
+            status: 'COMPLETED' as const,
         };
 
         const resetForm = () => {
-            setSelectedLease("");
-            setAmount("");
-            setPeriodStart("");
-            setPeriodEnd("");
-            setReference("");
+            setSelectedLease('');
+            setAmount('');
+            setPeriodStart('');
+            setPeriodEnd('');
+            setReference('');
             setIsCreating(false);
             setEditingPaymentId(null);
         };
 
         if (editingPaymentId) {
-            updateMutation.mutate({
-                id: editingPaymentId,
-                data: {
-                    ...payload,
-                    method: payload.method
-                }
-            }, { onSuccess: resetForm });
+            updateMutation.mutate(
+                {
+                    id: editingPaymentId,
+                    data: {
+                        ...payload,
+                        method: payload.method,
+                    },
+                },
+                { onSuccess: resetForm },
+            );
         } else {
             createMutation.mutate(payload, { onSuccess: resetForm });
         }
@@ -130,7 +129,13 @@ export function PaymentsPage() {
                     <h1 className="text-3xl font-bold tracking-tight text-gray-900">Pagos</h1>
                     <p className="text-gray-500">Registro y seguimiento de pagos de arrendamiento.</p>
                 </div>
-                <Button onClick={() => { setIsCreating(!isCreating); setEditingPaymentId(null); }} className="bg-green-600 hover:bg-green-700">
+                <Button
+                    onClick={() => {
+                        setIsCreating(!isCreating);
+                        setEditingPaymentId(null);
+                    }}
+                    className="bg-green-600 hover:bg-green-700"
+                >
                     <Plus size={18} className="mr-2" /> Registrar Pago
                 </Button>
             </div>
@@ -144,7 +149,9 @@ export function PaymentsPage() {
                                 <p className="text-green-100 font-medium">Total Recaudado</p>
                                 <h3 className="text-2xl font-bold mt-1">{formatCurrency(totalReceived)}</h3>
                             </div>
-                            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><DollarSign className="text-white" /></div>
+                            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                                <DollarSign className="text-white" />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -155,7 +162,9 @@ export function PaymentsPage() {
                                 <p className="text-gray-500 font-medium">Pagos Este Mes</p>
                                 <h3 className="text-2xl font-bold mt-1 text-gray-900">{payments?.length || 0}</h3>
                             </div>
-                            <div className="p-3 bg-blue-50 rounded-xl text-blue-600"><TrendingUp /></div>
+                            <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
+                                <TrendingUp />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -166,7 +175,9 @@ export function PaymentsPage() {
                                 <p className="text-gray-500 font-medium">Contratos Activos</p>
                                 <h3 className="text-2xl font-bold mt-1 text-gray-900">{activeLeases.length}</h3>
                             </div>
-                            <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600"><DollarSign /></div>
+                            <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
+                                <DollarSign />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -186,7 +197,7 @@ export function PaymentsPage() {
                             <select
                                 className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white"
                                 value={selectedLease}
-                                onChange={e => {
+                                onChange={(e) => {
                                     setSelectedLease(e.target.value);
                                     const lease = activeLeases.find((l: Lease) => l.id === e.target.value);
                                     if (lease) setAmount(lease.monthlyRent);
@@ -196,10 +207,23 @@ export function PaymentsPage() {
                                 <option value="">Seleccionar contrato activo...</option>
                                 {activeLeases.map((l: Lease) => (
                                     <option key={l.id} value={l.id}>
-                                        {l.unit?.name} - {l.renter?.firstName} {l.renter?.lastName} ({formatCurrency(l.monthlyRent)}/mes)
+                                        {l.unit?.name} - {l.renter?.firstName} {l.renter?.lastName} (
+                                        {formatCurrency(l.monthlyRent)}/mes)
                                     </option>
                                 ))}
                             </select>
+                            {selectedLease &&
+                                (() => {
+                                    const l = activeLeases.find((l: Lease) => l.id === selectedLease);
+                                    if (!l) return null;
+                                    const startDay = new Date(l.startDate).getDate();
+                                    return (
+                                        <p className="text-xs text-blue-600 mt-1">
+                                            ℹ️ Ciclo de facturación inicia el día <strong>{startDay}</strong> de cada
+                                            mes.
+                                        </p>
+                                    );
+                                })()}
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Monto ($)</label>
@@ -212,22 +236,37 @@ export function PaymentsPage() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Fecha de Pago</label>
-                            <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="bg-white" />
+                            <Input
+                                type="date"
+                                value={paymentDate}
+                                onChange={(e) => setPaymentDate(e.target.value)}
+                                className="bg-white"
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Período Desde</label>
-                            <Input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)} className="bg-white" />
+                            <Input
+                                type="date"
+                                value={periodStart}
+                                onChange={(e) => setPeriodStart(e.target.value)}
+                                className="bg-white"
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Período Hasta</label>
-                            <Input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} className="bg-white" />
+                            <Input
+                                type="date"
+                                value={periodEnd}
+                                onChange={(e) => setPeriodEnd(e.target.value)}
+                                className="bg-white"
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Método de Pago</label>
                             <select
                                 className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white"
                                 value={method}
-                                onChange={e => setMethod(e.target.value as Payment['method'])}
+                                onChange={(e) => setMethod(e.target.value as Payment['method'])}
                             >
                                 <option value="TRANSFER">Transferencia</option>
                                 <option value="CASH">Efectivo</option>
@@ -238,14 +277,34 @@ export function PaymentsPage() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Referencia (Opcional)</label>
-                            <Input placeholder="Número de transacción" value={reference} onChange={e => setReference(e.target.value)} className="bg-white" />
+                            <Input
+                                placeholder="Número de transacción"
+                                value={reference}
+                                onChange={(e) => setReference(e.target.value)}
+                                className="bg-white"
+                            />
                         </div>
                     </CardContent>
                     <div className="px-6 pb-6 flex justify-end gap-2">
-                        <Button variant="ghost" onClick={() => { setIsCreating(false); setEditingPaymentId(null); }}>Cancelar</Button>
+                        <Button
+                            variant="ghost"
+                            onClick={() => {
+                                setIsCreating(false);
+                                setEditingPaymentId(null);
+                            }}
+                        >
+                            Cancelar
+                        </Button>
                         <Button
                             onClick={handleCreateOrUpdate}
-                            disabled={!selectedLease || !amount || !periodStart || !periodEnd || createMutation.isPending || updateMutation.isPending}
+                            disabled={
+                                !selectedLease ||
+                                !amount ||
+                                !periodStart ||
+                                !periodEnd ||
+                                createMutation.isPending ||
+                                updateMutation.isPending
+                            }
                             className="bg-green-600 hover:bg-green-700"
                         >
                             {createMutation.isPending || updateMutation.isPending ? 'Guardando...' : 'Registrar Pago'}
@@ -266,7 +325,9 @@ export function PaymentsPage() {
 
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3].map(i => <div key={i} className="h-36 bg-gray-100 animate-pulse rounded-xl"></div>)}
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-36 bg-gray-100 animate-pulse rounded-xl"></div>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
